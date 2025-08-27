@@ -11,6 +11,23 @@ Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+// Onboarding completion
+Route::post('/onboarding/complete', function () {
+    $validated = request()->validate([
+        'role' => 'required|in:business,customer'
+    ]);
+    
+    // Update user role (assuming the user is authenticated via Telegram)
+    if (auth()->check()) {
+        auth()->user()->update([
+            'role' => $validated['role']
+        ]);
+    }
+    
+    // Redirect to dashboard after onboarding
+    return redirect()->route('dashboard');
+})->middleware(['telegram.auth'])->name('onboarding.complete');
+
 // Telegram protected routes
 Route::middleware(['telegram.auth'])->group(function () {
     Route::get('/tg', function () {

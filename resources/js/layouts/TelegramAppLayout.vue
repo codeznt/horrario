@@ -127,8 +127,8 @@ const rootClasses = computed(() => [
 
 /* Padded layout reserves safe areas using CSS variables with env() fallbacks */
 .tma-padded {
-  padding-left: max(var(--tma-safe-left), 15px);
-  padding-right: max(var(--tma-safe-right), 15px);
+  padding-left: max(var(--tma-safe-left), 0px);
+  padding-right: max(var(--tma-safe-right), 0px);
 }
 
 .tma-content {
@@ -144,11 +144,11 @@ const rootClasses = computed(() => [
 }
 
 .tma-spacer-top {
-  height: max(var(--tma-safe-top), 15px);
+  height: max(var(--tma-safe-top), 0px);
 }
 
 .tma-spacer-bottom {
-  height: max(var(--tma-safe-bottom), 15px);
+  height: max(var(--tma-safe-bottom), 0px);
 }
 
 /* Sticky actions bar that stays above bottom safe area */

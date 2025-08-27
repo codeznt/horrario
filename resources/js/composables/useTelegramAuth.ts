@@ -23,13 +23,6 @@ export function useTelegramAuth() {
                     }
                     
                     event.detail.visit.headers['X-Telegram-Init-Data'] = rawInitData
-                    
-                    // Also add as form data for POST requests if not already present
-                    if (event.detail.visit.method !== 'GET' && event.detail.visit.data) {
-                        if (typeof event.detail.visit.data === 'object' && !event.detail.visit.data._telegram_auth) {
-                            event.detail.visit.data._telegram_auth = rawInitData
-                        }
-                    }
                 }
             } catch (error) {
                 // In development or if SDK not available, this is expected

@@ -1,192 +1,335 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { backButton, miniApp } from '@telegram-apps/sdk';
 import TelegramAppLayout from '@/layouts/TelegramAppLayout.vue';
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 
 // shadcn-vue components
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Badge } from '@/components/ui/badge';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
-import { dashboard } from '@/routes';
 
 // Icons
-import { Check, X } from 'lucide-vue-next';
+import { ChevronLeft, Building2, User, Sparkles } from 'lucide-vue-next';
 
-const support = {
-    miniApp: typeof miniApp.isSupported === 'function' ? miniApp.isSupported() : true,
-    backButton: typeof backButton.isSupported === 'function' ? backButton.isSupported() : true,
-    themeParams: true,
-    viewport: true,
-};
+// Onboarding state
+const currentStep = ref(1);
+const totalSteps = 3;
+const selectedRole = ref<string>('');
 
-const supportItems = computed(() => [
-    { label: 'miniApp', value: support.miniApp },
-    { label: 'backButton', value: support.backButton },
-    { label: 'themeParams', value: support.themeParams },
-    { label: 'viewport', value: support.viewport },
-]);
+// Progress calculation
+const progress = computed(() => (currentStep.value / totalSteps) * 100);
 
-function onPrimary(): void {
-    // Demo handler
-    // eslint-disable-next-line no-console
-    console.log('Primary clicked');
+// Touch/drag handling
+const containerRef = ref<HTMLElement>();
+const isDragging = ref(false);
+const startX = ref(0);
+const currentX = ref(0);
+const translateX = ref(0);
+const threshold = 80; // Minimum distance to trigger slide
+
+// Touch event handlers
+function handleTouchStart(e: TouchEvent) {
+    isDragging.value = true;
+    startX.value = e.touches[0].clientX;
+    currentX.value = e.touches[0].clientX;
 }
 
-function onNeutral(): void {
-    // eslint-disable-next-line no-console
-    console.log('Neutral clicked');
+function handleTouchMove(e: TouchEvent) {
+    if (!isDragging.value) return;
+
+    currentX.value = e.touches[0].clientX;
+    const deltaX = currentX.value - startX.value;
+
+    // Limit drag distance
+    const maxDrag = 100;
+    translateX.value = Math.max(-maxDrag, Math.min(maxDrag, deltaX));
 }
 
-function onDestructive(): void {
-    // eslint-disable-next-line no-console
-    console.log('Destructive clicked');
+function handleTouchEnd() {
+    if (!isDragging.value) return;
+
+    const deltaX = currentX.value - startX.value;
+
+    // Determine slide direction and threshold
+    if (Math.abs(deltaX) > threshold) {
+        if (deltaX > 0 && currentStep.value > 1) {
+            // Swipe right - go back
+            goBack();
+        } else if (deltaX < 0 && currentStep.value < totalSteps) {
+            // Swipe left - go forward (only if role is selected on step 2)
+            if (currentStep.value === 2 && selectedRole.value) {
+                goNext();
+            } else if (currentStep.value !== 2) {
+                goNext();
+            }
+        }
+    }
+
+    // Reset drag state
+    isDragging.value = false;
+    translateX.value = 0;
 }
 
-function onLink(): void {
-    // eslint-disable-next-line no-console
-    console.log('Link clicked');
+// Mouse event handlers for desktop
+function handleMouseDown(e: MouseEvent) {
+    isDragging.value = true;
+    startX.value = e.clientX;
+    currentX.value = e.clientX;
 }
 
-function goDashboard(): void {
-    window.location.href = dashboard().url as string;
+function handleMouseMove(e: MouseEvent) {
+    if (!isDragging.value) return;
+
+    currentX.value = e.clientX;
+    const deltaX = currentX.value - startX.value;
+
+    const maxDrag = 100;
+    translateX.value = Math.max(-maxDrag, Math.min(maxDrag, deltaX));
+}
+
+function handleMouseUp() {
+    if (!isDragging.value) return;
+
+    const deltaX = currentX.value - startX.value;
+
+    if (Math.abs(deltaX) > threshold) {
+        if (deltaX > 0 && currentStep.value > 1) {
+            goBack();
+        } else if (deltaX < 0 && currentStep.value < totalSteps) {
+            if (currentStep.value === 2 && selectedRole.value) {
+                goNext();
+            } else if (currentStep.value !== 2) {
+                goNext();
+            }
+        }
+    }
+
+    isDragging.value = false;
+    translateX.value = 0;
+}
+
+// Navigation functions
+function goBack() {
+    if (currentStep.value > 1) {
+        currentStep.value--;
+    }
+}
+
+function goNext() {
+    if (currentStep.value < totalSteps) {
+        currentStep.value++;
+    }
+}
+
+function skipOnboarding() {
+    // Skip to dashboard or home
+    router.get('/dashboard');
+}
+
+function selectRole(role: 'business' | 'customer') {
+    selectedRole.value = role;
+    // Auto-advance to next step after role selection
+    setTimeout(() => {
+        goNext();
+    }, 300);
+}
+
+function completeOnboarding() {
+    // Save user role and redirect
+    router.post('/onboarding/complete', {
+        role: selectedRole.value
+    });
 }
 
 </script>
 
 <template>
-    <Head title="Welcome" />
+    <Head title="Welcome to " />
 
-    <TelegramAppLayout>
-        <section id="tokens" class="mx-auto max-w-5xl space-y-6">
-            <!-- Hero / Intro -->
-            <Card class="relative overflow-hidden border border-tg-section-separator bg-tg-section-bg">
-                <div class="pointer-events-none absolute inset-0 -z-10 opacity-70 [background:radial-gradient(1200px_400px_at_0%_0%,color-mix(in_oklab,var(--color-tg-accent),transparent_70%),transparent),radial-gradient(800px_300px_at_100%_100%,color-mix(in_oklab,var(--color-tg-link),transparent_75%),transparent)]" />
-                <CardContent class="flex items-center gap-4 p-5">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-black/5 dark:bg-white/10">
-                        <AppLogoIcon class="size-8 fill-current text-black dark:text-white" />
-                    </div>
-                    <div class="flex-1">
-                        <h1 class="text-base font-semibold">Welcome to Horrario</h1>
-                        <p class="text-xs text-tg-subtitle-text">Telegram Mini App-ready UI powered by shadcn-vue</p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <Badge class="hidden sm:inline-flex" variant="secondary">Preview</Badge>
-                        <Button class="bg-tg-accent text-tg-accent-foreground shadow hover:opacity-90" @click="onPrimary">Get Started</Button>
-                    </div>
-                </CardContent>
-            </Card>
-            <!-- SDK Support -->
-            <Card class="border border-tg-section-separator bg-tg-secondary-bg/60 backdrop-blur-sm">
-                <CardHeader>
-                    <CardTitle class="text-sm font-medium">SDK Support</CardTitle>
-                    <CardDescription>Detection uses isSupported(). Mocked in dev if not in Telegram.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <TransitionGroup name="list" tag="ul" class="mt-1 grid grid-cols-2 gap-2 text-sm md:grid-cols-4">
-                        <li
-                            v-for="item in supportItems"
-                            :key="item.label"
-                            class="group flex items-center justify-between rounded-md border border-tg-section-separator bg-tg-section-bg/70 px-3 py-2 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5 hover:bg-tg-section-bg"
-                        >
-                            <span class="font-medium">{{ item.label }}</span>
-                            <span class="ml-2 inline-flex items-center gap-1 text-xs">
-                                <Check v-if="item.value" class="size-4 text-green-500" />
-                                <X v-else class="size-4 text-red-500" />
-                                <Badge :variant="item.value ? 'secondary' : 'destructive'" class="px-2 py-0.5">{{ item.value ? 'Yes' : 'No' }}</Badge>
-                            </span>
-                        </li>
-                    </TransitionGroup>
-                </CardContent>
-            </Card>
+    <TelegramAppLayout class="bg-tg-bg">
+        <div class="flex min-h-[--spacing-viewport-h] flex-col">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-4 pb-2">
+                <Button
+                    v-if="currentStep > 1"
+                    variant="ghost"
+                    size="sm"
+                    class="text-tg-text hover:bg-tg-secondary-bg"
+                    @click="goBack"
+                >
+                    <ChevronLeft class="size-4" />
+                    Назад
+                </Button>
+                <div v-else></div>
 
-            <!-- Actions & Links -->
-            <Card class="border border-tg-section-separator bg-tg-secondary-bg/60">
-                <CardHeader>
-                    <CardTitle class="text-sm font-medium">Actions & Links</CardTitle>
-                    <CardDescription>Primary and link styles from Telegram tokens.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div class="mt-1 flex flex-wrap items-center gap-3">
-                        <Button class="bg-tg-accent text-tg-accent-foreground shadow hover:opacity-90" @click="onPrimary">Primary</Button>
-                        <Button variant="outline" class="border-tg-section-separator bg-tg-section-bg" @click="onNeutral">Neutral</Button>
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger as-child>
-                                    <Button variant="ghost" class="text-tg-destructive" @click="onDestructive">Destructive (text)</Button>
-                                </TooltipTrigger>
-                                <TooltipContent class="text-xs">Example action; no real effect</TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                        <Button variant="link" class="text-tg-link" @click.prevent="onLink">Link</Button>
-                        <span class="text-xs text-tg-hint">Hint text</span>
-                    </div>
-                </CardContent>
-            </Card>
+                <div class="text-sm font-medium text-tg-subtitle-text">
+                    {{ currentStep }}
+                </div>
 
-            <!-- Tiles Grid -->
-            <div class="grid gap-4 md:grid-cols-3">
-                <Card class="border border-tg-section-separator bg-tg-section-bg transition-transform duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5">
-                    <CardContent class="p-4">
-                        <h3 class="text-sm font-semibold">Section BG</h3>
-                        <p class="mt-1 text-xs text-tg-hint">bg-tg-section-bg + border-tg-section-separator</p>
-                    </CardContent>
-                </Card>
-                <Card class="border border-tg-section-separator bg-tg-secondary-bg transition-transform duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5">
-                    <CardContent class="p-4">
-                        <h3 class="text-sm font-semibold">Secondary BG</h3>
-                        <p class="mt-1 text-xs text-tg-hint">bg-tg-secondary-bg</p>
-                    </CardContent>
-                </Card>
-                <Card class="border border-tg-section-separator transition-transform duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5">
-                    <CardContent class="rounded-lg p-4 [background:linear-gradient(90deg,var(--color-tg-accent),var(--color-tg-link))] text-white">
-                        <h3 class="text-sm font-semibold">Gradient Accent → Link</h3>
-                        <p class="mt-1 text-xs text-white/80">using CSS vars directly</p>
-                    </CardContent>
-                </Card>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    class="text-tg-hint hover:bg-tg-secondary-bg"
+                    @click="skipOnboarding"
+                >
+                    Пропустити
+                </Button>
             </div>
 
-            <!-- Viewport Height Demo -->
-            <Card class="border border-tg-section-separator bg-tg-section-bg">
-                <CardHeader>
-                    <CardTitle class="text-sm font-medium">Viewport Height</CardTitle>
-                    <CardDescription>min-h-[--spacing-viewport-h] adapts to Telegram viewport.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Separator class="my-3 opacity-40" />
-                    <div class="mt-3 min-h-[--spacing-viewport-h] overflow-hidden rounded-md border border-dashed border-tg-section-separator p-3">
-                        <div class="relative">
-                            <Skeleton class="mb-2 h-6 w-40 rounded-md opacity-60" />
-                            <p class="text-xs text-tg-subtitle-text">This box grows to the Telegram viewport height.</p>
-                            <div
-                                class="absolute inset-0 -z-10 animate-pulse opacity-20 [background:repeating-linear-gradient(45deg,var(--color-tg-link),var(--color-tg-link)_10px,transparent_10px,transparent_20px)]"
-                            />
+            <!-- Progress Bar -->
+            <div class="px-4 pb-6">
+                <div class="h-1 w-full bg-tg-secondary-bg rounded-full overflow-hidden">
+                    <div
+                        class="h-full bg-tg-accent transition-all duration-300 ease-out rounded-full"
+                        :style="`width: ${progress}%`"
+                    ></div>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="flex-1 flex flex-col items-center justify-center px-6 pb-8">
+                <!-- Step 1: Welcome -->
+                <div v-if="currentStep === 1" class="flex flex-col items-center text-center space-y-8 max-w-sm animate-in fade-in slide-in-from-right-4 duration-300">
+                    <!-- Illustration placeholder -->
+                    <div class="flex items-center justify-center w-32 h-32 bg-gradient-to-br from-tg-accent/20 to-tg-link/20 rounded-3xl border border-tg-section-separator">
+                        <div class="flex items-center justify-center w-16 h-16 bg-tg-accent/10 rounded-2xl">
+                            <Sparkles class="size-8 text-tg-accent" />
                         </div>
                     </div>
-                </CardContent>
-            </Card>
-        </section>
 
-        <template #actions>
-            <Button class="bg-tg-accent text-tg-accent-foreground" @click="goDashboard">Open Dashboard</Button>
-            <Button variant="outline" class="border-tg-section-separator bg-tg-section-bg">Later</Button>
-        </template>
+                    <div class="space-y-4">
+                        <h1 class="text-2xl font-bold text-tg-text">
+                            Прощавайте,<br>
+                            записник та ручка
+                        </h1>
+                        <div class="space-y-3">
+                            <h2 class="text-xl font-semibold text-tg-text">
+                                Привіт,<br>
+                                Horario
+                            </h2>
+                            <p class="text-tg-hint text-sm leading-relaxed">
+                                Ваш розклад та записи в одному місці.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Role Selection -->
+                <div v-if="currentStep === 2" class="flex flex-col items-center text-center space-y-8 max-w-sm animate-in fade-in slide-in-from-right-4 duration-300">
+                    <div class="space-y-4">
+                        <h1 class="text-2xl font-bold text-tg-text">
+                            Оберіть ваш профіль
+                        </h1>
+                        <p class="text-tg-hint text-sm">
+                            Допоможіть нам організувати ваш досвід
+                        </p>
+                    </div>
+
+                    <div class="w-full space-y-3">
+                        <!-- Business Option -->
+                        <Card
+                            class="cursor-pointer border-2 transition-all duration-200 hover:scale-[0.98] active:scale-95"
+                            :class="selectedRole === 'business'
+                                ? 'border-tg-accent bg-tg-accent/5'
+                                : 'border-tg-section-separator bg-tg-section-bg hover:bg-tg-secondary-bg'"
+                            @click="selectRole('business')"
+                        >
+                            <CardContent class="flex items-center gap-4 p-4">
+                                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-tg-accent/10">
+                                    <Building2 class="size-6 text-tg-accent" />
+                                </div>
+                                <div class="flex-1 text-left">
+                                    <h3 class="font-semibold text-tg-text">Бізнес</h3>
+                                    <p class="text-sm text-tg-hint">Надаєте послуги</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <!-- Customer Option -->
+                        <Card
+                            class="cursor-pointer border-2 transition-all duration-200 hover:scale-[0.98] active:scale-95"
+                            :class="selectedRole === 'customer'
+                                ? 'border-tg-accent bg-tg-accent/5'
+                                : 'border-tg-section-separator bg-tg-section-bg hover:bg-tg-secondary-bg'"
+                            @click="selectRole('customer')"
+                        >
+                            <CardContent class="flex items-center gap-4 p-4">
+                                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-tg-link/10">
+                                    <User class="size-6 text-tg-link" />
+                                </div>
+                                <div class="flex-1 text-left">
+                                    <h3 class="font-semibold text-tg-text">Клієнт</h3>
+                                    <p class="text-sm text-tg-hint">Користуєтесь послугами</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+
+                <!-- Step 3: Completion -->
+                <div v-if="currentStep === 3" class="flex flex-col items-center text-center space-y-8 max-w-sm animate-in fade-in slide-in-from-right-4 duration-300">
+                    <div class="flex items-center justify-center w-32 h-32 bg-gradient-to-br from-green-500/20 to-tg-accent/20 rounded-3xl border border-tg-section-separator">
+                        <div class="flex items-center justify-center w-16 h-16 bg-green-500/10 rounded-2xl">
+                            <AppLogoIcon class="size-8 text-tg-accent" />
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h1 class="text-2xl font-bold text-tg-text">
+                            Все готово!
+                        </h1>
+                        <p class="text-tg-hint text-sm leading-relaxed">
+                            Вітаємо в Horario. Організацію ваших {{ selectedRole === 'business' ? 'розкладів' : 'записів' }}.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Actions -->
+            <div class="px-6 pb-6">
+                <div v-if="currentStep === 1" class="flex gap-3">
+                    <Button
+                        class="flex-1 bg-tg-accent text-tg-accent-foreground hover:opacity-90"
+                        @click="goNext"
+                    >
+                        Розпочати
+                    </Button>
+                </div>
+
+                <div v-if="currentStep === 3" class="flex gap-3">
+                    <Button
+                        class="flex-1 bg-tg-accent text-tg-accent-foreground hover:opacity-90"
+                        @click="completeOnboarding"
+                    >
+                        В кабінет
+                    </Button>
+                </div>
+            </div>
+        </div>
     </TelegramAppLayout>
-
 </template>
 
 <style scoped>
-.list-enter-from,
-.list-leave-to {
-    opacity: 0;
-    transform: translateY(4px);
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
-.list-enter-active,
-.list-leave-active {
-    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+
+@keyframes slide-in-from-right-4 {
+    from {
+        transform: translateX(1rem);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+.animate-in {
+    animation: fade-in 300ms ease-out, slide-in-from-right-4 300ms ease-out;
 }
 </style>

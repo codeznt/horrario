@@ -84,9 +84,10 @@ This application uses **Inertia.js** for seamless frontend-backend communication
 The middleware expects Telegram init data in one of these request sources (checked in order):
 
 1. `X-Telegram-Init-Data` header (recommended)
-2. `_telegram_auth` form parameter (for POST requests)
-3. `_auth` form parameter
-4. `initData` form parameter
+2. `tgWebAppData` query parameter (present on initial launches from Telegram)
+3. `_telegram_auth` form parameter (for POST requests)
+4. `_auth` form parameter
+5. `initData` form parameter
 
 #### Automatic Authentication Setup
 
@@ -100,9 +101,7 @@ const { setupTelegramAuth } = useTelegramAuth()
 setupTelegramAuth()
 ```
 
-This automatically adds the Telegram init data to **all Inertia requests** via:
-- `X-Telegram-Init-Data` header for all requests
-- `_telegram_auth` form parameter for POST/PUT/PATCH requests
+This automatically adds the Telegram init data to **all Inertia requests** via the `X-Telegram-Init-Data` header.
 
 #### Manual Usage (if needed)
 
@@ -247,6 +246,8 @@ The middleware logs authentication attempts, failures, and user creation events.
 
 ## Development with Mock Data
 
-In development, you can use the existing mock environment (`resources/js/telegram/mockEnv.ts`) which provides realistic Telegram data for testing without requiring actual Telegram WebApp context.
+In development, you can use the existing mock environment (`resources/js/telegram/mockEnv.ts`) which provides realistic Telegram data for testing.
 
-The mock generates valid hashes that will pass verification when using a test bot token.
+- Set `TELEGRAM_BOT_TOKEN` in `.env` to a DEV-ONLY token (e.g., `123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ-0123456789`).
+- Set `VITE_TELEGRAM_BOT_TOKEN` in `.env` to the same value. This is used only by the local mock to generate a valid hash and must NOT be set in production builds.
+- The mock now generates a valid hash matching the server algorithm; no insecure middleware bypasses are used.
