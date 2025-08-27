@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import { backButton, miniApp } from '@telegram-apps/sdk';
+import TelegramAppLayout from '@/layouts/TelegramAppLayout.vue';
 
 const support = {
     miniApp: typeof miniApp.isSupported === 'function' ? miniApp.isSupported() : true,
@@ -9,28 +10,13 @@ const support = {
     viewport: true,
 };
 
-function toggleDarkMode() {
-    document.documentElement.classList.toggle('dark');
-}
 </script>
 
 <template>
     <Head title="Welcome" />
 
-        <main class="min-h-screen min-h-[--spacing-viewport-h] bg-tg-bg text-tg-text">
-            <header class="sticky top-0 z-10 border-b border-tg-section-separator bg-tg-header px-4 py-3 text-tg-section-header-text">
-                <div class="mx-auto flex max-w-5xl items-center justify-between">
-                    <h1 class="text-base font-semibold">Telegram Mini App Integration Demo</h1>
-                    <div class="flex items-center gap-2">
-                        <a class="text-sm text-tg-link underline" href="#tokens">Tokens</a>
-                        <button class="rounded-md bg-tg-accent px-3 py-1.5 text-sm text-tg-accent-foreground hover:opacity-90" @click="toggleDarkMode">
-                            Toggle dark
-                        </button>
-                    </div>
-                </div>
-            </header>
-
-            <section id="tokens" class="mx-auto max-w-5xl space-y-6 px-4 py-6">
+        <TelegramAppLayout>
+            <section id="tokens" class="mx-auto max-w-5xl space-y-6">
                 <div class="rounded-lg border border-tg-section-separator bg-tg-secondary-bg p-4">
                     <h2 class="text-sm font-medium">SDK Support</h2>
                     <p class="mt-1 text-xs text-tg-hint">Detection uses isSupported(). Mocked in dev if not in Telegram.</p>
@@ -77,6 +63,6 @@ function toggleDarkMode() {
                     </div>
                 </div>
             </section>
-        </main>
+        </TelegramAppLayout>
 
 </template>
