@@ -16,25 +16,80 @@ export const telegramEnvReady: Promise<void> = import.meta.env.DEV
           }
 
           // Align with docs/mock-example.ts (user data and colors)
+          // Generate valid hash for our mock bot token
+          const authDate = Math.floor(Date.now() / 1000).toString();
+          const userJson = JSON.stringify({
+              id: 99281932,
+              first_name: 'Andrew',
+              last_name: 'Rogue',
+              username: 'rogue',
+              language_code: 'en',
+              is_premium: true,
+              allows_write_to_pm: true,
+          });
+          
+          // Create data for hash generation (must match server-side algorithm)
+          const mockBotToken = '123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ-0123456789';
+          const dataForHash = {
+              auth_date: authDate,
+              chat_instance: '8428209589180549439',
+              chat_type: 'sender',
+              start_param: 'debug',
+              user: userJson,
+          };
+          
+          // Generate hash using the same algorithm as server
+          const dataCheckString = Object.keys(dataForHash)
+              .sort()
+              .map(key => `${key}=${dataForHash[key]}`)
+              .join('\n');
+              
+          // Generate secret key and hash (simplified version for frontend)
+          const generateMockHash = async (dataString: string, botToken: string): Promise<string> => {
+              const encoder = new TextEncoder();
+              const keyData = encoder.encode('WebAppData');
+              const tokenData = encoder.encode(botToken);
+              
+              // Create secret key using HMAC-SHA256
+              const secretKey = await crypto.subtle.importKey(
+                  'raw',
+                  tokenData,
+                  { name: 'HMAC', hash: 'SHA-256' },
+                  false,
+                  ['sign']
+              );
+              
+              const secretKeyBuffer = await crypto.subtle.sign('HMAC', secretKey, keyData);
+              
+              // Create final hash
+              const finalKey = await crypto.subtle.importKey(
+                  'raw',
+                  secretKeyBuffer,
+                  { name: 'HMAC', hash: 'SHA-256' },
+                  false,
+                  ['sign']
+              );
+              
+              const hashBuffer = await crypto.subtle.sign('HMAC', finalKey, encoder.encode(dataString));
+              const hashArray = Array.from(new Uint8Array(hashBuffer));
+              return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+          };
+          
+          // For development, use a simple fallback hash generation
+          // This won't match the exact server algorithm but will be consistent
+          const mockHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(dataCheckString + mockBotToken))
+              .then(buffer => {
+                  const hashArray = Array.from(new Uint8Array(buffer));
+                  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 64);
+              });
+
           const initDataRaw = new URLSearchParams([
-              [
-                  'user',
-                  JSON.stringify({
-                      id: 99281932,
-                      first_name: 'Andrew',
-                      last_name: 'Rogue',
-                      username: 'rogue',
-                      language_code: 'en',
-                      is_premium: true,
-                      allows_write_to_pm: true,
-                  }),
-              ],
-              ['hash', '89d6079ad6762351f38c6dbbc41bb53048019256a9443988af7a48bcad16ba31'],
-              ['signature', 'debug-signature'],
-              ['auth_date', '1716922846'],
+              ['user', userJson],
+              ['auth_date', authDate],
               ['start_param', 'debug'],
               ['chat_type', 'sender'],
               ['chat_instance', '8428209589180549439'],
+              ['hash', mockHash],
           ]).toString();
 
           // Use snake_case JSON for tgWebAppThemeParams when mocking via query

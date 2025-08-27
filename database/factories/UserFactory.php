@@ -29,6 +29,15 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'telegram_id' => null,
+            'first_name' => null,
+            'last_name' => null,
+            'username' => null,
+            'language_code' => null,
+            'is_premium' => false,
+            'allows_write_to_pm' => false,
+            'role' => 'user',
+            'telegram_auth_date' => null,
         ];
     }
 
@@ -39,6 +48,30 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Create a Telegram user.
+     */
+    public function telegram(): static
+    {
+        $firstName = fake()->firstName();
+        $lastName = fake()->lastName();
+        $username = fake()->userName();
+        
+        return $this->state(fn (array $attributes) => [
+            'telegram_id' => fake()->unique()->numberBetween(100000, 999999999),
+            'name' => $firstName . ' ' . $lastName,
+            'email' => $username . '@telegram.local',
+            'password' => '',
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'username' => $username,
+            'language_code' => fake()->randomElement(['en', 'es', 'fr', 'de', 'ru']),
+            'is_premium' => fake()->boolean(20), // 20% chance of premium
+            'allows_write_to_pm' => fake()->boolean(70), // 70% chance of allowing PMs
+            'telegram_auth_date' => now(),
         ]);
     }
 }

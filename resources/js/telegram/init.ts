@@ -41,6 +41,11 @@ export async function initTelegram(debug = import.meta.env.DEV): Promise<void> {
     // Initialize bridge/events once
     initSDK();
 
+    // Always try to restore initData, even in mock environments
+    try { 
+        initData.restore(); 
+    } catch {}
+
     // Ensure required components are supported
     if (!backButton.isSupported() || !miniApp.isSupported()) {
         // Not inside a Telegram context; mocks may kick in via mockEnv.ts
@@ -61,7 +66,6 @@ export async function initTelegram(debug = import.meta.env.DEV): Promise<void> {
     try { backButton.mount(); } catch {}
     try { miniApp.mount(); } catch {}
     try { themeParams.mount(); } catch {}
-    try { initData.restore(); } catch {}
 
     // Mount viewport and bind its CSS vars without blocking app init
     viewport
