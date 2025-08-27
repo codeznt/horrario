@@ -43,15 +43,8 @@ npm install --save-dev eruda  # Optional dev console
 ### File: `resources/js/telegram/init.ts`
 
 ```typescript
-import {
-  $debug,
-  init as initSDK,
-  backButton,
-  miniApp,
-  themeParams,
-  viewport,
-  initData,
-} from '@telegram-apps/sdk-vue';
+import { init as initSDK, backButton, miniApp, themeParams, viewport, initData } from '@telegram-apps/sdk';
+import { setDebug } from '@telegram-apps/bridge';
 
 /**
  * Configure Telegram SDK, mount components, and bind CSS variables.
@@ -59,7 +52,7 @@ import {
  */
 export async function initTelegram(debug = import.meta.env.DEV): Promise<void> {
   // Enable SDK debug logs in dev
-  $debug.set(debug);
+  try { setDebug(!!debug); } catch {}
 
   // Initialize bridge/events once
   initSDK();
@@ -109,13 +102,7 @@ export async function initTelegram(debug = import.meta.env.DEV): Promise<void> {
 ### File: `resources/js/telegram/mockEnv.ts`
 
 ```typescript
-import {
-  isTMA,
-  mockTelegramEnv,
-  retrieveLaunchParams,
-  parseInitData,
-} from '@telegram-apps/sdk-vue';
-import type { LaunchParams } from '@telegram-apps/sdk-vue';
+import { isTMA, mockTelegramEnv, retrieveLaunchParams } from '@telegram-apps/bridge';
 
 /**
  * Development-only Telegram environment mock.
@@ -131,11 +118,13 @@ if (import.meta.env.DEV) {
       // Continue to mock if detection throws
     }
 
-    let lp: LaunchParams | undefined;
+    let lp: any;
+    let launchParamsInput: any;
 
     // If launch params are present locally (e.g., via URL), use them
     try {
       lp = retrieveLaunchParams();
+      launchParamsInput = lp;
     } catch {
       // Otherwise, craft a sane default
       const initDataRaw = new URLSearchParams([
@@ -157,30 +146,33 @@ if (import.meta.env.DEV) {
         ['chat_instance', '1'],
       ]).toString();
 
-      lp = {
-        version: '8',
-        platform: 'web',
-        initData: parseInitData(initDataRaw),
-        initDataRaw,
-        themeParams: {
-          accentTextColor: '#6ab2f2',
-          bgColor: '#17212b',
-          buttonColor: '#5288c1',
-          buttonTextColor: '#ffffff',
-          destructiveTextColor: '#ec3942',
-          headerBgColor: '#17212b',
-          hintColor: '#708499',
-          linkColor: '#6ab3f3',
-          secondaryBgColor: '#232e3c',
-          sectionBgColor: '#17212b',
-          sectionHeaderTextColor: '#6ab3f3',
-          subtitleTextColor: '#708499',
-          textColor: '#f5f5f5',
-        },
-      };
+      const theme = {
+        accent_text_color: '#6ab2f2',
+        bg_color: '#17212b',
+        button_color: '#5288c1',
+        button_text_color: '#ffffff',
+        destructive_text_color: '#ec3942',
+        header_bg_color: '#17212b',
+        hint_color: '#708499',
+        link_color: '#6ab3f3',
+        secondary_bg_color: '#232e3c',
+        section_bg_color: '#17212b',
+        section_header_text_color: '#6ab3f3',
+        subtitle_text_color: '#708499',
+        text_color: '#f5f5f5',
+      } as const;
+
+      const lpSearch = new URLSearchParams([
+        ['tgWebAppData', initDataRaw],
+        ['tgWebAppVersion', '8'],
+        ['tgWebAppPlatform', 'web'],
+        ['tgWebAppThemeParams', JSON.stringify(theme)],
+      ]);
+
+      launchParamsInput = lpSearch;
     }
 
-    mockTelegramEnv(lp);
+    mockTelegramEnv({ launchParams: launchParamsInput });
     console.warn(
       'Telegram env mocked for DEV only. Do not enable in production.'
     );
@@ -311,3 +303,12 @@ Use the Tailwind v4 tokens mapped to Telegram CSS variables in your Vue componen
 
 - **Telegram Mini Apps SDK**: Documentation on binding CSS variables, availability checks, and lifecycle management (e.g., `themeParams.bindCssVars`, `miniApp.bindCssVars`, `viewport.bindCssVars`).
 - **Tailwind CSS v4**: Documentation on `@theme` and `@theme inline` for mapping external CSS variables to Tailwind utilities.
+
+## Repository Implementation Notes
+
+We intentionally use the SDK core and Bridge directly:
+
+- Components and lifecycle from `@telegram-apps/sdk`.
+- Debug and environment utilities from `@telegram-apps/bridge` (`setDebug`, `mockTelegramEnv`, `retrieveLaunchParams`).
+
+Rationale: `@telegram-apps/sdk-vue` wraps the SDK but doesn’t expose debug controls. Using the core SDK plus Bridge avoids re-export gaps and version drift, and keeps imports explicit.
