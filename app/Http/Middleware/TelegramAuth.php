@@ -32,8 +32,18 @@ class TelegramAuth
         $initData = $this->extractTelegramInitData($request);
 
         if (!$initData) {
-            Log::debug('TelegramAuth: No init data found');
-            return $this->unauthorizedResponse($request);
+            // In local/dev environments, attempt to generate a valid mock init data
+            if (app()->environment(['local', 'development']) || config('app.debug')) {
+                $initData = $this->generateDevMockInitData();
+                if ($initData) {
+                    Log::info('TelegramAuth: Using generated DEV mock init data');
+                }
+            }
+
+            if (!$initData) {
+                Log::debug('TelegramAuth: No init data found');
+                return $this->unauthorizedResponse($request);
+            }
         }
 
         // Parse and validate Telegram data
@@ -121,4 +131,70 @@ class TelegramAuth
     }
 
     // Development-only bypass helpers removed to keep middleware secure and minimal.
+
+    /**
+     * Generate valid Telegram init data for local development using the configured bot token.
+     * Returns a query-string formatted init data matching Telegram's verification scheme.
+     */
+    private function generateDevMockInitData(): ?string
+    {
+        try {
+            $botToken = config('telegram.bot_token');
+            if (empty($botToken)) {
+                return null;
+            }
+
+            $authDate = (string) time();
+            $user = [
+                'id' => 99281932,
+                'first_name' => 'Andrew',
+                'last_name' => 'Rogue',
+                'username' => 'rogue',
+                'language_code' => 'en',
+                'is_premium' => true,
+                'allows_write_to_pm' => true,
+            ];
+
+            $userJson = json_encode($user, JSON_UNESCAPED_SLASHES);
+
+            // Data used for hash generation (without hash)
+            $dataForHash = [
+                'auth_date' => $authDate,
+                'chat_instance' => '8428209589180549439',
+                'chat_type' => 'sender',
+                'start_param' => 'debug',
+                'user' => $userJson,
+            ];
+
+            // Create data check string (sorted by key)
+            ksort($dataForHash);
+            $pairs = [];
+            foreach ($dataForHash as $key => $value) {
+                $pairs[] = $key . '=' . $value;
+            }
+            $dataCheckString = implode("\n", $pairs);
+
+            // secret_key = HMAC_SHA256(bot_token, 'WebAppData') using raw binary output
+            $secretKey = hash_hmac('sha256', $botToken, 'WebAppData', true);
+            // hash = HMAC_SHA256(data_check_string, secret_key) (hex output)
+            $hash = hash_hmac('sha256', $dataCheckString, $secretKey);
+
+            // Build full init data (include hash)
+            $initData = [
+                'user' => $userJson,
+                'auth_date' => $authDate,
+                'start_param' => 'debug',
+                'chat_type' => 'sender',
+                'chat_instance' => '8428209589180549439',
+                'hash' => $hash,
+            ];
+
+            return http_build_query($initData);
+        } catch (\Throwable $e) {
+            Log::debug('TelegramAuth: Failed to generate DEV mock init data', [
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
 }
