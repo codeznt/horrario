@@ -166,7 +166,7 @@
           16,
           17
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -174,7 +174,7 @@
             "description": "Create the Schedule model with relationships and database migration for storing provider schedules",
             "dependencies": [],
             "details": "1. Create a Schedule model with fields: provider_id, day_of_week, start_time, end_time\n2. Define relationships in the model (belongs to Provider)\n3. Create migration file with appropriate schema\n4. Add fillable properties to the model\n5. Register the model policy in AuthServiceProvider\n6. Run the migration",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -185,7 +185,7 @@
               "19.1"
             ],
             "details": "1. Finalize the index method to display schedules grouped by day\n2. Implement store method with validation for creating new schedules\n3. Create update method with proper validation and authorization\n4. Implement destroy method with authorization check\n5. Add error handling and success messages\n6. Test all controller methods with different scenarios",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -196,7 +196,7 @@
               "19.1"
             ],
             "details": "1. Create the SchedulePolicy class\n2. Implement update method to verify ownership\n3. Implement delete method to verify ownership\n4. Add viewAny method for listing schedules\n5. Add create method to check if user is a provider\n6. Register policy in AuthServiceProvider",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -208,7 +208,7 @@
               "19.2"
             ],
             "details": "1. Create TimeSlotService class\n2. Implement generateTimeSlots method to create 30-minute slots\n3. Add logic to handle multiple schedule blocks in a day\n4. Implement filtering for already booked slots\n5. Add caching for performance optimization\n6. Create unit tests for the service",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -221,7 +221,7 @@
               "19.3"
             ],
             "details": "1. Create Index.vue component with weekly calendar grid\n2. Implement ScheduleForm.vue for adding/editing time slots\n3. Integrate shadcn-vue time picker components\n4. Add form validation for time inputs\n5. Create visual representation of scheduled time blocks\n6. Implement drag-and-drop functionality for schedule adjustment",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -236,7 +236,7 @@
               "19.5"
             ],
             "details": "1. Add routes in web.php for all schedule controller methods\n2. Implement middleware for route protection\n3. Create feature tests for the schedule management workflow\n4. Test validation for overlapping schedules\n5. Verify visual calendar correctly displays schedules\n6. Test the complete system with real data",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -734,7 +734,7 @@
     ],
     "metadata": {
       "created": "2025-08-28T07:00:10.708Z",
-      "updated": "2025-08-28T08:03:25.502Z",
+      "updated": "2025-08-28T08:37:28.736Z",
       "description": "Tasks for master context"
     }
   }

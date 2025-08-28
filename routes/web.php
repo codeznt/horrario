@@ -86,6 +86,14 @@ Route::middleware(['telegram.auth'])->group(function () {
         Route::put('/{service}', [App\Http\Controllers\ServiceController::class, 'update'])->name('update');
         Route::delete('/{service}', [App\Http\Controllers\ServiceController::class, 'destroy'])->name('destroy');
     });
+
+    // Schedule routes
+    Route::prefix('schedules')->name('schedules.')->group(function () {
+        Route::get('/', [App\Http\Controllers\ScheduleController::class, 'index'])->name('index');
+        Route::post('/', [App\Http\Controllers\ScheduleController::class, 'store'])->name('store');
+        Route::put('/{schedule}', [App\Http\Controllers\ScheduleController::class, 'update'])->name('update');
+        Route::delete('/{schedule}', [App\Http\Controllers\ScheduleController::class, 'destroy'])->name('destroy');
+    });
 });
 
 require __DIR__.'/settings.php';
