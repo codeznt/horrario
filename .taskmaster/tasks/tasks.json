@@ -93,7 +93,7 @@
           16,
           17
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -101,7 +101,7 @@
             "description": "Create the Service model with proper relationships and database migration for storing service information.",
             "dependencies": [],
             "details": "1. Create a Service model with proper fillable attributes and relationships\n2. Define the relationship between Provider and Service models\n3. Create a migration file for the services table with fields: id, provider_id, title, description, duration_minutes, display_price, created_at, updated_at\n4. Run the migration to create the table\n5. Add the relationship method in the Provider model to access services",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -112,7 +112,7 @@
               "18.1"
             ],
             "details": "1. Create ServiceController with index, create, store, edit, update, and destroy methods\n2. Implement validation rules for service creation and updates\n3. Create ServicePolicy with update and delete methods for authorization\n4. Register the policy in AuthServiceProvider\n5. Add proper authorization checks in controller methods\n6. Test controller methods with valid and invalid data",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -124,7 +124,7 @@
               "18.2"
             ],
             "details": "1. Create Index.vue component to list all services with edit/delete actions\n2. Implement Create.vue component with form for new service creation\n3. Build Edit.vue component for updating existing services\n4. Use shadcn-vue components for forms, buttons, and UI elements\n5. Implement form validation with error messages\n6. Add confirmation dialog for service deletion",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -136,7 +136,7 @@
               "18.3"
             ],
             "details": "1. Add routes in web.php for all service management endpoints\n2. Update the navigation menu to include links to service management\n3. Implement breadcrumbs for service management pages\n4. Add proper route names and use them in components\n5. Ensure routes are protected with auth middleware\n6. Test all routes to verify they work correctly",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -150,7 +150,7 @@
               "18.4"
             ],
             "details": "1. Write feature tests for service creation, editing, and deletion\n2. Create unit tests for the Service model and relationships\n3. Implement tests for authorization policies\n4. Test validation rules with valid and invalid data\n5. Create browser tests for the UI components\n6. Verify all CRUD operations work correctly through the entire stack",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -734,7 +734,7 @@
     ],
     "metadata": {
       "created": "2025-08-28T07:00:10.708Z",
-      "updated": "2025-08-28T07:53:36.744Z",
+      "updated": "2025-08-28T08:03:25.502Z",
       "description": "Tasks for master context"
     }
   }
