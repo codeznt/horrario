@@ -3,39 +3,33 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-
-
-
-
 // Onboarding role selection
 Route::post('/onboarding/role', function () {
     $validated = request()->validate([
-        'role' => 'required|in:business,customer'
+        'role' => 'required|in:business,customer',
     ]);
 
     // Update user role immediately for dynamic flow
     if (auth()->check()) {
         auth()->user()->update([
-            'role' => $validated['role']
+            'role' => $validated['role'],
         ]);
     }
 
     // Return proper Inertia response - redirect back to maintain state
     return back()->with('flash', [
         'success' => true,
-        'message' => 'Role saved successfully'
+        'message' => 'Role saved successfully',
     ]);
 })->middleware(['telegram.auth'])->name('onboarding.role');
 
 // Onboarding completion
 Route::post('/onboarding/complete', function () {
     // Role already saved, just complete the onboarding flow
-    
-    // Mark onboarding as completed (you can add a completed_onboarding field to users table)
+
+    // Mark onboarding as completed using meta
     if (auth()->check()) {
-        auth()->user()->update([
-            'completed_onboarding' => true
-        ]);
+        auth()->user()->markOnboardingCompleted();
     }
 
     // Redirect to dashboard after onboarding
@@ -73,7 +67,6 @@ Route::middleware(['telegram.auth'])->group(function () {
         return Inertia::render('Dashboard');
     })->middleware(['auth', 'verified'])->name('dashboard');
 });
-
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

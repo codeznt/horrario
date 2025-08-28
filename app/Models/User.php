@@ -6,11 +6,12 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Plank\Metable\Metable;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Metable, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -29,7 +30,6 @@ class User extends Authenticatable
         'is_premium',
         'allows_write_to_pm',
         'role',
-        'completed_onboarding',
         'telegram_auth_date',
     ];
 
@@ -56,16 +56,58 @@ class User extends Authenticatable
             'telegram_id' => 'integer',
             'is_premium' => 'boolean',
             'allows_write_to_pm' => 'boolean',
-            'completed_onboarding' => 'boolean',
             'telegram_auth_date' => 'datetime',
         ];
     }
 
     /**
+     * Check if the user has completed onboarding.
+     */
+    public function hasCompletedOnboarding(): bool
+    {
+        return (bool) $this->getMeta('completed_onboarding', false);
+    }
+
+    /**
+     * Mark the user as having completed onboarding.
+     */
+    public function markOnboardingCompleted(): self
+    {
+        $this->setMeta('completed_onboarding', true);
+
+        return $this;
+    }
+
+    /**
+     * Reset the user's onboarding status.
+     */
+    public function resetOnboardingStatus(): self
+    {
+        $this->setMeta('completed_onboarding', false);
+
+        return $this;
+    }
+
+    /**
+     * Accessor for completed_onboarding to maintain backward compatibility.
+     */
+    public function getCompletedOnboardingAttribute(): bool
+    {
+        return $this->hasCompletedOnboarding();
+    }
+
+    /**
+     * Mutator for completed_onboarding to maintain backward compatibility.
+     */
+    public function setCompletedOnboardingAttribute(bool $value): void
+    {
+        $this->setMeta('completed_onboarding', $value);
+    }
+
+    /**
      * Find or create a user from Telegram data.
      *
-     * @param array<string, mixed> $telegramData
-     * @return static
+     * @param  array<string, mixed>  $telegramData
      */
     public static function findOrCreateFromTelegram(array $telegramData): static
     {
@@ -89,8 +131,8 @@ class User extends Authenticatable
         }
 
         // Create new user from Telegram data
-        $fullName = trim(($telegramData['first_name'] ?? '') . ' ' . ($telegramData['last_name'] ?? ''));
-        $email = $telegramData['username'] ? $telegramData['username'] . '@telegram.local' : 'user' . $telegramId . '@telegram.local';
+        $fullName = trim(($telegramData['first_name'] ?? '').' '.($telegramData['last_name'] ?? ''));
+        $email = $telegramData['username'] ? $telegramData['username'].'@telegram.local' : 'user'.$telegramId.'@telegram.local';
 
         return static::create([
             'telegram_id' => $telegramId,
