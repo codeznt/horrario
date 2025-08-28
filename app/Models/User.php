@@ -29,6 +29,7 @@ class User extends Authenticatable
         'is_premium',
         'allows_write_to_pm',
         'role',
+        'completed_onboarding',
         'telegram_auth_date',
     ];
 
@@ -55,6 +56,7 @@ class User extends Authenticatable
             'telegram_id' => 'integer',
             'is_premium' => 'boolean',
             'allows_write_to_pm' => 'boolean',
+            'completed_onboarding' => 'boolean',
             'telegram_auth_date' => 'datetime',
         ];
     }

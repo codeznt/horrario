@@ -38,8 +38,15 @@ export async function initTelegram(debug = import.meta.env.DEV): Promise<void> {
         /* ignore shim errors */
     }
 
-    // Initialize bridge/events once
-    initSDK();
+    // Initialize bridge/events once - gracefully handle dev environment failures
+    try {
+        initSDK();
+    } catch (error) {
+        // In development, SDK may fail to retrieve launch params - this is expected
+        if (debug) {
+            console.warn('Telegram SDK initialization failed (expected in dev):', error);
+        }
+    }
 
     // Always try to restore initData, even in mock environments
     try { 
