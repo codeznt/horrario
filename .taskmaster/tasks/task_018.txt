@@ -1,0 +1,174 @@
+# Task ID: 18
+# Title: Implement Service Management
+# Status: pending
+# Dependencies: 16, 17
+# Priority: high
+# Description: Create CRUD functionality for providers to manage their services with title, duration, and display pricing.
+# Details:
+1. Create Service Controller:
+```php
+class ServiceController extends Controller
+{
+    public function index()
+    {
+        $services = auth()->user()->provider->services;
+        
+        return Inertia::render('Service/Index', [
+            'services' => $services
+        ]);
+    }
+    
+    public function create()
+    {
+        return Inertia::render('Service/Create');
+    }
+    
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'duration_minutes' => 'required|integer|min:5|max:480',
+            'display_price' => 'required|string|max:50'
+        ]);
+        
+        $service = new Service($validated);
+        $service->provider_id = auth()->user()->provider->id;
+        $service->save();
+        
+        return redirect()->route('services.index');
+    }
+    
+    public function edit(Service $service)
+    {
+        $this->authorize('update', $service);
+        
+        return Inertia::render('Service/Edit', [
+            'service' => $service
+        ]);
+    }
+    
+    public function update(Request $request, Service $service)
+    {
+        $this->authorize('update', $service);
+        
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'duration_minutes' => 'required|integer|min:5|max:480',
+            'display_price' => 'required|string|max:50'
+        ]);
+        
+        $service->update($validated);
+        
+        return redirect()->route('services.index');
+    }
+    
+    public function destroy(Service $service)
+    {
+        $this->authorize('delete', $service);
+        
+        $service->delete();
+        
+        return redirect()->route('services.index');
+    }
+}
+```
+
+2. Create Service Policy:
+```php
+class ServicePolicy
+{
+    public function update(User $user, Service $service)
+    {
+        return $user->provider && $user->provider->id === $service->provider_id;
+    }
+    
+    public function delete(User $user, Service $service)
+    {
+        return $user->provider && $user->provider->id === $service->provider_id;
+    }
+}
+```
+
+3. Create Vue components for service management:
+   - Index.vue - List all services with edit/delete actions
+   - Create.vue - Form to create new services
+   - Edit.vue - Form to edit existing services
+   - Use shadcn-vue components for consistent UI
+
+4. Add routes in web.php:
+```php
+Route::middleware(['auth'])->group(function () {
+    Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
+    Route::get('/services/create', [ServiceController::class, 'create'])->name('services.create');
+    Route::post('/services', [ServiceController::class, 'store'])->name('services.store');
+    Route::get('/services/{service}/edit', [ServiceController::class, 'edit'])->name('services.edit');
+    Route::put('/services/{service}', [ServiceController::class, 'update'])->name('services.update');
+    Route::delete('/services/{service}', [ServiceController::class, 'destroy'])->name('services.destroy');
+});
+```
+
+# Test Strategy:
+1. Test service creation with valid and invalid data
+2. Verify validation error messages display correctly
+3. Test service editing functionality
+4. Test service deletion with confirmation dialog
+5. Verify policy enforcement prevents unauthorized access
+6. Test list view pagination and sorting if implemented
+
+# Subtasks:
+## 1. Implement Service Model and Database Migration [pending]
+### Dependencies: None
+### Description: Create the Service model with proper relationships and database migration for storing service information.
+### Details:
+1. Create a Service model with proper fillable attributes and relationships
+2. Define the relationship between Provider and Service models
+3. Create a migration file for the services table with fields: id, provider_id, title, description, duration_minutes, display_price, created_at, updated_at
+4. Run the migration to create the table
+5. Add the relationship method in the Provider model to access services
+
+## 2. Implement Service Controller and Policy [pending]
+### Dependencies: 18.1
+### Description: Create the ServiceController with all CRUD methods and ServicePolicy for authorization.
+### Details:
+1. Create ServiceController with index, create, store, edit, update, and destroy methods
+2. Implement validation rules for service creation and updates
+3. Create ServicePolicy with update and delete methods for authorization
+4. Register the policy in AuthServiceProvider
+5. Add proper authorization checks in controller methods
+6. Test controller methods with valid and invalid data
+
+## 3. Create Vue Components for Service Management [pending]
+### Dependencies: 18.1, 18.2
+### Description: Develop Vue components for listing, creating, and editing services using shadcn-vue components.
+### Details:
+1. Create Index.vue component to list all services with edit/delete actions
+2. Implement Create.vue component with form for new service creation
+3. Build Edit.vue component for updating existing services
+4. Use shadcn-vue components for forms, buttons, and UI elements
+5. Implement form validation with error messages
+6. Add confirmation dialog for service deletion
+
+## 4. Configure Routes and Navigation [pending]
+### Dependencies: 18.2, 18.3
+### Description: Set up routes for service management and add navigation links in the application.
+### Details:
+1. Add routes in web.php for all service management endpoints
+2. Update the navigation menu to include links to service management
+3. Implement breadcrumbs for service management pages
+4. Add proper route names and use them in components
+5. Ensure routes are protected with auth middleware
+6. Test all routes to verify they work correctly
+
+## 5. Implement Service Management Testing [pending]
+### Dependencies: 18.1, 18.2, 18.3, 18.4
+### Description: Create comprehensive tests for the service management functionality.
+### Details:
+1. Write feature tests for service creation, editing, and deletion
+2. Create unit tests for the Service model and relationships
+3. Implement tests for authorization policies
+4. Test validation rules with valid and invalid data
+5. Create browser tests for the UI components
+6. Verify all CRUD operations work correctly through the entire stack
+

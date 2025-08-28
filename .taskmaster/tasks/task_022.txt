@@ -1,0 +1,150 @@
+# Task ID: 22
+# Title: Implement Consumer Booking Management
+# Status: pending
+# Dependencies: 16, 20
+# Priority: medium
+# Description: Create functionality for consumers to view, manage, and cancel their personal bookings.
+# Details:
+1. Extend Booking Controller with consumer methods:
+```php
+class BookingController extends Controller
+{
+    // ... existing methods
+    
+    public function index()
+    {
+        $bookings = auth()->user()->bookings()
+            ->with(['service', 'provider.user'])
+            ->orderBy('start_datetime')
+            ->get()
+            ->groupBy(function ($booking) {
+                return $booking->start_datetime->format('Y-m-d');
+            });
+        
+        return Inertia::render('Booking/Index', [
+            'bookingsByDate' => $bookings
+        ]);
+    }
+    
+    public function upcoming()
+    {
+        $bookings = auth()->user()->bookings()
+            ->with(['service', 'provider.user'])
+            ->where('start_datetime', '>=', Carbon::now())
+            ->where('status', '!=', 'cancelled')
+            ->orderBy('start_datetime')
+            ->get();
+        
+        return Inertia::render('Booking/Upcoming', [
+            'bookings' => $bookings
+        ]);
+    }
+    
+    public function past()
+    {
+        $bookings = auth()->user()->bookings()
+            ->with(['service', 'provider.user'])
+            ->where('start_datetime', '<', Carbon::now())
+            ->orderBy('start_datetime', 'desc')
+            ->get();
+        
+        return Inertia::render('Booking/Past', [
+            'bookings' => $bookings
+        ]);
+    }
+}
+```
+
+2. Create Vue components for consumer booking management:
+   - Index.vue - All bookings grouped by date
+   - Upcoming.vue - Upcoming bookings view
+   - Past.vue - Past bookings history
+   - BookingCard.vue - Reusable booking card component
+   - Use shadcn-vue card, badge, and button components
+
+3. Add routes in web.php:
+```php
+Route::middleware(['auth'])->group(function () {
+    Route::get('/bookings', [BookingController::class, 'index'])->name('bookings.index');
+    Route::get('/bookings/upcoming', [BookingController::class, 'upcoming'])->name('bookings.upcoming');
+    Route::get('/bookings/past', [BookingController::class, 'past'])->name('bookings.past');
+});
+```
+
+4. Create a BookingCard.vue component:
+```vue
+<template>
+  <div class="booking-card" :class="statusClass">
+    <div class="card-header">
+      <h3>{{ booking.service.title }}</h3>
+      <Badge :variant="statusVariant">{{ booking.status }}</Badge>
+    </div>
+    
+    <div class="card-body">
+      <p><Icon name="calendar" /> {{ formatDate(booking.start_datetime) }}</p>
+      <p><Icon name="clock" /> {{ formatTime(booking.start_datetime) }} - {{ formatTime(booking.end_datetime) }}</p>
+      <p><Icon name="store" /> {{ booking.provider.business_name }}</p>
+    </div>
+    
+    <div class="card-footer" v-if="canCancel">
+      <Button variant="destructive" @click="confirmCancel">
+        <Icon name="x" class="mr-2" />
+        Cancel Booking
+      </Button>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { computed } from 'vue';
+import { Badge, Button, Icon } from '@/Components/shadcn';
+
+const props = defineProps({
+  booking: Object,
+  required: true
+});
+
+const statusVariant = computed(() => {
+  switch(props.booking.status) {
+    case 'confirmed': return 'success';
+    case 'pending': return 'warning';
+    case 'declined': return 'destructive';
+    case 'cancelled': return 'outline';
+    default: return 'default';
+  }
+});
+
+const statusClass = computed(() => {
+  return `status-${props.booking.status}`;
+});
+
+const canCancel = computed(() => {
+  return ['pending', 'confirmed'].includes(props.booking.status) && 
+         new Date(props.booking.start_datetime) > new Date();
+});
+
+function formatDate(datetime) {
+  return new Date(datetime).toLocaleDateString();
+}
+
+function formatTime(datetime) {
+  return new Date(datetime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function confirmCancel() {
+  if (confirm('Are you sure you want to cancel this booking?')) {
+    // Use Inertia to submit the cancellation
+    Inertia.post(route('bookings.cancel', props.booking.id));
+  }
+}
+</script>
+```
+
+# Test Strategy:
+1. Test booking listing with various booking statuses
+2. Verify booking cancellation functionality
+3. Test upcoming and past booking filters
+4. Verify booking details display correctly
+5. Test responsive layout for mobile Telegram clients
+6. Verify date and time formatting across different locales
+7. Test empty state handling when no bookings exist

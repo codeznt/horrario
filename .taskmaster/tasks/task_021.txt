@@ -1,0 +1,171 @@
+# Task ID: 21
+# Title: Implement Provider Booking Dashboard
+# Status: pending
+# Dependencies: 16, 20
+# Priority: medium
+# Description: Create a dashboard for providers to view and manage their daily bookings with consumer details.
+# Details:
+1. Extend Booking Controller with provider methods:
+```php
+class BookingController extends Controller
+{
+    // ... existing methods
+    
+    public function providerDashboard()
+    {
+        $provider = auth()->user()->provider;
+        
+        if (!$provider) {
+            return redirect()->route('home');
+        }
+        
+        $today = Carbon::today();
+        $bookings = $provider->bookings()
+            ->with(['user', 'service'])
+            ->whereDate('start_datetime', $today)
+            ->orderBy('start_datetime')
+            ->get();
+        
+        return Inertia::render('Provider/Dashboard', [
+            'bookings' => $bookings,
+            'date' => $today->format('Y-m-d')
+        ]);
+    }
+    
+    public function providerBookings(Request $request)
+    {
+        $provider = auth()->user()->provider;
+        
+        if (!$provider) {
+            return redirect()->route('home');
+        }
+        
+        $date = $request->input('date', Carbon::today()->format('Y-m-d'));
+        $bookings = $provider->bookings()
+            ->with(['user', 'service'])
+            ->whereDate('start_datetime', $date)
+            ->orderBy('start_datetime')
+            ->get();
+        
+        return Inertia::render('Provider/Bookings', [
+            'bookings' => $bookings,
+            'date' => $date
+        ]);
+    }
+    
+    public function confirm(Booking $booking)
+    {
+        $this->authorize('manage', $booking);
+        
+        $booking->status = 'confirmed';
+        $booking->save();
+        
+        return redirect()->back();
+    }
+    
+    public function decline(Booking $booking)
+    {
+        $this->authorize('manage', $booking);
+        
+        $booking->status = 'declined';
+        $booking->save();
+        
+        return redirect()->back();
+    }
+}
+```
+
+2. Update Booking Policy:
+```php
+class BookingPolicy
+{
+    // ... existing methods
+    
+    public function manage(User $user, Booking $booking)
+    {
+        return $user->provider && $user->provider->id === $booking->provider_id;
+    }
+}
+```
+
+3. Create Vue components for provider dashboard:
+   - Dashboard.vue - Overview of today's bookings
+   - Bookings.vue - Calendar view with date selection
+   - BookingItem.vue - Individual booking with action buttons
+   - Use shadcn-vue card and button components
+
+4. Add routes in web.php:
+```php
+Route::middleware(['auth'])->group(function () {
+    Route::get('/provider/dashboard', [BookingController::class, 'providerDashboard'])->name('provider.dashboard');
+    Route::get('/provider/bookings', [BookingController::class, 'providerBookings'])->name('provider.bookings');
+    Route::post('/bookings/{booking}/confirm', [BookingController::class, 'confirm'])->name('bookings.confirm');
+    Route::post('/bookings/{booking}/decline', [BookingController::class, 'decline'])->name('bookings.decline');
+});
+```
+
+# Test Strategy:
+1. Test dashboard loading with various booking scenarios
+2. Verify booking confirmation and declining functionality
+3. Test date navigation in the calendar view
+4. Verify booking details display correctly
+5. Test responsive layout for mobile Telegram clients
+6. Verify policy enforcement prevents unauthorized access
+7. Test empty state handling when no bookings exist
+
+# Subtasks:
+## 1. Implement Provider Dashboard Controller Methods [pending]
+### Dependencies: None
+### Description: Extend the BookingController with provider-specific methods for dashboard and bookings views, including date filtering and booking management actions.
+### Details:
+1. Implement providerDashboard() method to display today's bookings
+2. Implement providerBookings() method with date filtering
+3. Implement confirm() method for booking confirmation
+4. Implement decline() method for booking rejection
+5. Update BookingPolicy with manage() method for authorization
+6. Test controller methods with different booking scenarios
+
+## 2. Create Dashboard.vue Component [pending]
+### Dependencies: 21.1
+### Description: Develop the main dashboard Vue component to display an overview of today's bookings for providers.
+### Details:
+1. Create Provider/Dashboard.vue component
+2. Implement layout with shadcn-vue card components
+3. Display today's date and booking count summary
+4. Iterate through bookings and display them in time order
+5. Add empty state for when no bookings exist
+6. Implement responsive design for mobile devices
+
+## 3. Create Bookings.vue with Calendar View [pending]
+### Dependencies: 21.1
+### Description: Develop the bookings calendar view component with date selection functionality to view bookings for specific dates.
+### Details:
+1. Create Provider/Bookings.vue component
+2. Implement date picker using shadcn-vue calendar component
+3. Display selected date's bookings in time order
+4. Add navigation controls to move between dates
+5. Implement loading states during date changes
+6. Create empty state for dates with no bookings
+
+## 4. Create BookingItem.vue Component [pending]
+### Dependencies: 21.1
+### Description: Develop a reusable booking item component to display individual booking details with action buttons for confirmation/declining.
+### Details:
+1. Create Provider/BookingItem.vue component
+2. Display booking time, service details, and consumer information
+3. Implement confirm and decline action buttons using shadcn-vue components
+4. Add status indicators (pending, confirmed, declined)
+5. Include confirmation dialog before declining bookings
+6. Style component for different booking statuses
+
+## 5. Configure Routes and Navigation [pending]
+### Dependencies: 21.1, 21.2, 21.3, 21.4
+### Description: Set up the necessary routes and navigation elements for the provider dashboard and booking management.
+### Details:
+1. Add routes in web.php for provider dashboard and bookings
+2. Configure routes for booking confirmation and declining actions
+3. Update navigation menu to include provider dashboard link
+4. Add breadcrumb navigation between dashboard views
+5. Implement route guards to prevent unauthorized access
+6. Test all routes with authenticated and unauthenticated users
+

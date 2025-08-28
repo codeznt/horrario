@@ -1,0 +1,165 @@
+# Service Booking App - Product Requirements Document
+
+## Overview
+
+A service booking platform built as a Telegram Mini App using Laravel 12, Inertia.js, Vue 3, and Tailwind CSS v4. The platform connects service providers with consumers through a monolithic Laravel architecture with server-side rendering via Inertia.js.
+
+The app solves the problem of fragmented service booking by providing a unified platform where providers can manage their services and schedules, while consumers can easily discover, book, and manage appointments. The Telegram integration provides seamless authentication and native mobile experience.
+
+## Core Features
+
+### User Management & Authentication
+- **Telegram OAuth Integration**: Seamless login using Telegram credentials with automatic user creation
+- **Dual Role System**: Users can function as both providers and consumers
+- **Profile Management**: Business profiles for providers, personal profiles for consumers
+- **Mock Development**: Local development with SQLite and mock user authentication
+
+### Provider Features
+- **Business Profile Creation**: Name, address, contacts, description using shadcn-vue components
+- **Service Management**: Add, edit, delete services with title, duration, and display pricing
+- **Schedule Management**: Weekly working hours with opening/closing times
+- **Booking Dashboard**: View daily bookings with consumer details
+- **Booking Actions**: Confirm or decline incoming booking requests via Inertia forms
+
+### Consumer Features
+- **Service Discovery**: Search services by name and browse providers
+- **Availability Viewing**: Available time slots for selected services
+- **Booking Management**: Create, view, and cancel personal bookings
+- **Provider Selection**: Compare providers and view their profiles
+
+### Telegram Mini App Integration
+- **Native UI Components**: Telegram-themed interface using bound CSS variables
+- **Profile Sync**: Automatic import of Telegram profile data (name, username, photo)
+- **Responsive Design**: Optimized for mobile Telegram clients with viewport awareness
+- **Lucide Icons**: Consistent iconography throughout the application
+
+## User Experience
+
+### User Personas
+- **Service Providers**: Small business owners, freelancers, consultants needing appointment management
+- **Service Consumers**: Individuals seeking convenient booking for various services
+- **Dual Users**: Users who both offer and consume services within the platform
+
+### Key User Flows
+1. **Provider Onboarding**: Telegram auth → Role selection → Profile setup → Service creation → Schedule configuration
+2. **Consumer Booking**: Service search → Provider selection → Time slot selection → Booking confirmation
+3. **Booking Management**: View bookings → Action (confirm/decline) → Status update
+
+### UI/UX Considerations
+- **Telegram Theme Integration**: Dynamic color adaptation based on user's Telegram theme
+- **Mobile-First Design**: Optimized for Telegram's mobile environment
+- **shadcn-vue Components**: Consistent, accessible UI components
+- **Minimal Friction**: Streamlined flows with pre-filled data from Telegram profiles
+
+## Technical Architecture
+
+### System Components
+- **Backend**: Laravel 12 with Inertia.js for server-side rendering
+- **Frontend**: Vue 3 with TypeScript and Tailwind CSS v4
+- **Database**: SQLite for local development, MySQL/PostgreSQL for production
+- **Authentication**: Telegram Mini Apps SDK with custom middleware
+- **UI Components**: shadcn-vue component library with Lucide icons
+- **File Storage**: Laravel filesystem for profile images
+
+### Data Models
+- **Users**: Telegram ID, profile data, roles (provider/consumer), onboarding status
+- **Providers**: Business information, working hours, contact details
+- **Services**: Title, description, duration, display price, provider association
+- **Bookings**: Consumer, provider, service, datetime, status, notes
+- **Schedules**: Weekly availability patterns with time slots
+
+### Monolithic Architecture
+- **No API Endpoints**: All interactions through Inertia.js server-side rendering
+- **No WebSockets**: Standard HTTP requests with page refreshes
+- **No External APIs**: Self-contained Laravel application
+- **Form Submissions**: Standard Laravel form handling with Inertia responses
+
+### Infrastructure Requirements
+- **Web Server**: Nginx/Apache with PHP 8.3+
+- **Database**: SQLite (dev), MySQL 8.0+ or PostgreSQL 13+ (production)
+- **SSL Certificate**: Required for Telegram Mini Apps
+- **Domain**: HTTPS domain for production deployment
+
+## Development Roadmap
+
+### Phase 1: Foundation & Authentication (COMPLETED)
+- ✅ **Telegram Mini Apps Setup**: SDK integration, theme binding, mock environment
+- ✅ **User Authentication**: Telegram OAuth middleware, user model, role management
+- ✅ **Basic UI Framework**: Tailwind v4 integration, shadcn-vue components, responsive layouts
+- ✅ **Onboarding Flow**: Role selection carousel with stepper navigation
+
+### Phase 2: Core Business Logic (CURRENT FOCUS)
+- **Database Schema**: Extend models for providers, services, bookings, schedules
+- **Provider Profile Management**: Business profile CRUD with shadcn-vue forms
+- **Service Management**: Provider service creation, editing, display pricing
+- **Schedule System**: Weekly availability, time slot generation using Inertia forms
+
+### Phase 3: Booking System
+- **Booking Engine**: Consumer booking flow, availability checking, reservation system
+- **Booking Dashboard**: Provider booking management with confirm/decline actions
+- **Search & Discovery**: Service search functionality with filtering using Inertia
+- **Consumer Management**: Personal booking history and cancellation
+
+### Phase 4: Polish & Enhancement
+- **UI/UX Refinement**: Enhanced shadcn-vue component usage, better mobile experience
+- **Data Validation**: Comprehensive form validation and error handling
+- **Performance Optimization**: Database query optimization, caching strategies
+- **Testing & Deployment**: Comprehensive testing suite and production deployment
+
+## Logical Dependency Chain
+
+### Foundation First (COMPLETED)
+1. ✅ **Telegram Mini Apps Infrastructure**: SDK integration, theme binding, mock environment
+2. ✅ **User Authentication & Profiles**: Telegram OAuth middleware, user model, role system
+3. ✅ **Basic UI Components**: shadcn-vue components, Tailwind v4, responsive layouts
+4. ✅ **Onboarding Flow**: Role selection with carousel and stepper navigation
+
+### Progressive Feature Building (CURRENT PHASE)
+1. **Database Schema Extension**: Provider, service, booking, schedule models
+2. **Provider Profile Management**: Business profile CRUD with Inertia forms
+3. **Service Management**: Service creation, editing with display pricing
+4. **Schedule System**: Weekly availability patterns and time slot generation
+5. **Booking Engine**: Consumer booking flow with availability checking
+6. **Booking Dashboard**: Provider booking management with confirm/decline actions
+
+### Enhancement Layer (FUTURE)
+1. **Search & Discovery**: Service search with filtering using Inertia
+2. **Consumer Management**: Personal booking history and cancellation
+3. **UI/UX Polish**: Enhanced shadcn-vue usage, better mobile experience
+4. **Performance Optimization**: Database optimization, caching strategies
+
+## Constraints and Limitations
+
+### Technical Constraints
+- **Monolithic Architecture**: No API endpoints, all interactions via Inertia.js
+- **No Real-time Features**: Standard HTTP requests, no WebSocket integration
+- **No External APIs**: Self-contained Laravel application
+- **SQLite Development**: Local development database for simplicity
+
+### Feature Limitations
+- **Display Pricing Only**: No payment processing or financial transactions
+- **Basic Notifications**: In-app only, no external notification systems
+- **Simple Search**: Text-based search without advanced filtering
+- **Manual Testing**: No automated testing requirements for MVP
+
+### Development Approach
+- **shadcn-vue Components**: Consistent UI component library usage
+- **Lucide Icons**: No emoji usage, only Lucide icon library
+- **Inertia Forms**: Standard Laravel form handling with Inertia responses
+- **Mock Development**: Local user mocking for development and debugging
+- **String Translations**: Use Laravel's string translation system. The main language is Ukrainian.
+
+## Success Criteria
+
+### MVP Completion Metrics
+- **Provider Onboarding**: Complete business profile creation flow
+- **Service Management**: Full CRUD operations for services
+- **Booking System**: End-to-end booking creation and management
+- **Schedule Management**: Weekly availability configuration
+- **Mobile Experience**: Responsive design optimized for Telegram clients
+
+### Technical Quality
+- **Code Consistency**: Proper use of shadcn-vue components throughout
+- **Performance**: Fast page loads with Inertia.js server-side rendering
+- **User Experience**: Intuitive navigation with Telegram theme integration
+- **Data Integrity**: Proper validation and error handling for all forms

@@ -1,0 +1,338 @@
+# Task ID: 25
+# Title: Implement Telegram Profile Sync
+# Status: pending
+# Dependencies: 24
+# Priority: high
+# Description: Create functionality to automatically import and sync Telegram profile data (name, username, photo) with user profiles.
+# Details:
+1. Create a Telegram Profile Service:
+```php
+class TelegramProfileService
+{
+    public function syncProfile(User $user, array $telegramData)
+    {
+        // Update user profile with Telegram data
+        $user->name = $telegramData['first_name'] . ' ' . ($telegramData['last_name'] ?? '');
+        $user->telegram_username = $telegramData['username'] ?? null;
+        
+        // Save Telegram photo if available
+        if (isset($telegramData['photo_url'])) {
+            $this->syncProfilePhoto($user, $telegramData['photo_url']);
+        }
+        
+        $user->save();
+        
+        return $user;
+    }
+    
+    protected function syncProfilePhoto(User $user, string $photoUrl)
+    {
+        try {
+            $photoContents = file_get_contents($photoUrl);
+            
+            if ($photoContents === false) {
+                return;
+            }
+            
+            $filename = 'telegram_' . $user->id . '_' . time() . '.jpg';
+            $path = 'profile-photos/' . $filename;
+            
+            Storage::disk('public')->put($path, $photoContents);
+            
+            // Delete old photo if exists
+            if ($user->profile_photo_path) {
+                Storage::disk('public')->delete($user->profile_photo_path);
+            }
+            
+            $user->profile_photo_path = $path;
+        } catch (\Exception $e) {
+            // Log error but don't fail the sync
+            Log::error('Failed to sync Telegram profile photo: ' . $e->getMessage());
+        }
+    }
+}
+```
+
+2. Create a Telegram Auth Middleware:
+```php
+class TelegramAuth
+{
+    protected $telegramProfileService;
+    
+    public function __construct(TelegramProfileService $telegramProfileService)
+    {
+        $this->telegramProfileService = $telegramProfileService;
+    }
+    
+    public function handle($request, Closure $next)
+    {
+        if (!$request->hasHeader('X-Telegram-Data')) {
+            // For development, allow mock auth
+            if (app()->environment('local') && $request->has('mock_user_id')) {
+                $user = User::find($request->mock_user_id);
+                if ($user) {
+                    Auth::login($user);
+                    return $next($request);
+                }
+            }
+            
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        
+        $telegramData = json_decode(base64_decode($request->header('X-Telegram-Data')), true);
+        
+        if (!$this->validateTelegramData($telegramData)) {
+            return response()->json(['error' => 'Invalid Telegram data'], 401);
+        }
+        
+        // Find or create user
+        $user = User::firstOrCreate(
+            ['telegram_id' => $telegramData['id']],
+            [
+                'name' => $telegramData['first_name'] . ' ' . ($telegramData['last_name'] ?? ''),
+                'email' => $telegramData['id'] . '@telegram.user', // Placeholder email
+                'password' => Hash::make(Str::random(32)), // Random password
+            ]
+        );
+        
+        // Sync profile data
+        $this->telegramProfileService->syncProfile($user, $telegramData);
+        
+        // Login user
+        Auth::login($user);
+        
+        return $next($request);
+    }
+    
+    protected function validateTelegramData($data)
+    {
+        // Basic validation - in production would include signature verification
+        return isset($data['id']) && isset($data['first_name']);
+    }
+}
+```
+
+3. Register the middleware in Kernel.php:
+```php
+protected $routeMiddleware = [
+    // Other middleware...
+    'telegram.auth' => \App\Http\Middleware\TelegramAuth::class,
+];
+```
+
+4. Create a JavaScript utility for Telegram auth:
+```javascript
+// resources/js/Services/TelegramAuth.js
+export default class TelegramAuth {
+  constructor() {
+    this.telegram = window.Telegram?.WebApp;
+  }
+  
+  isAvailable() {
+    return !!this.telegram;
+  }
+  
+  getUserData() {
+    if (!this.isAvailable()) {
+      return null;
+    }
+    
+    // Get user data from Telegram WebApp
+    const initData = this.telegram.initData;
+    const user = this.telegram.initDataUnsafe?.user;
+    
+    return {
+      initData,
+      user
+    };
+  }
+  
+  attachAuthHeader(headers) {
+    const userData = this.getUserData();
+    
+    if (userData && userData.user) {
+      // In production, would include full initData with signature
+      headers['X-Telegram-Data'] = btoa(JSON.stringify(userData.user));
+    }
+    
+    return headers;
+  }
+  
+  setupAxiosInterceptor() {
+    const self = this;
+    
+    // Add Telegram auth header to all axios requests
+    window.axios.interceptors.request.use(function (config) {
+      config.headers = self.attachAuthHeader(config.headers || {});
+      return config;
+    });
+  }
+}
+```
+
+5. Initialize the Telegram auth in the main app entry point:
+```javascript
+// resources/js/app.js
+import './bootstrap';
+import { createApp, h } from 'vue';
+import { createInertiaApp } from '@inertiajs/inertia-vue3';
+import TelegramTheme from './Services/TelegramTheme';
+import TelegramAuth from './Services/TelegramAuth';
+
+createInertiaApp({
+  resolve: name => require(`./Pages/${name}`),
+  setup({ el, App, props, plugin }) {
+    const app = createApp({ render: () => h(App, props) });
+    
+    app.use(plugin);
+    
+    // Initialize Telegram theme
+    const telegramTheme = new TelegramTheme();
+    telegramTheme.init();
+    
+    // Initialize Telegram auth
+    const telegramAuth = new TelegramAuth();
+    telegramAuth.setupAxiosInterceptor();
+    
+    // Make Telegram WebApp available globally in components
+    app.config.globalProperties.$telegram = window.Telegram?.WebApp;
+    app.config.globalProperties.$telegramAuth = telegramAuth;
+    
+    app.mount(el);
+  },
+});
+```
+
+6. Create a mock auth component for development:
+```vue
+<template>
+  <div v-if="showMockAuth" class="mock-auth-panel">
+    <h3>Mock Telegram Auth</h3>
+    <select v-model="selectedUserId" @change="switchUser">
+      <option v-for="user in users" :key="user.id" :value="user.id">
+        {{ user.name }} ({{ user.telegram_username || 'No username' }})
+      </option>
+    </select>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import { Inertia } from '@inertiajs/inertia';
+
+const props = defineProps({
+  users: Array
+});
+
+const selectedUserId = ref(null);
+const showMockAuth = computed(() => {
+  return process.env.NODE_ENV === 'development';
+});
+
+onMounted(() => {
+  if (props.users && props.users.length > 0) {
+    selectedUserId.value = props.users[0].id;
+  }
+});
+
+function switchUser() {
+  if (selectedUserId.value) {
+    Inertia.visit(window.location.pathname, {
+      data: {
+        mock_user_id: selectedUserId.value
+      }
+    });
+  }
+}
+</script>
+
+<style scoped>
+.mock-auth-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #f0f0f0;
+  padding: 10px;
+  border-top: 1px solid #ccc;
+  z-index: 1000;
+}
+</style>
+```
+
+# Test Strategy:
+1. Test Telegram profile sync with mock data
+2. Verify profile photo retrieval and storage
+3. Test authentication middleware with valid and invalid Telegram data
+4. Verify user creation for new Telegram users
+5. Test profile updates when Telegram data changes
+6. Verify mock auth component works in development environment
+7. Test error handling for failed profile photo downloads
+
+# Subtasks:
+## 1. Create and Implement TelegramProfileService [pending]
+### Dependencies: None
+### Description: Finalize the TelegramProfileService class to handle profile data synchronization between Telegram and the application.
+### Details:
+1. Review and finalize the TelegramProfileService class
+2. Implement error handling for profile sync failures
+3. Add logging for sync operations
+4. Create unit tests for the service
+5. Handle edge cases like missing profile data
+6. Ensure proper cleanup of old profile photos
+
+## 2. Implement TelegramAuth Middleware [pending]
+### Dependencies: 25.1
+### Description: Complete the authentication middleware to validate Telegram data and create/update users based on Telegram profiles.
+### Details:
+1. Finalize the TelegramAuth middleware implementation
+2. Add proper validation of Telegram data including signature verification
+3. Implement user creation/lookup logic
+4. Connect the middleware with the TelegramProfileService
+5. Add comprehensive error handling
+6. Register the middleware in Kernel.php
+
+## 3. Develop Profile Photo Handling [pending]
+### Dependencies: 25.1
+### Description: Create functionality to retrieve, store, and manage Telegram profile photos.
+### Details:
+1. Implement the syncProfilePhoto method in TelegramProfileService
+2. Create storage configuration for profile photos
+3. Add image processing for optimization if needed
+4. Implement cleanup of old profile photos
+5. Handle various error cases (invalid URLs, network issues)
+6. Add proper file naming and organization
+
+## 4. Create JavaScript Utilities for Telegram Auth [pending]
+### Dependencies: 25.2
+### Description: Develop frontend utilities to handle Telegram WebApp integration and authentication.
+### Details:
+1. Finalize the TelegramAuth JavaScript class
+2. Implement proper data encoding/encryption for auth headers
+3. Create Axios interceptors for authentication
+4. Add detection of Telegram WebApp environment
+5. Implement error handling for when Telegram WebApp is not available
+6. Create documentation for the utility
+
+## 5. Implement Mock Auth for Development [pending]
+### Dependencies: 25.2, 25.4
+### Description: Create a development-only mock authentication system for testing without Telegram.
+### Details:
+1. Complete the mock auth Vue component
+2. Implement user switching functionality
+3. Create a mock data generator for Telegram profile data
+4. Add styling for the mock auth panel
+5. Ensure the mock auth only appears in development environment
+6. Add sample users for testing different scenarios
+
+## 6. Test and Integrate Telegram Profile Sync [pending]
+### Dependencies: 25.1, 25.2, 25.3, 25.4, 25.5
+### Description: Perform comprehensive testing of the Telegram profile sync functionality and integrate it with the main application.
+### Details:
+1. Create integration tests for the complete auth flow
+2. Test profile updates when Telegram data changes
+3. Verify profile photo sync works correctly
+4. Test error scenarios and recovery
+5. Perform security testing of the authentication process
+6. Document the integration process for other developers
+

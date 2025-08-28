@@ -1,0 +1,353 @@
+# Task ID: 27
+# Title: Implement Performance Optimization
+# Status: pending
+# Dependencies: 16, 20, 21, 22, 23
+# Priority: low
+# Description: Optimize database queries, implement caching strategies, and improve overall application performance.
+# Details:
+1. Create a QueryCacheService:
+```php
+class QueryCacheService
+{
+    protected $cacheEnabled;
+    protected $defaultTtl;
+    
+    public function __construct()
+    {
+        $this->cacheEnabled = config('cache.query_cache_enabled', true);
+        $this->defaultTtl = config('cache.query_cache_ttl', 3600); // 1 hour default
+    }
+    
+    public function remember($key, $callback, $ttl = null)
+    {
+        if (!$this->cacheEnabled) {
+            return $callback();
+        }
+        
+        $ttl = $ttl ?? $this->defaultTtl;
+        
+        return Cache::remember($key, $ttl, $callback);
+    }
+    
+    public function forget($key)
+    {
+        return Cache::forget($key);
+    }
+    
+    public function generateKey($prefix, $params = [])
+    {
+        $paramString = '';
+        
+        if (!empty($params)) {
+            $paramString = '_' . md5(json_encode($params));
+        }
+        
+        return "query_{$prefix}{$paramString}";
+    }
+}
+```
+
+2. Create a ServiceRepository with optimized queries:
+```php
+class ServiceRepository
+{
+    protected $queryCacheService;
+    
+    public function __construct(QueryCacheService $queryCacheService)
+    {
+        $this->queryCacheService = $queryCacheService;
+    }
+    
+    public function search($query, $page = 1, $perPage = 10)
+    {
+        $cacheKey = $this->queryCacheService->generateKey('service_search', [
+            'query' => $query,
+            'page' => $page,
+            'perPage' => $perPage
+        ]);
+        
+        return $this->queryCacheService->remember($cacheKey, function () use ($query, $page, $perPage) {
+            return Service::query()
+                ->select('services.*', 'providers.business_name')
+                ->join('providers', 'services.provider_id', '=', 'providers.id')
+                ->when($query, function ($q) use ($query) {
+                    return $q->where(function ($subQuery) use ($query) {
+                        $subQuery->where('services.title', 'like', "%{$query}%")
+                            ->orWhere('services.description', 'like', "%{$query}%")
+                            ->orWhere('providers.business_name', 'like', "%{$query}%");
+                    });
+                })
+                ->orderBy('services.title')
+                ->paginate($perPage, ['*'], 'page', $page);
+        }, 600); // 10 minutes cache
+    }
+    
+    public function getProviderServices($providerId)
+    {
+        $cacheKey = $this->queryCacheService->generateKey('provider_services', [
+            'provider_id' => $providerId
+        ]);
+        
+        return $this->queryCacheService->remember($cacheKey, function () use ($providerId) {
+            return Service::where('provider_id', $providerId)
+                ->orderBy('title')
+                ->get();
+        }, 1800); // 30 minutes cache
+    }
+    
+    public function invalidateProviderCache($providerId)
+    {
+        $cacheKey = $this->queryCacheService->generateKey('provider_services', [
+            'provider_id' => $providerId
+        ]);
+        
+        $this->queryCacheService->forget($cacheKey);
+    }
+}
+```
+
+3. Create a BookingRepository with optimized queries:
+```php
+class BookingRepository
+{
+    protected $queryCacheService;
+    
+    public function __construct(QueryCacheService $queryCacheService)
+    {
+        $this->queryCacheService = $queryCacheService;
+    }
+    
+    public function getProviderBookings($providerId, $date)
+    {
+        return Booking::where('provider_id', $providerId)
+            ->whereDate('start_datetime', $date)
+            ->with(['user', 'service'])
+            ->orderBy('start_datetime')
+            ->get();
+    }
+    
+    public function getUserUpcomingBookings($userId)
+    {
+        $cacheKey = $this->queryCacheService->generateKey('user_upcoming_bookings', [
+            'user_id' => $userId
+        ]);
+        
+        return $this->queryCacheService->remember($cacheKey, function () use ($userId) {
+            return Booking::where('user_id', $userId)
+                ->where('start_datetime', '>=', Carbon::now())
+                ->where('status', '!=', 'cancelled')
+                ->with(['service', 'provider.user'])
+                ->orderBy('start_datetime')
+                ->get();
+        }, 300); // 5 minutes cache
+    }
+    
+    public function invalidateUserBookingsCache($userId)
+    {
+        $cacheKey = $this->queryCacheService->generateKey('user_upcoming_bookings', [
+            'user_id' => $userId
+        ]);
+        
+        $this->queryCacheService->forget($cacheKey);
+    }
+    
+    public function checkSlotAvailability($providerId, $startDatetime, $endDatetime)
+    {
+        return Booking::where('provider_id', $providerId)
+            ->where(function ($query) use ($startDatetime, $endDatetime) {
+                $query->whereBetween('start_datetime', [$startDatetime, $endDatetime])
+                    ->orWhereBetween('end_datetime', [$startDatetime, $endDatetime])
+                    ->orWhere(function ($q) use ($startDatetime, $endDatetime) {
+                        $q->where('start_datetime', '<=', $startDatetime)
+                          ->where('end_datetime', '>=', $endDatetime);
+                    });
+            })
+            ->where('status', '!=', 'cancelled')
+            ->exists();
+    }
+}
+```
+
+4. Optimize Inertia responses with partial reloads:
+```php
+class BookingController extends Controller
+{
+    // Example of optimized controller method
+    public function confirm(Booking $booking)
+    {
+        $this->authorize('manage', $booking);
+        
+        $booking->status = 'confirmed';
+        $booking->save();
+        
+        // Invalidate relevant caches
+        $this->bookingRepository->invalidateUserBookingsCache($booking->user_id);
+        
+        if (request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'booking' => $booking->fresh()
+            ]);
+        }
+        
+        return Inertia::render('Provider/Bookings', [
+            'bookings' => $this->bookingRepository->getProviderBookings(
+                $booking->provider_id,
+                Carbon::parse($booking->start_datetime)->format('Y-m-d')
+            ),
+            'date' => Carbon::parse($booking->start_datetime)->format('Y-m-d'),
+            'flash' => [
+                'message' => 'Booking confirmed successfully',
+                'type' => 'success'
+            ]
+        ]);
+    }
+}
+```
+
+5. Add database indexes for common queries:
+```php
+// In a migration file
+Schema::table('bookings', function (Blueprint $table) {
+    // Add indexes for common queries
+    $table->index(['provider_id', 'start_datetime']);
+    $table->index(['user_id', 'start_datetime']);
+    $table->index(['status']);
+});
+
+Schema::table('services', function (Blueprint $table) {
+    $table->index(['provider_id']);
+    $table->index(['title']);
+});
+
+Schema::table('schedules', function (Blueprint $table) {
+    $table->index(['provider_id', 'day_of_week']);
+});
+```
+
+6. Implement eager loading for common relationships:
+```php
+// In ServiceController
+public function index()
+{
+    $services = auth()->user()->provider->services()
+        ->withCount('bookings')
+        ->get();
+    
+    return Inertia::render('Service/Index', [
+        'services' => $services
+    ]);
+}
+
+// In SearchController
+public function providers()
+{
+    $providers = Provider::with(['user' => function ($query) {
+            $query->select('id', 'name', 'profile_photo_path');
+        }])
+        ->withCount('services')
+        ->orderBy('business_name')
+        ->paginate(10);
+    
+    return Inertia::render('Search/Providers', [
+        'providers' => $providers
+    ]);
+}
+```
+
+7. Implement asset optimization:
+```javascript
+// webpack.mix.js
+const mix = require('laravel-mix');
+
+mix.js('resources/js/app.js', 'public/js')
+    .vue()
+    .postCss('resources/css/app.css', 'public/css', [
+        require('tailwindcss'),
+    ])
+    .version()
+    .extract(['vue', '@inertiajs/inertia', '@inertiajs/inertia-vue3'])
+    .webpackConfig({
+        optimization: {
+            providedExports: true,
+            sideEffects: true,
+            usedExports: true
+        }
+    });
+
+if (mix.inProduction()) {
+    mix.version();
+}
+```
+
+# Test Strategy:
+1. Benchmark database query performance before and after optimization
+2. Test cache hit rates for common queries
+3. Verify cache invalidation works correctly when data changes
+4. Test application performance with large datasets
+5. Verify eager loading reduces the number of database queries
+6. Test asset loading times with browser developer tools
+7. Verify indexes improve query performance for common operations
+
+# Subtasks:
+## 1. Implement QueryCacheService [pending]
+### Dependencies: None
+### Description: Create and implement the QueryCacheService class for caching database query results
+### Details:
+1. Create the QueryCacheService class with methods for remembering, forgetting, and generating cache keys
+2. Implement configuration options for enabling/disabling cache and setting default TTL
+3. Create unit tests for the QueryCacheService
+4. Register the service in the service container
+5. Create cache configuration options in config/cache.php
+
+## 2. Implement Repository Pattern with Caching [pending]
+### Dependencies: 27.1
+### Description: Create ServiceRepository and BookingRepository with optimized queries and caching
+### Details:
+1. Create ServiceRepository with methods for searching services, getting provider services, and cache invalidation
+2. Create BookingRepository with methods for retrieving bookings and checking slot availability
+3. Implement caching strategies with appropriate TTL values for different query types
+4. Create unit tests for both repositories
+5. Update relevant controllers to use the repository pattern instead of direct model queries
+
+## 3. Add Database Indexes for Performance [pending]
+### Dependencies: None
+### Description: Create and apply database migrations to add indexes for commonly queried columns
+### Details:
+1. Create a migration to add indexes to the bookings table (provider_id, start_datetime, user_id, status)
+2. Create a migration to add indexes to the services table (provider_id, title)
+3. Create a migration to add indexes to the schedules table (provider_id, day_of_week)
+4. Run and test the migrations
+5. Verify query performance improvements with EXPLAIN queries
+
+## 4. Implement Eager Loading for Common Relationships [pending]
+### Dependencies: None
+### Description: Update controllers to use eager loading for reducing N+1 query problems
+### Details:
+1. Identify controllers with N+1 query issues using Laravel Debugbar
+2. Update ServiceController to use eager loading with withCount for bookings
+3. Update SearchController to use eager loading for provider relationships
+4. Update BookingController to use eager loading for service and user relationships
+5. Verify reduction in query count using Laravel Debugbar
+
+## 5. Optimize Inertia Responses with Partial Reloads [pending]
+### Dependencies: 27.2
+### Description: Update controllers to support partial data reloads and JSON responses for AJAX requests
+### Details:
+1. Update BookingController to support JSON responses for AJAX requests
+2. Implement partial data reloads in Inertia responses
+3. Add cache invalidation calls when data is modified
+4. Update frontend components to use partial reloads where appropriate
+5. Test performance improvements with network monitoring tools
+
+## 6. Configure Asset Optimization [pending]
+### Dependencies: None
+### Description: Implement frontend asset optimization with Laravel Mix
+### Details:
+1. Update webpack.mix.js to extract vendor libraries
+2. Configure versioning for production builds
+3. Implement code splitting for route-based components
+4. Configure optimization settings for webpack
+5. Implement CSS minification and purging
+6. Test build process and verify reduced asset sizes
+

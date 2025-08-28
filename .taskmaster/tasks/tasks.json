@@ -1,0 +1,741 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 16,
+        "title": "Extend Database Schema for Core Models",
+        "description": "Create and extend database models for providers, services, bookings, and schedules to support the core business logic.",
+        "details": "Implement the following models with migrations:\n\n1. Provider Model:\n```php\nclass Provider extends Model\n{\n    protected $fillable = [\n        'user_id', 'business_name', 'address', 'contact_phone',\n        'description', 'profile_image'\n    ];\n    \n    public function user()\n    {\n        return $this->belongsTo(User::class);\n    }\n    \n    public function services()\n    {\n        return $this->hasMany(Service::class);\n    }\n    \n    public function schedules()\n    {\n        return $this->hasMany(Schedule::class);\n    }\n}\n```\n\n2. Service Model:\n```php\nclass Service extends Model\n{\n    protected $fillable = [\n        'provider_id', 'title', 'description', 'duration_minutes', 'display_price'\n    ];\n    \n    public function provider()\n    {\n        return $this->belongsTo(Provider::class);\n    }\n    \n    public function bookings()\n    {\n        return $this->hasMany(Booking::class);\n    }\n}\n```\n\n3. Schedule Model:\n```php\nclass Schedule extends Model\n{\n    protected $fillable = [\n        'provider_id', 'day_of_week', 'start_time', 'end_time'\n    ];\n    \n    public function provider()\n    {\n        return $this->belongsTo(Provider::class);\n    }\n}\n```\n\n4. Booking Model:\n```php\nclass Booking extends Model\n{\n    protected $fillable = [\n        'user_id', 'provider_id', 'service_id', 'start_datetime',\n        'end_datetime', 'status', 'notes'\n    ];\n    \n    public function user()\n    {\n        return $this->belongsTo(User::class);\n    }\n    \n    public function provider()\n    {\n        return $this->belongsTo(Provider::class);\n    }\n    \n    public function service()\n    {\n        return $this->belongsTo(Service::class);\n    }\n}\n```\n\nCreate corresponding migrations for each model with appropriate foreign key constraints and indexes.",
+        "testStrategy": "1. Write unit tests for each model to verify relationships and fillable attributes\n2. Test database migrations up and down to ensure schema integrity\n3. Manually verify database schema using SQLite GUI tool\n4. Test model factories to ensure they generate valid test data",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 17,
+        "title": "Implement Provider Profile Management",
+        "description": "Create business profile CRUD functionality for providers using Inertia.js forms and shadcn-vue components.",
+        "details": "1. Create Provider Controller:\n```php\nclass ProviderController extends Controller\n{\n    public function create()\n    {\n        return Inertia::render('Provider/Create');\n    }\n    \n    public function store(Request $request)\n    {\n        $validated = $request->validate([\n            'business_name' => 'required|string|max:255',\n            'address' => 'required|string|max:255',\n            'contact_phone' => 'required|string|max:20',\n            'description' => 'nullable|string|max:1000',\n            'profile_image' => 'nullable|image|max:2048'\n        ]);\n        \n        $provider = new Provider($validated);\n        $provider->user_id = auth()->id();\n        \n        if ($request->hasFile('profile_image')) {\n            $provider->profile_image = $request->file('profile_image')\n                ->store('profile-images', 'public');\n        }\n        \n        $provider->save();\n        \n        return redirect()->route('provider.dashboard');\n    }\n    \n    public function edit()\n    {\n        $provider = auth()->user()->provider;\n        \n        return Inertia::render('Provider/Edit', [\n            'provider' => $provider\n        ]);\n    }\n    \n    public function update(Request $request)\n    {\n        $provider = auth()->user()->provider;\n        \n        $validated = $request->validate([\n            'business_name' => 'required|string|max:255',\n            'address' => 'required|string|max:255',\n            'contact_phone' => 'required|string|max:20',\n            'description' => 'nullable|string|max:1000',\n            'profile_image' => 'nullable|image|max:2048'\n        ]);\n        \n        if ($request->hasFile('profile_image')) {\n            // Delete old image if exists\n            if ($provider->profile_image) {\n                Storage::disk('public')->delete($provider->profile_image);\n            }\n            \n            $validated['profile_image'] = $request->file('profile_image')\n                ->store('profile-images', 'public');\n        }\n        \n        $provider->update($validated);\n        \n        return redirect()->route('provider.dashboard');\n    }\n}\n```\n\n2. Create Vue components for provider profile forms using shadcn-vue:\n   - Create.vue - New provider profile form\n   - Edit.vue - Edit existing provider profile\n   - Components should use shadcn-vue form elements and Lucide icons\n   - Implement file upload for profile images\n\n3. Add routes in web.php:\n```php\nRoute::middleware(['auth'])->group(function () {\n    Route::get('/provider/create', [ProviderController::class, 'create'])->name('provider.create');\n    Route::post('/provider', [ProviderController::class, 'store'])->name('provider.store');\n    Route::get('/provider/edit', [ProviderController::class, 'edit'])->name('provider.edit');\n    Route::put('/provider', [ProviderController::class, 'update'])->name('provider.update');\n});\n```",
+        "testStrategy": "1. Manual testing of form submission with valid and invalid data\n2. Verify validation error messages display correctly\n3. Test image upload functionality with various file types and sizes\n4. Verify redirect flows after successful form submission\n5. Test form prefilling when editing existing provider profiles",
+        "priority": "high",
+        "dependencies": [
+          16
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Provider Model and Database Migration",
+            "description": "Set up the Provider model and database migration with the required fields for business profile management.",
+            "dependencies": [],
+            "details": "1. Create Provider model with fillable fields: business_name, address, contact_phone, description, profile_image\n2. Set up relationship with User model (belongsTo)\n3. Create migration file with all required fields\n4. Add foreign key constraint to user_id\n5. Run migration and verify database structure",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Create.vue Component",
+            "description": "Create the Vue component for new provider profile creation using shadcn-vue form elements.",
+            "dependencies": [
+              "17.1"
+            ],
+            "details": "1. Create Provider/Create.vue component with form layout\n2. Implement form fields using shadcn-vue components (Input, Textarea, FileInput)\n3. Add validation error handling for each field\n4. Implement file upload preview for profile image\n5. Add form submission handler with proper error handling\n6. Style the form using Tailwind CSS",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Edit.vue Component",
+            "description": "Create the Vue component for editing existing provider profiles with pre-filled data.",
+            "dependencies": [
+              "17.1",
+              "17.2"
+            ],
+            "details": "1. Create Provider/Edit.vue component with form layout similar to Create.vue\n2. Pre-fill form fields with existing provider data\n3. Implement image preview for existing profile image\n4. Add image replacement functionality\n5. Implement form submission with PUT method\n6. Add success/error notifications",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Complete ProviderController Implementation",
+            "description": "Finalize the ProviderController with all required methods and proper validation.",
+            "dependencies": [
+              "17.1"
+            ],
+            "details": "1. Complete the create() method to check if user already has a provider profile\n2. Enhance store() method with additional validation and error handling\n3. Implement edit() method with proper authorization checks\n4. Complete update() method with image handling and validation\n5. Add delete() method for profile removal if needed\n6. Implement proper error responses for API requests",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Configure Routes and Test End-to-End Functionality",
+            "description": "Set up all required routes and test the complete provider profile management functionality.",
+            "dependencies": [
+              "17.2",
+              "17.3",
+              "17.4"
+            ],
+            "details": "1. Configure all routes in web.php with proper middleware\n2. Add route names and controller method bindings\n3. Test form submission with valid and invalid data\n4. Verify image upload and storage functionality\n5. Test edit functionality with existing profiles\n6. Verify redirects and navigation flow\n7. Test mobile responsiveness of all forms",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 18,
+        "title": "Implement Service Management",
+        "description": "Create CRUD functionality for providers to manage their services with title, duration, and display pricing.",
+        "details": "1. Create Service Controller:\n```php\nclass ServiceController extends Controller\n{\n    public function index()\n    {\n        $services = auth()->user()->provider->services;\n        \n        return Inertia::render('Service/Index', [\n            'services' => $services\n        ]);\n    }\n    \n    public function create()\n    {\n        return Inertia::render('Service/Create');\n    }\n    \n    public function store(Request $request)\n    {\n        $validated = $request->validate([\n            'title' => 'required|string|max:255',\n            'description' => 'nullable|string|max:1000',\n            'duration_minutes' => 'required|integer|min:5|max:480',\n            'display_price' => 'required|string|max:50'\n        ]);\n        \n        $service = new Service($validated);\n        $service->provider_id = auth()->user()->provider->id;\n        $service->save();\n        \n        return redirect()->route('services.index');\n    }\n    \n    public function edit(Service $service)\n    {\n        $this->authorize('update', $service);\n        \n        return Inertia::render('Service/Edit', [\n            'service' => $service\n        ]);\n    }\n    \n    public function update(Request $request, Service $service)\n    {\n        $this->authorize('update', $service);\n        \n        $validated = $request->validate([\n            'title' => 'required|string|max:255',\n            'description' => 'nullable|string|max:1000',\n            'duration_minutes' => 'required|integer|min:5|max:480',\n            'display_price' => 'required|string|max:50'\n        ]);\n        \n        $service->update($validated);\n        \n        return redirect()->route('services.index');\n    }\n    \n    public function destroy(Service $service)\n    {\n        $this->authorize('delete', $service);\n        \n        $service->delete();\n        \n        return redirect()->route('services.index');\n    }\n}\n```\n\n2. Create Service Policy:\n```php\nclass ServicePolicy\n{\n    public function update(User $user, Service $service)\n    {\n        return $user->provider && $user->provider->id === $service->provider_id;\n    }\n    \n    public function delete(User $user, Service $service)\n    {\n        return $user->provider && $user->provider->id === $service->provider_id;\n    }\n}\n```\n\n3. Create Vue components for service management:\n   - Index.vue - List all services with edit/delete actions\n   - Create.vue - Form to create new services\n   - Edit.vue - Form to edit existing services\n   - Use shadcn-vue components for consistent UI\n\n4. Add routes in web.php:\n```php\nRoute::middleware(['auth'])->group(function () {\n    Route::get('/services', [ServiceController::class, 'index'])->name('services.index');\n    Route::get('/services/create', [ServiceController::class, 'create'])->name('services.create');\n    Route::post('/services', [ServiceController::class, 'store'])->name('services.store');\n    Route::get('/services/{service}/edit', [ServiceController::class, 'edit'])->name('services.edit');\n    Route::put('/services/{service}', [ServiceController::class, 'update'])->name('services.update');\n    Route::delete('/services/{service}', [ServiceController::class, 'destroy'])->name('services.destroy');\n});\n```",
+        "testStrategy": "1. Test service creation with valid and invalid data\n2. Verify validation error messages display correctly\n3. Test service editing functionality\n4. Test service deletion with confirmation dialog\n5. Verify policy enforcement prevents unauthorized access\n6. Test list view pagination and sorting if implemented",
+        "priority": "high",
+        "dependencies": [
+          16,
+          17
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Service Model and Database Migration",
+            "description": "Create the Service model with proper relationships and database migration for storing service information.",
+            "dependencies": [],
+            "details": "1. Create a Service model with proper fillable attributes and relationships\n2. Define the relationship between Provider and Service models\n3. Create a migration file for the services table with fields: id, provider_id, title, description, duration_minutes, display_price, created_at, updated_at\n4. Run the migration to create the table\n5. Add the relationship method in the Provider model to access services",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Service Controller and Policy",
+            "description": "Create the ServiceController with all CRUD methods and ServicePolicy for authorization.",
+            "dependencies": [
+              "18.1"
+            ],
+            "details": "1. Create ServiceController with index, create, store, edit, update, and destroy methods\n2. Implement validation rules for service creation and updates\n3. Create ServicePolicy with update and delete methods for authorization\n4. Register the policy in AuthServiceProvider\n5. Add proper authorization checks in controller methods\n6. Test controller methods with valid and invalid data",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Create Vue Components for Service Management",
+            "description": "Develop Vue components for listing, creating, and editing services using shadcn-vue components.",
+            "dependencies": [
+              "18.1",
+              "18.2"
+            ],
+            "details": "1. Create Index.vue component to list all services with edit/delete actions\n2. Implement Create.vue component with form for new service creation\n3. Build Edit.vue component for updating existing services\n4. Use shadcn-vue components for forms, buttons, and UI elements\n5. Implement form validation with error messages\n6. Add confirmation dialog for service deletion",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Configure Routes and Navigation",
+            "description": "Set up routes for service management and add navigation links in the application.",
+            "dependencies": [
+              "18.2",
+              "18.3"
+            ],
+            "details": "1. Add routes in web.php for all service management endpoints\n2. Update the navigation menu to include links to service management\n3. Implement breadcrumbs for service management pages\n4. Add proper route names and use them in components\n5. Ensure routes are protected with auth middleware\n6. Test all routes to verify they work correctly",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement Service Management Testing",
+            "description": "Create comprehensive tests for the service management functionality.",
+            "dependencies": [
+              "18.1",
+              "18.2",
+              "18.3",
+              "18.4"
+            ],
+            "details": "1. Write feature tests for service creation, editing, and deletion\n2. Create unit tests for the Service model and relationships\n3. Implement tests for authorization policies\n4. Test validation rules with valid and invalid data\n5. Create browser tests for the UI components\n6. Verify all CRUD operations work correctly through the entire stack",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 19,
+        "title": "Implement Schedule Management System",
+        "description": "Create functionality for providers to set their weekly working hours with opening and closing times.",
+        "details": "1. Create Schedule Controller:\n```php\nclass ScheduleController extends Controller\n{\n    public function index()\n    {\n        $schedules = auth()->user()->provider->schedules\n            ->groupBy('day_of_week');\n        \n        return Inertia::render('Schedule/Index', [\n            'schedules' => $schedules,\n            'days' => [\n                0 => 'Sunday',\n                1 => 'Monday',\n                2 => 'Tuesday',\n                3 => 'Wednesday',\n                4 => 'Thursday',\n                5 => 'Friday',\n                6 => 'Saturday',\n            ]\n        ]);\n    }\n    \n    public function store(Request $request)\n    {\n        $validated = $request->validate([\n            'day_of_week' => 'required|integer|between:0,6',\n            'start_time' => 'required|date_format:H:i',\n            'end_time' => 'required|date_format:H:i|after:start_time'\n        ]);\n        \n        $schedule = new Schedule($validated);\n        $schedule->provider_id = auth()->user()->provider->id;\n        $schedule->save();\n        \n        return redirect()->route('schedules.index');\n    }\n    \n    public function update(Request $request, Schedule $schedule)\n    {\n        $this->authorize('update', $schedule);\n        \n        $validated = $request->validate([\n            'start_time' => 'required|date_format:H:i',\n            'end_time' => 'required|date_format:H:i|after:start_time'\n        ]);\n        \n        $schedule->update($validated);\n        \n        return redirect()->route('schedules.index');\n    }\n    \n    public function destroy(Schedule $schedule)\n    {\n        $this->authorize('delete', $schedule);\n        \n        $schedule->delete();\n        \n        return redirect()->route('schedules.index');\n    }\n}\n```\n\n2. Create Schedule Policy:\n```php\nclass SchedulePolicy\n{\n    public function update(User $user, Schedule $schedule)\n    {\n        return $user->provider && $user->provider->id === $schedule->provider_id;\n    }\n    \n    public function delete(User $user, Schedule $schedule)\n    {\n        return $user->provider && $user->provider->id === $schedule->provider_id;\n    }\n}\n```\n\n3. Create Vue components for schedule management:\n   - Index.vue - Weekly schedule view with time slots\n   - ScheduleForm.vue - Component for adding/editing time slots\n   - Use shadcn-vue time picker components\n   - Implement visual weekly calendar grid\n\n4. Add routes in web.php:\n```php\nRoute::middleware(['auth'])->group(function () {\n    Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');\n    Route::post('/schedules', [ScheduleController::class, 'store'])->name('schedules.store');\n    Route::put('/schedules/{schedule}', [ScheduleController::class, 'update'])->name('schedules.update');\n    Route::delete('/schedules/{schedule}', [ScheduleController::class, 'destroy'])->name('schedules.destroy');\n});\n```\n\n5. Create a TimeSlotService for generating available time slots:\n```php\nclass TimeSlotService\n{\n    public function generateTimeSlots(Provider $provider, $date)\n    {\n        $dayOfWeek = Carbon::parse($date)->dayOfWeek;\n        $schedules = $provider->schedules()->where('day_of_week', $dayOfWeek)->get();\n        \n        $slots = [];\n        \n        foreach ($schedules as $schedule) {\n            $start = Carbon::parse($date . ' ' . $schedule->start_time);\n            $end = Carbon::parse($date . ' ' . $schedule->end_time);\n            \n            $current = clone $start;\n            \n            // Generate 30-minute slots\n            while ($current->lt($end)) {\n                $slotEnd = (clone $current)->addMinutes(30);\n                if ($slotEnd->lte($end)) {\n                    $slots[] = [\n                        'start' => $current->format('H:i'),\n                        'end' => $slotEnd->format('H:i')\n                    ];\n                }\n                $current->addMinutes(30);\n            }\n        }\n        \n        return $slots;\n    }\n}\n```",
+        "testStrategy": "1. Test schedule creation with valid and invalid time ranges\n2. Verify validation prevents overlapping schedules\n3. Test time slot generation algorithm\n4. Verify visual weekly calendar correctly displays schedules\n5. Test schedule editing and deletion\n6. Verify policy enforcement prevents unauthorized access",
+        "priority": "high",
+        "dependencies": [
+          16,
+          17
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Schedule Model and Migration",
+            "description": "Create the Schedule model with relationships and database migration for storing provider schedules",
+            "dependencies": [],
+            "details": "1. Create a Schedule model with fields: provider_id, day_of_week, start_time, end_time\n2. Define relationships in the model (belongs to Provider)\n3. Create migration file with appropriate schema\n4. Add fillable properties to the model\n5. Register the model policy in AuthServiceProvider\n6. Run the migration",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Schedule Controller Methods",
+            "description": "Complete the Schedule controller with all required methods for CRUD operations",
+            "dependencies": [
+              "19.1"
+            ],
+            "details": "1. Finalize the index method to display schedules grouped by day\n2. Implement store method with validation for creating new schedules\n3. Create update method with proper validation and authorization\n4. Implement destroy method with authorization check\n5. Add error handling and success messages\n6. Test all controller methods with different scenarios",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Create Schedule Policy",
+            "description": "Implement authorization policy for schedule management to ensure providers can only manage their own schedules",
+            "dependencies": [
+              "19.1"
+            ],
+            "details": "1. Create the SchedulePolicy class\n2. Implement update method to verify ownership\n3. Implement delete method to verify ownership\n4. Add viewAny method for listing schedules\n5. Add create method to check if user is a provider\n6. Register policy in AuthServiceProvider",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Develop TimeSlotService",
+            "description": "Create service class for generating available time slots based on provider schedules",
+            "dependencies": [
+              "19.1",
+              "19.2"
+            ],
+            "details": "1. Create TimeSlotService class\n2. Implement generateTimeSlots method to create 30-minute slots\n3. Add logic to handle multiple schedule blocks in a day\n4. Implement filtering for already booked slots\n5. Add caching for performance optimization\n6. Create unit tests for the service",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Build Vue Schedule Components",
+            "description": "Create Vue components for the weekly schedule management interface",
+            "dependencies": [
+              "19.1",
+              "19.2",
+              "19.3"
+            ],
+            "details": "1. Create Index.vue component with weekly calendar grid\n2. Implement ScheduleForm.vue for adding/editing time slots\n3. Integrate shadcn-vue time picker components\n4. Add form validation for time inputs\n5. Create visual representation of scheduled time blocks\n6. Implement drag-and-drop functionality for schedule adjustment",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Configure Routes and Test Integration",
+            "description": "Set up routes and test the complete schedule management system",
+            "dependencies": [
+              "19.1",
+              "19.2",
+              "19.3",
+              "19.4",
+              "19.5"
+            ],
+            "details": "1. Add routes in web.php for all schedule controller methods\n2. Implement middleware for route protection\n3. Create feature tests for the schedule management workflow\n4. Test validation for overlapping schedules\n5. Verify visual calendar correctly displays schedules\n6. Test the complete system with real data",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 20,
+        "title": "Implement Booking Engine",
+        "description": "Create the core booking functionality allowing consumers to book available time slots for services.",
+        "details": "1. Create Booking Controller:\n```php\nclass BookingController extends Controller\n{\n    protected $timeSlotService;\n    \n    public function __construct(TimeSlotService $timeSlotService)\n    {\n        $this->timeSlotService = $timeSlotService;\n    }\n    \n    public function create(Service $service)\n    {\n        $provider = $service->provider;\n        \n        // Get next 7 days\n        $dates = [];\n        $startDate = Carbon::today();\n        \n        for ($i = 0; $i < 7; $i++) {\n            $date = $startDate->copy()->addDays($i);\n            $slots = $this->timeSlotService->generateTimeSlots($provider, $date->format('Y-m-d'));\n            \n            // Filter out slots that are already booked\n            $bookedSlots = Booking::where('provider_id', $provider->id)\n                ->whereDate('start_datetime', $date)\n                ->where('status', '!=', 'cancelled')\n                ->get()\n                ->map(function ($booking) {\n                    return [\n                        'start' => Carbon::parse($booking->start_datetime)->format('H:i'),\n                        'end' => Carbon::parse($booking->end_datetime)->format('H:i')\n                    ];\n                })->toArray();\n            \n            $availableSlots = array_filter($slots, function ($slot) use ($bookedSlots) {\n                foreach ($bookedSlots as $bookedSlot) {\n                    if ($slot['start'] === $bookedSlot['start']) {\n                        return false;\n                    }\n                }\n                return true;\n            });\n            \n            $dates[] = [\n                'date' => $date->format('Y-m-d'),\n                'day' => $date->format('D'),\n                'slots' => array_values($availableSlots)\n            ];\n        }\n        \n        return Inertia::render('Booking/Create', [\n            'service' => $service,\n            'provider' => $provider,\n            'dates' => $dates\n        ]);\n    }\n    \n    public function store(Request $request)\n    {\n        $validated = $request->validate([\n            'service_id' => 'required|exists:services,id',\n            'date' => 'required|date|after_or_equal:today',\n            'start_time' => 'required|date_format:H:i',\n        ]);\n        \n        $service = Service::findOrFail($validated['service_id']);\n        $provider = $service->provider;\n        \n        // Calculate end time based on service duration\n        $startDatetime = Carbon::parse($validated['date'] . ' ' . $validated['start_time']);\n        $endDatetime = (clone $startDatetime)->addMinutes($service->duration_minutes);\n        \n        // Check if slot is available\n        $conflictingBooking = Booking::where('provider_id', $provider->id)\n            ->where(function ($query) use ($startDatetime, $endDatetime) {\n                $query->whereBetween('start_datetime', [$startDatetime, $endDatetime])\n                    ->orWhereBetween('end_datetime', [$startDatetime, $endDatetime]);\n            })\n            ->where('status', '!=', 'cancelled')\n            ->exists();\n        \n        if ($conflictingBooking) {\n            return back()->withErrors(['start_time' => 'This time slot is no longer available.']);\n        }\n        \n        $booking = new Booking([\n            'user_id' => auth()->id(),\n            'provider_id' => $provider->id,\n            'service_id' => $service->id,\n            'start_datetime' => $startDatetime,\n            'end_datetime' => $endDatetime,\n            'status' => 'pending',\n            'notes' => $request->input('notes')\n        ]);\n        \n        $booking->save();\n        \n        return redirect()->route('bookings.show', $booking);\n    }\n    \n    public function show(Booking $booking)\n    {\n        $this->authorize('view', $booking);\n        \n        return Inertia::render('Booking/Show', [\n            'booking' => $booking->load(['service', 'provider.user'])\n        ]);\n    }\n    \n    public function cancel(Booking $booking)\n    {\n        $this->authorize('cancel', $booking);\n        \n        $booking->status = 'cancelled';\n        $booking->save();\n        \n        return redirect()->route('bookings.index');\n    }\n}\n```\n\n2. Create Booking Policy:\n```php\nclass BookingPolicy\n{\n    public function view(User $user, Booking $booking)\n    {\n        return $user->id === $booking->user_id || \n               ($user->provider && $user->provider->id === $booking->provider_id);\n    }\n    \n    public function cancel(User $user, Booking $booking)\n    {\n        return $user->id === $booking->user_id && $booking->status === 'pending';\n    }\n}\n```\n\n3. Create Vue components for booking:\n   - Create.vue - Date and time slot selection\n   - Show.vue - Booking details view\n   - Use shadcn-vue calendar and time picker components\n\n4. Add routes in web.php:\n```php\nRoute::middleware(['auth'])->group(function () {\n    Route::get('/services/{service}/book', [BookingController::class, 'create'])->name('bookings.create');\n    Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');\n    Route::get('/bookings/{booking}', [BookingController::class, 'show'])->name('bookings.show');\n    Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');\n});\n```",
+        "testStrategy": "1. Test booking creation with valid and invalid time slots\n2. Verify double-booking prevention works correctly\n3. Test booking cancellation functionality\n4. Verify booking details display correctly\n5. Test date and time picker components\n6. Verify policy enforcement prevents unauthorized access\n7. Test edge cases like booking at the end of provider's availability",
+        "priority": "high",
+        "dependencies": [
+          16,
+          19
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create TimeSlotService for Availability Management",
+            "description": "Implement the TimeSlotService class to handle time slot generation, filtering, and availability checking based on provider schedules and existing bookings.",
+            "dependencies": [],
+            "details": "1. Create TimeSlotService.php in app/Services directory\n2. Implement generateTimeSlots method to create time slots based on provider availability\n3. Add methods to check for booking conflicts\n4. Implement logic to filter out already booked slots\n5. Add helper methods for time manipulation and validation\n6. Write unit tests for the service",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Booking Controller Methods",
+            "description": "Complete the BookingController implementation with all required methods for creating, viewing, and canceling bookings.",
+            "dependencies": [
+              "20.1"
+            ],
+            "details": "1. Finalize the create method to display available time slots\n2. Complete the store method with proper validation and conflict detection\n3. Implement the show method to display booking details\n4. Add the cancel method with proper authorization\n5. Add error handling and validation messages\n6. Implement any missing helper methods",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Create Booking Policy and Authorization",
+            "description": "Implement the BookingPolicy class to handle authorization for viewing and canceling bookings.",
+            "dependencies": [],
+            "details": "1. Complete the BookingPolicy implementation\n2. Register the policy in AuthServiceProvider\n3. Add methods for additional actions if needed (reschedule, etc.)\n4. Ensure proper authorization checks in controller methods\n5. Test policy with different user roles",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Develop Booking Creation Vue Component",
+            "description": "Create the booking creation Vue component with date selection and time slot picking functionality.",
+            "dependencies": [
+              "20.1",
+              "20.2"
+            ],
+            "details": "1. Create Booking/Create.vue component\n2. Implement date selection using shadcn-vue calendar\n3. Add time slot selection grid with available/unavailable states\n4. Implement form for additional booking information\n5. Add validation and error handling\n6. Create loading states for async operations",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement Booking Details and Management Vue Components",
+            "description": "Create Vue components for viewing booking details and managing existing bookings.",
+            "dependencies": [
+              "20.2",
+              "20.3"
+            ],
+            "details": "1. Create Booking/Show.vue component to display booking details\n2. Implement booking cancellation functionality with confirmation\n3. Add status indicators and badges\n4. Create a booking list component for user's bookings\n5. Implement filtering and sorting options\n6. Add responsive design for mobile devices",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Configure Routes and Navigation",
+            "description": "Set up all required routes for the booking system and integrate with the application navigation.",
+            "dependencies": [
+              "20.2",
+              "20.4",
+              "20.5"
+            ],
+            "details": "1. Add all booking routes to web.php\n2. Implement middleware for route protection\n3. Update navigation components to include booking-related links\n4. Add breadcrumbs for booking pages\n5. Implement route transitions\n6. Test all routes with different user roles",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Implement Double-Booking Prevention and Edge Cases",
+            "description": "Add robust validation and conflict detection to prevent double-bookings and handle edge cases in the booking process.",
+            "dependencies": [
+              "20.1",
+              "20.2"
+            ],
+            "details": "1. Enhance conflict detection algorithm in the store method\n2. Implement database transaction for booking creation\n3. Add real-time validation of slot availability\n4. Handle timezone differences and DST changes\n5. Implement booking expiration for pending bookings\n6. Add notifications for booking status changes\n7. Test with concurrent booking attempts",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 21,
+        "title": "Implement Provider Booking Dashboard",
+        "description": "Create a dashboard for providers to view and manage their daily bookings with consumer details.",
+        "details": "1. Extend Booking Controller with provider methods:\n```php\nclass BookingController extends Controller\n{\n    // ... existing methods\n    \n    public function providerDashboard()\n    {\n        $provider = auth()->user()->provider;\n        \n        if (!$provider) {\n            return redirect()->route('home');\n        }\n        \n        $today = Carbon::today();\n        $bookings = $provider->bookings()\n            ->with(['user', 'service'])\n            ->whereDate('start_datetime', $today)\n            ->orderBy('start_datetime')\n            ->get();\n        \n        return Inertia::render('Provider/Dashboard', [\n            'bookings' => $bookings,\n            'date' => $today->format('Y-m-d')\n        ]);\n    }\n    \n    public function providerBookings(Request $request)\n    {\n        $provider = auth()->user()->provider;\n        \n        if (!$provider) {\n            return redirect()->route('home');\n        }\n        \n        $date = $request->input('date', Carbon::today()->format('Y-m-d'));\n        $bookings = $provider->bookings()\n            ->with(['user', 'service'])\n            ->whereDate('start_datetime', $date)\n            ->orderBy('start_datetime')\n            ->get();\n        \n        return Inertia::render('Provider/Bookings', [\n            'bookings' => $bookings,\n            'date' => $date\n        ]);\n    }\n    \n    public function confirm(Booking $booking)\n    {\n        $this->authorize('manage', $booking);\n        \n        $booking->status = 'confirmed';\n        $booking->save();\n        \n        return redirect()->back();\n    }\n    \n    public function decline(Booking $booking)\n    {\n        $this->authorize('manage', $booking);\n        \n        $booking->status = 'declined';\n        $booking->save();\n        \n        return redirect()->back();\n    }\n}\n```\n\n2. Update Booking Policy:\n```php\nclass BookingPolicy\n{\n    // ... existing methods\n    \n    public function manage(User $user, Booking $booking)\n    {\n        return $user->provider && $user->provider->id === $booking->provider_id;\n    }\n}\n```\n\n3. Create Vue components for provider dashboard:\n   - Dashboard.vue - Overview of today's bookings\n   - Bookings.vue - Calendar view with date selection\n   - BookingItem.vue - Individual booking with action buttons\n   - Use shadcn-vue card and button components\n\n4. Add routes in web.php:\n```php\nRoute::middleware(['auth'])->group(function () {\n    Route::get('/provider/dashboard', [BookingController::class, 'providerDashboard'])->name('provider.dashboard');\n    Route::get('/provider/bookings', [BookingController::class, 'providerBookings'])->name('provider.bookings');\n    Route::post('/bookings/{booking}/confirm', [BookingController::class, 'confirm'])->name('bookings.confirm');\n    Route::post('/bookings/{booking}/decline', [BookingController::class, 'decline'])->name('bookings.decline');\n});\n```",
+        "testStrategy": "1. Test dashboard loading with various booking scenarios\n2. Verify booking confirmation and declining functionality\n3. Test date navigation in the calendar view\n4. Verify booking details display correctly\n5. Test responsive layout for mobile Telegram clients\n6. Verify policy enforcement prevents unauthorized access\n7. Test empty state handling when no bookings exist",
+        "priority": "medium",
+        "dependencies": [
+          16,
+          20
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Provider Dashboard Controller Methods",
+            "description": "Extend the BookingController with provider-specific methods for dashboard and bookings views, including date filtering and booking management actions.",
+            "dependencies": [],
+            "details": "1. Implement providerDashboard() method to display today's bookings\n2. Implement providerBookings() method with date filtering\n3. Implement confirm() method for booking confirmation\n4. Implement decline() method for booking rejection\n5. Update BookingPolicy with manage() method for authorization\n6. Test controller methods with different booking scenarios",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Create Dashboard.vue Component",
+            "description": "Develop the main dashboard Vue component to display an overview of today's bookings for providers.",
+            "dependencies": [
+              "21.1"
+            ],
+            "details": "1. Create Provider/Dashboard.vue component\n2. Implement layout with shadcn-vue card components\n3. Display today's date and booking count summary\n4. Iterate through bookings and display them in time order\n5. Add empty state for when no bookings exist\n6. Implement responsive design for mobile devices",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Create Bookings.vue with Calendar View",
+            "description": "Develop the bookings calendar view component with date selection functionality to view bookings for specific dates.",
+            "dependencies": [
+              "21.1"
+            ],
+            "details": "1. Create Provider/Bookings.vue component\n2. Implement date picker using shadcn-vue calendar component\n3. Display selected date's bookings in time order\n4. Add navigation controls to move between dates\n5. Implement loading states during date changes\n6. Create empty state for dates with no bookings",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create BookingItem.vue Component",
+            "description": "Develop a reusable booking item component to display individual booking details with action buttons for confirmation/declining.",
+            "dependencies": [
+              "21.1"
+            ],
+            "details": "1. Create Provider/BookingItem.vue component\n2. Display booking time, service details, and consumer information\n3. Implement confirm and decline action buttons using shadcn-vue components\n4. Add status indicators (pending, confirmed, declined)\n5. Include confirmation dialog before declining bookings\n6. Style component for different booking statuses",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Configure Routes and Navigation",
+            "description": "Set up the necessary routes and navigation elements for the provider dashboard and booking management.",
+            "dependencies": [
+              "21.1",
+              "21.2",
+              "21.3",
+              "21.4"
+            ],
+            "details": "1. Add routes in web.php for provider dashboard and bookings\n2. Configure routes for booking confirmation and declining actions\n3. Update navigation menu to include provider dashboard link\n4. Add breadcrumb navigation between dashboard views\n5. Implement route guards to prevent unauthorized access\n6. Test all routes with authenticated and unauthenticated users",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 22,
+        "title": "Implement Consumer Booking Management",
+        "description": "Create functionality for consumers to view, manage, and cancel their personal bookings.",
+        "details": "1. Extend Booking Controller with consumer methods:\n```php\nclass BookingController extends Controller\n{\n    // ... existing methods\n    \n    public function index()\n    {\n        $bookings = auth()->user()->bookings()\n            ->with(['service', 'provider.user'])\n            ->orderBy('start_datetime')\n            ->get()\n            ->groupBy(function ($booking) {\n                return $booking->start_datetime->format('Y-m-d');\n            });\n        \n        return Inertia::render('Booking/Index', [\n            'bookingsByDate' => $bookings\n        ]);\n    }\n    \n    public function upcoming()\n    {\n        $bookings = auth()->user()->bookings()\n            ->with(['service', 'provider.user'])\n            ->where('start_datetime', '>=', Carbon::now())\n            ->where('status', '!=', 'cancelled')\n            ->orderBy('start_datetime')\n            ->get();\n        \n        return Inertia::render('Booking/Upcoming', [\n            'bookings' => $bookings\n        ]);\n    }\n    \n    public function past()\n    {\n        $bookings = auth()->user()->bookings()\n            ->with(['service', 'provider.user'])\n            ->where('start_datetime', '<', Carbon::now())\n            ->orderBy('start_datetime', 'desc')\n            ->get();\n        \n        return Inertia::render('Booking/Past', [\n            'bookings' => $bookings\n        ]);\n    }\n}\n```\n\n2. Create Vue components for consumer booking management:\n   - Index.vue - All bookings grouped by date\n   - Upcoming.vue - Upcoming bookings view\n   - Past.vue - Past bookings history\n   - BookingCard.vue - Reusable booking card component\n   - Use shadcn-vue card, badge, and button components\n\n3. Add routes in web.php:\n```php\nRoute::middleware(['auth'])->group(function () {\n    Route::get('/bookings', [BookingController::class, 'index'])->name('bookings.index');\n    Route::get('/bookings/upcoming', [BookingController::class, 'upcoming'])->name('bookings.upcoming');\n    Route::get('/bookings/past', [BookingController::class, 'past'])->name('bookings.past');\n});\n```\n\n4. Create a BookingCard.vue component:\n```vue\n<template>\n  <div class=\"booking-card\" :class=\"statusClass\">\n    <div class=\"card-header\">\n      <h3>{{ booking.service.title }}</h3>\n      <Badge :variant=\"statusVariant\">{{ booking.status }}</Badge>\n    </div>\n    \n    <div class=\"card-body\">\n      <p><Icon name=\"calendar\" /> {{ formatDate(booking.start_datetime) }}</p>\n      <p><Icon name=\"clock\" /> {{ formatTime(booking.start_datetime) }} - {{ formatTime(booking.end_datetime) }}</p>\n      <p><Icon name=\"store\" /> {{ booking.provider.business_name }}</p>\n    </div>\n    \n    <div class=\"card-footer\" v-if=\"canCancel\">\n      <Button variant=\"destructive\" @click=\"confirmCancel\">\n        <Icon name=\"x\" class=\"mr-2\" />\n        Cancel Booking\n      </Button>\n    </div>\n  </div>\n</template>\n\n<script setup>\nimport { computed } from 'vue';\nimport { Badge, Button, Icon } from '@/Components/shadcn';\n\nconst props = defineProps({\n  booking: Object,\n  required: true\n});\n\nconst statusVariant = computed(() => {\n  switch(props.booking.status) {\n    case 'confirmed': return 'success';\n    case 'pending': return 'warning';\n    case 'declined': return 'destructive';\n    case 'cancelled': return 'outline';\n    default: return 'default';\n  }\n});\n\nconst statusClass = computed(() => {\n  return `status-${props.booking.status}`;\n});\n\nconst canCancel = computed(() => {\n  return ['pending', 'confirmed'].includes(props.booking.status) && \n         new Date(props.booking.start_datetime) > new Date();\n});\n\nfunction formatDate(datetime) {\n  return new Date(datetime).toLocaleDateString();\n}\n\nfunction formatTime(datetime) {\n  return new Date(datetime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });\n}\n\nfunction confirmCancel() {\n  if (confirm('Are you sure you want to cancel this booking?')) {\n    // Use Inertia to submit the cancellation\n    Inertia.post(route('bookings.cancel', props.booking.id));\n  }\n}\n</script>\n```",
+        "testStrategy": "1. Test booking listing with various booking statuses\n2. Verify booking cancellation functionality\n3. Test upcoming and past booking filters\n4. Verify booking details display correctly\n5. Test responsive layout for mobile Telegram clients\n6. Verify date and time formatting across different locales\n7. Test empty state handling when no bookings exist",
+        "priority": "medium",
+        "dependencies": [
+          16,
+          20
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 23,
+        "title": "Implement Service Discovery and Search",
+        "description": "Create functionality for consumers to search services by name and browse providers.",
+        "details": "1. Create Search Controller:\n```php\nclass SearchController extends Controller\n{\n    public function index(Request $request)\n    {\n        $query = $request->input('query', '');\n        \n        $services = Service::query()\n            ->with('provider')\n            ->when($query, function ($q) use ($query) {\n                return $q->where('title', 'like', \"%{$query}%\")\n                    ->orWhere('description', 'like', \"%{$query}%\");\n            })\n            ->orderBy('title')\n            ->paginate(10)\n            ->withQueryString();\n        \n        return Inertia::render('Search/Index', [\n            'services' => $services,\n            'query' => $query\n        ]);\n    }\n    \n    public function providers()\n    {\n        $providers = Provider::with('user')\n            ->withCount('services')\n            ->orderBy('business_name')\n            ->paginate(10);\n        \n        return Inertia::render('Search/Providers', [\n            'providers' => $providers\n        ]);\n    }\n    \n    public function providerDetail(Provider $provider)\n    {\n        $services = $provider->services;\n        \n        return Inertia::render('Search/ProviderDetail', [\n            'provider' => $provider->load('user'),\n            'services' => $services\n        ]);\n    }\n}\n```\n\n2. Create Vue components for search and discovery:\n   - Index.vue - Search form and results\n   - Providers.vue - Provider listing\n   - ProviderDetail.vue - Provider profile with services\n   - ServiceCard.vue - Reusable service card component\n   - Use shadcn-vue input, card, and pagination components\n\n3. Add routes in web.php:\n```php\nRoute::middleware(['auth'])->group(function () {\n    Route::get('/search', [SearchController::class, 'index'])->name('search.index');\n    Route::get('/providers', [SearchController::class, 'providers'])->name('search.providers');\n    Route::get('/providers/{provider}', [SearchController::class, 'providerDetail'])->name('search.provider.detail');\n});\n```\n\n4. Create a ServiceCard.vue component:\n```vue\n<template>\n  <div class=\"service-card\">\n    <div class=\"card-header\">\n      <h3>{{ service.title }}</h3>\n      <span class=\"price\">{{ service.display_price }}</span>\n    </div>\n    \n    <div class=\"card-body\">\n      <p v-if=\"service.description\">{{ service.description }}</p>\n      <p><Icon name=\"clock\" /> {{ service.duration_minutes }} minutes</p>\n      <p v-if=\"showProvider\"><Icon name=\"store\" /> {{ service.provider.business_name }}</p>\n    </div>\n    \n    <div class=\"card-footer\">\n      <Button @click=\"bookService\">\n        <Icon name=\"calendar-plus\" class=\"mr-2\" />\n        Book Now\n      </Button>\n    </div>\n  </div>\n</template>\n\n<script setup>\nimport { Button, Icon } from '@/Components/shadcn';\nimport { Inertia } from '@inertiajs/inertia';\n\nconst props = defineProps({\n  service: Object,\n  required: true,\n  showProvider: {\n    type: Boolean,\n    default: true\n  }\n});\n\nfunction bookService() {\n  Inertia.visit(route('bookings.create', props.service.id));\n}\n</script>\n```\n\n5. Create a search form component:\n```vue\n<template>\n  <form @submit.prevent=\"search\">\n    <div class=\"search-container\">\n      <Input \n        v-model=\"searchQuery\" \n        placeholder=\"Search services...\" \n        type=\"search\"\n        class=\"search-input\"\n      />\n      <Button type=\"submit\">\n        <Icon name=\"search\" />\n        Search\n      </Button>\n    </div>\n  </form>\n</template>\n\n<script setup>\nimport { ref } from 'vue';\nimport { Inertia } from '@inertiajs/inertia';\nimport { Input, Button, Icon } from '@/Components/shadcn';\n\nconst props = defineProps({\n  initialQuery: {\n    type: String,\n    default: ''\n  }\n});\n\nconst searchQuery = ref(props.initialQuery);\n\nfunction search() {\n  Inertia.get(route('search.index'), {\n    query: searchQuery.value\n  }, {\n    preserveState: true,\n    replace: true\n  });\n}\n</script>\n```",
+        "testStrategy": "1. Test search functionality with various queries\n2. Verify provider listing and pagination\n3. Test provider detail view with services\n4. Verify booking flow from search results\n5. Test responsive layout for mobile Telegram clients\n6. Verify empty state handling when no results exist\n7. Test search form validation and submission",
+        "priority": "medium",
+        "dependencies": [
+          16,
+          18
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 24,
+        "title": "Implement Telegram Theme Integration",
+        "description": "Create dynamic color adaptation based on user's Telegram theme and optimize UI for Telegram's mobile environment.",
+        "details": "1. Create a Telegram theme service in JavaScript:\n```javascript\n// resources/js/Services/TelegramTheme.js\nexport default class TelegramTheme {\n  constructor() {\n    this.telegram = window.Telegram?.WebApp;\n    this.themeParams = this.telegram?.themeParams || {};\n    this.colorScheme = this.telegram?.colorScheme || 'light';\n  }\n  \n  init() {\n    if (!this.telegram) {\n      console.warn('Telegram WebApp is not available, using fallback theme');\n      this.useFallbackTheme();\n      return;\n    }\n    \n    this.applyThemeColors();\n    this.setupViewportHandling();\n    \n    // Listen for theme changes\n    this.telegram.onEvent('themeChanged', () => {\n      this.colorScheme = this.telegram.colorScheme;\n      this.themeParams = this.telegram.themeParams;\n      this.applyThemeColors();\n    });\n  }\n  \n  applyThemeColors() {\n    const root = document.documentElement;\n    \n    // Apply Telegram theme colors to CSS variables\n    root.style.setProperty('--tg-theme-bg-color', this.themeParams.bg_color || '#ffffff');\n    root.style.setProperty('--tg-theme-text-color', this.themeParams.text_color || '#000000');\n    root.style.setProperty('--tg-theme-hint-color', this.themeParams.hint_color || '#999999');\n    root.style.setProperty('--tg-theme-link-color', this.themeParams.link_color || '#2481cc');\n    root.style.setProperty('--tg-theme-button-color', this.themeParams.button_color || '#2481cc');\n    root.style.setProperty('--tg-theme-button-text-color', this.themeParams.button_text_color || '#ffffff');\n    root.style.setProperty('--tg-theme-secondary-bg-color', this.themeParams.secondary_bg_color || '#f0f0f0');\n    \n    // Set color scheme attribute for conditional styling\n    document.body.setAttribute('data-theme', this.colorScheme);\n  }\n  \n  setupViewportHandling() {\n    if (!this.telegram) return;\n    \n    // Expand the WebApp to maximum available height\n    this.telegram.expand();\n    \n    // Handle viewport changes\n    this.telegram.onEvent('viewportChanged', () => {\n      const viewportHeight = this.telegram.viewportHeight;\n      document.documentElement.style.setProperty('--tg-viewport-height', `${viewportHeight}px`);\n    });\n    \n    // Initial viewport setup\n    document.documentElement.style.setProperty('--tg-viewport-height', `${this.telegram.viewportHeight}px`);\n  }\n  \n  useFallbackTheme() {\n    const root = document.documentElement;\n    \n    // Fallback colors for development\n    root.style.setProperty('--tg-theme-bg-color', '#ffffff');\n    root.style.setProperty('--tg-theme-text-color', '#000000');\n    root.style.setProperty('--tg-theme-hint-color', '#999999');\n    root.style.setProperty('--tg-theme-link-color', '#2481cc');\n    root.style.setProperty('--tg-theme-button-color', '#2481cc');\n    root.style.setProperty('--tg-theme-button-text-color', '#ffffff');\n    root.style.setProperty('--tg-theme-secondary-bg-color', '#f0f0f0');\n    \n    document.body.setAttribute('data-theme', 'light');\n  }\n}\n```\n\n2. Initialize the Telegram theme in the main app entry point:\n```javascript\n// resources/js/app.js\nimport './bootstrap';\nimport { createApp, h } from 'vue';\nimport { createInertiaApp } from '@inertiajs/inertia-vue3';\nimport TelegramTheme from './Services/TelegramTheme';\n\ncreateInertiaApp({\n  resolve: name => require(`./Pages/${name}`),\n  setup({ el, App, props, plugin }) {\n    const app = createApp({ render: () => h(App, props) });\n    \n    app.use(plugin);\n    \n    // Initialize Telegram theme\n    const telegramTheme = new TelegramTheme();\n    telegramTheme.init();\n    \n    // Make Telegram WebApp available globally in components\n    app.config.globalProperties.$telegram = window.Telegram?.WebApp;\n    \n    app.mount(el);\n  },\n});\n```\n\n3. Create Tailwind CSS theme configuration:\n```javascript\n// tailwind.config.js\nmodule.exports = {\n  content: [\n    './resources/**/*.blade.php',\n    './resources/**/*.js',\n    './resources/**/*.vue',\n  ],\n  theme: {\n    extend: {\n      colors: {\n        // Map Telegram theme variables to Tailwind colors\n        'tg-bg': 'var(--tg-theme-bg-color)',\n        'tg-text': 'var(--tg-theme-text-color)',\n        'tg-hint': 'var(--tg-theme-hint-color)',\n        'tg-link': 'var(--tg-theme-link-color)',\n        'tg-button': 'var(--tg-theme-button-color)',\n        'tg-button-text': 'var(--tg-theme-button-text-color)',\n        'tg-secondary-bg': 'var(--tg-theme-secondary-bg-color)',\n      },\n      height: {\n        'tg-viewport': 'var(--tg-viewport-height, 100vh)',\n      },\n    },\n  },\n  plugins: [],\n};\n```\n\n4. Create a base layout component that uses Telegram theme:\n```vue\n<template>\n  <div class=\"telegram-app bg-tg-bg text-tg-text min-h-tg-viewport\">\n    <header class=\"app-header bg-tg-secondary-bg p-4\">\n      <slot name=\"header\">\n        <h1 class=\"text-xl font-bold\">{{ title }}</h1>\n      </slot>\n    </header>\n    \n    <main class=\"app-content p-4\">\n      <slot />\n    </main>\n    \n    <footer v-if=\"$slots.footer\" class=\"app-footer bg-tg-secondary-bg p-4\">\n      <slot name=\"footer\" />\n    </footer>\n  </div>\n</template>\n\n<script setup>\ndefineProps({\n  title: {\n    type: String,\n    default: 'Service Booking App'\n  }\n});\n</script>\n\n<style>\n/* Base Telegram theme styles */\n[data-theme=\"dark\"] .telegram-app {\n  color-scheme: dark;\n}\n\n[data-theme=\"light\"] .telegram-app {\n  color-scheme: light;\n}\n\n/* Adjust shadcn-vue components to use Telegram theme */\n.btn-primary {\n  background-color: var(--tg-theme-button-color) !important;\n  color: var(--tg-theme-button-text-color) !important;\n}\n\n.link {\n  color: var(--tg-theme-link-color) !important;\n}\n</style>\n```",
+        "testStrategy": "1. Test theme integration in both light and dark Telegram themes\n2. Verify responsive layout adapts to different viewport sizes\n3. Test theme changes are applied dynamically when user switches themes\n4. Verify shadcn-vue components correctly use Telegram theme colors\n5. Test fallback theme for development environment\n6. Verify viewport handling for different mobile devices\n7. Test accessibility with various color contrast combinations",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create and implement TelegramTheme service",
+            "description": "Implement the TelegramTheme JavaScript service to detect and apply Telegram theme colors to the application.",
+            "dependencies": [],
+            "details": "1. Create the TelegramTheme.js service file in resources/js/Services/\n2. Implement constructor to detect Telegram WebApp availability\n3. Add theme detection methods for colors and color scheme\n4. Implement fallback theme for development environment\n5. Add event listeners for theme changes\n6. Test the service with both light and dark Telegram themes",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Configure Tailwind CSS for Telegram theme variables",
+            "description": "Update Tailwind configuration to use Telegram theme CSS variables for consistent styling across the application.",
+            "dependencies": [
+              "24.1"
+            ],
+            "details": "1. Modify tailwind.config.js to include Telegram theme color mappings\n2. Add custom height variables for Telegram viewport\n3. Create utility classes for Telegram-specific styling\n4. Test the configuration with different theme colors\n5. Ensure proper fallback colors are defined for non-Telegram environments",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement viewport handling for Telegram WebApp",
+            "description": "Add functionality to properly handle Telegram WebApp viewport changes and ensure the application adapts to different screen sizes.",
+            "dependencies": [
+              "24.1"
+            ],
+            "details": "1. Implement the setupViewportHandling method in TelegramTheme service\n2. Add event listeners for viewportChanged events\n3. Create CSS variables for viewport height\n4. Implement expand() method call to maximize available height\n5. Test viewport adaptation on different mobile devices\n6. Ensure scrolling behavior works correctly within Telegram WebApp",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create base layout component with Telegram theme support",
+            "description": "Develop a base layout Vue component that properly applies Telegram theme colors and adapts to viewport changes.",
+            "dependencies": [
+              "24.1",
+              "24.2",
+              "24.3"
+            ],
+            "details": "1. Create a TelegramLayout.vue component\n2. Implement slots for header, content, and footer\n3. Apply Telegram theme classes from Tailwind configuration\n4. Add conditional styling based on data-theme attribute\n5. Test layout in both light and dark themes\n6. Ensure proper height calculations with Telegram viewport",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Adapt UI components to use Telegram theme colors",
+            "description": "Update existing UI components to use Telegram theme colors and ensure consistent styling across the application.",
+            "dependencies": [
+              "24.1",
+              "24.2",
+              "24.4"
+            ],
+            "details": "1. Create CSS overrides for shadcn-vue components to use Telegram theme variables\n2. Update button styles to use Telegram button colors\n3. Modify form elements to match Telegram theme\n4. Implement theme-aware card and panel components\n5. Test all components in both light and dark themes\n6. Create documentation for developers on using theme-aware components",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 25,
+        "title": "Implement Telegram Profile Sync",
+        "description": "Create functionality to automatically import and sync Telegram profile data (name, username, photo) with user profiles.",
+        "details": "1. Create a Telegram Profile Service:\n```php\nclass TelegramProfileService\n{\n    public function syncProfile(User $user, array $telegramData)\n    {\n        // Update user profile with Telegram data\n        $user->name = $telegramData['first_name'] . ' ' . ($telegramData['last_name'] ?? '');\n        $user->telegram_username = $telegramData['username'] ?? null;\n        \n        // Save Telegram photo if available\n        if (isset($telegramData['photo_url'])) {\n            $this->syncProfilePhoto($user, $telegramData['photo_url']);\n        }\n        \n        $user->save();\n        \n        return $user;\n    }\n    \n    protected function syncProfilePhoto(User $user, string $photoUrl)\n    {\n        try {\n            $photoContents = file_get_contents($photoUrl);\n            \n            if ($photoContents === false) {\n                return;\n            }\n            \n            $filename = 'telegram_' . $user->id . '_' . time() . '.jpg';\n            $path = 'profile-photos/' . $filename;\n            \n            Storage::disk('public')->put($path, $photoContents);\n            \n            // Delete old photo if exists\n            if ($user->profile_photo_path) {\n                Storage::disk('public')->delete($user->profile_photo_path);\n            }\n            \n            $user->profile_photo_path = $path;\n        } catch (\\Exception $e) {\n            // Log error but don't fail the sync\n            Log::error('Failed to sync Telegram profile photo: ' . $e->getMessage());\n        }\n    }\n}\n```\n\n2. Create a Telegram Auth Middleware:\n```php\nclass TelegramAuth\n{\n    protected $telegramProfileService;\n    \n    public function __construct(TelegramProfileService $telegramProfileService)\n    {\n        $this->telegramProfileService = $telegramProfileService;\n    }\n    \n    public function handle($request, Closure $next)\n    {\n        if (!$request->hasHeader('X-Telegram-Data')) {\n            // For development, allow mock auth\n            if (app()->environment('local') && $request->has('mock_user_id')) {\n                $user = User::find($request->mock_user_id);\n                if ($user) {\n                    Auth::login($user);\n                    return $next($request);\n                }\n            }\n            \n            return response()->json(['error' => 'Unauthorized'], 401);\n        }\n        \n        $telegramData = json_decode(base64_decode($request->header('X-Telegram-Data')), true);\n        \n        if (!$this->validateTelegramData($telegramData)) {\n            return response()->json(['error' => 'Invalid Telegram data'], 401);\n        }\n        \n        // Find or create user\n        $user = User::firstOrCreate(\n            ['telegram_id' => $telegramData['id']],\n            [\n                'name' => $telegramData['first_name'] . ' ' . ($telegramData['last_name'] ?? ''),\n                'email' => $telegramData['id'] . '@telegram.user', // Placeholder email\n                'password' => Hash::make(Str::random(32)), // Random password\n            ]\n        );\n        \n        // Sync profile data\n        $this->telegramProfileService->syncProfile($user, $telegramData);\n        \n        // Login user\n        Auth::login($user);\n        \n        return $next($request);\n    }\n    \n    protected function validateTelegramData($data)\n    {\n        // Basic validation - in production would include signature verification\n        return isset($data['id']) && isset($data['first_name']);\n    }\n}\n```\n\n3. Register the middleware in Kernel.php:\n```php\nprotected $routeMiddleware = [\n    // Other middleware...\n    'telegram.auth' => \\App\\Http\\Middleware\\TelegramAuth::class,\n];\n```\n\n4. Create a JavaScript utility for Telegram auth:\n```javascript\n// resources/js/Services/TelegramAuth.js\nexport default class TelegramAuth {\n  constructor() {\n    this.telegram = window.Telegram?.WebApp;\n  }\n  \n  isAvailable() {\n    return !!this.telegram;\n  }\n  \n  getUserData() {\n    if (!this.isAvailable()) {\n      return null;\n    }\n    \n    // Get user data from Telegram WebApp\n    const initData = this.telegram.initData;\n    const user = this.telegram.initDataUnsafe?.user;\n    \n    return {\n      initData,\n      user\n    };\n  }\n  \n  attachAuthHeader(headers) {\n    const userData = this.getUserData();\n    \n    if (userData && userData.user) {\n      // In production, would include full initData with signature\n      headers['X-Telegram-Data'] = btoa(JSON.stringify(userData.user));\n    }\n    \n    return headers;\n  }\n  \n  setupAxiosInterceptor() {\n    const self = this;\n    \n    // Add Telegram auth header to all axios requests\n    window.axios.interceptors.request.use(function (config) {\n      config.headers = self.attachAuthHeader(config.headers || {});\n      return config;\n    });\n  }\n}\n```\n\n5. Initialize the Telegram auth in the main app entry point:\n```javascript\n// resources/js/app.js\nimport './bootstrap';\nimport { createApp, h } from 'vue';\nimport { createInertiaApp } from '@inertiajs/inertia-vue3';\nimport TelegramTheme from './Services/TelegramTheme';\nimport TelegramAuth from './Services/TelegramAuth';\n\ncreateInertiaApp({\n  resolve: name => require(`./Pages/${name}`),\n  setup({ el, App, props, plugin }) {\n    const app = createApp({ render: () => h(App, props) });\n    \n    app.use(plugin);\n    \n    // Initialize Telegram theme\n    const telegramTheme = new TelegramTheme();\n    telegramTheme.init();\n    \n    // Initialize Telegram auth\n    const telegramAuth = new TelegramAuth();\n    telegramAuth.setupAxiosInterceptor();\n    \n    // Make Telegram WebApp available globally in components\n    app.config.globalProperties.$telegram = window.Telegram?.WebApp;\n    app.config.globalProperties.$telegramAuth = telegramAuth;\n    \n    app.mount(el);\n  },\n});\n```\n\n6. Create a mock auth component for development:\n```vue\n<template>\n  <div v-if=\"showMockAuth\" class=\"mock-auth-panel\">\n    <h3>Mock Telegram Auth</h3>\n    <select v-model=\"selectedUserId\" @change=\"switchUser\">\n      <option v-for=\"user in users\" :key=\"user.id\" :value=\"user.id\">\n        {{ user.name }} ({{ user.telegram_username || 'No username' }})\n      </option>\n    </select>\n  </div>\n</template>\n\n<script setup>\nimport { ref, computed, onMounted } from 'vue';\nimport { Inertia } from '@inertiajs/inertia';\n\nconst props = defineProps({\n  users: Array\n});\n\nconst selectedUserId = ref(null);\nconst showMockAuth = computed(() => {\n  return process.env.NODE_ENV === 'development';\n});\n\nonMounted(() => {\n  if (props.users && props.users.length > 0) {\n    selectedUserId.value = props.users[0].id;\n  }\n});\n\nfunction switchUser() {\n  if (selectedUserId.value) {\n    Inertia.visit(window.location.pathname, {\n      data: {\n        mock_user_id: selectedUserId.value\n      }\n    });\n  }\n}\n</script>\n\n<style scoped>\n.mock-auth-panel {\n  position: fixed;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  background: #f0f0f0;\n  padding: 10px;\n  border-top: 1px solid #ccc;\n  z-index: 1000;\n}\n</style>\n```",
+        "testStrategy": "1. Test Telegram profile sync with mock data\n2. Verify profile photo retrieval and storage\n3. Test authentication middleware with valid and invalid Telegram data\n4. Verify user creation for new Telegram users\n5. Test profile updates when Telegram data changes\n6. Verify mock auth component works in development environment\n7. Test error handling for failed profile photo downloads",
+        "priority": "high",
+        "dependencies": [
+          24
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create and Implement TelegramProfileService",
+            "description": "Finalize the TelegramProfileService class to handle profile data synchronization between Telegram and the application.",
+            "dependencies": [],
+            "details": "1. Review and finalize the TelegramProfileService class\n2. Implement error handling for profile sync failures\n3. Add logging for sync operations\n4. Create unit tests for the service\n5. Handle edge cases like missing profile data\n6. Ensure proper cleanup of old profile photos",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement TelegramAuth Middleware",
+            "description": "Complete the authentication middleware to validate Telegram data and create/update users based on Telegram profiles.",
+            "dependencies": [
+              "25.1"
+            ],
+            "details": "1. Finalize the TelegramAuth middleware implementation\n2. Add proper validation of Telegram data including signature verification\n3. Implement user creation/lookup logic\n4. Connect the middleware with the TelegramProfileService\n5. Add comprehensive error handling\n6. Register the middleware in Kernel.php",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Develop Profile Photo Handling",
+            "description": "Create functionality to retrieve, store, and manage Telegram profile photos.",
+            "dependencies": [
+              "25.1"
+            ],
+            "details": "1. Implement the syncProfilePhoto method in TelegramProfileService\n2. Create storage configuration for profile photos\n3. Add image processing for optimization if needed\n4. Implement cleanup of old profile photos\n5. Handle various error cases (invalid URLs, network issues)\n6. Add proper file naming and organization",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create JavaScript Utilities for Telegram Auth",
+            "description": "Develop frontend utilities to handle Telegram WebApp integration and authentication.",
+            "dependencies": [
+              "25.2"
+            ],
+            "details": "1. Finalize the TelegramAuth JavaScript class\n2. Implement proper data encoding/encryption for auth headers\n3. Create Axios interceptors for authentication\n4. Add detection of Telegram WebApp environment\n5. Implement error handling for when Telegram WebApp is not available\n6. Create documentation for the utility",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement Mock Auth for Development",
+            "description": "Create a development-only mock authentication system for testing without Telegram.",
+            "dependencies": [
+              "25.2",
+              "25.4"
+            ],
+            "details": "1. Complete the mock auth Vue component\n2. Implement user switching functionality\n3. Create a mock data generator for Telegram profile data\n4. Add styling for the mock auth panel\n5. Ensure the mock auth only appears in development environment\n6. Add sample users for testing different scenarios",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Test and Integrate Telegram Profile Sync",
+            "description": "Perform comprehensive testing of the Telegram profile sync functionality and integrate it with the main application.",
+            "dependencies": [
+              "25.1",
+              "25.2",
+              "25.3",
+              "25.4",
+              "25.5"
+            ],
+            "details": "1. Create integration tests for the complete auth flow\n2. Test profile updates when Telegram data changes\n3. Verify profile photo sync works correctly\n4. Test error scenarios and recovery\n5. Perform security testing of the authentication process\n6. Document the integration process for other developers",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 26,
+        "title": "Implement UI/UX Polish with shadcn-vue Components",
+        "description": "Enhance the user interface with consistent shadcn-vue components, better mobile experience, and comprehensive form validation.",
+        "details": "1. Create a shadcn-vue component registry:\n```javascript\n// resources/js/Components/shadcn/index.js\nimport Button from './Button.vue';\nimport Input from './Input.vue';\nimport Select from './Select.vue';\nimport Checkbox from './Checkbox.vue';\nimport Card from './Card.vue';\nimport Badge from './Badge.vue';\nimport Calendar from './Calendar.vue';\nimport TimePicker from './TimePicker.vue';\nimport Tabs from './Tabs.vue';\nimport TabPanel from './TabPanel.vue';\nimport Alert from './Alert.vue';\nimport Spinner from './Spinner.vue';\nimport Avatar from './Avatar.vue';\nimport Dialog from './Dialog.vue';\n\n// Import Lucide icons\nimport { \n  Calendar as IconCalendar,\n  Clock as IconClock,\n  Search as IconSearch,\n  User as IconUser,\n  Store as IconStore,\n  Plus as IconPlus,\n  Edit as IconEdit,\n  Trash as IconTrash,\n  Check as IconCheck,\n  X as IconX,\n  ChevronLeft as IconChevronLeft,\n  ChevronRight as IconChevronRight,\n  CalendarPlus as IconCalendarPlus\n} from 'lucide-vue-next';\n\n// Create Icon component that wraps Lucide icons\nconst Icon = {\n  name: 'Icon',\n  props: ['name'],\n  components: {\n    IconCalendar,\n    IconClock,\n    IconSearch,\n    IconUser,\n    IconStore,\n    IconPlus,\n    IconEdit,\n    IconTrash,\n    IconCheck,\n    IconX,\n    IconChevronLeft,\n    IconChevronRight,\n    IconCalendarPlus\n  },\n  render() {\n    const IconComponent = this.$options.components[`Icon${this.name.charAt(0).toUpperCase() + this.name.slice(1)}`];\n    return IconComponent ? h(IconComponent) : null;\n  }\n};\n\nexport {\n  Button,\n  Input,\n  Select,\n  Checkbox,\n  Card,\n  Badge,\n  Calendar,\n  TimePicker,\n  Tabs,\n  TabPanel,\n  Alert,\n  Spinner,\n  Avatar,\n  Dialog,\n  Icon\n};\n```\n\n2. Create form validation composable:\n```javascript\n// resources/js/Composables/useFormValidation.js\nimport { ref, computed } from 'vue';\n\nexport function useFormValidation(initialValues = {}) {\n  const form = ref({ ...initialValues });\n  const errors = ref({});\n  const processing = ref(false);\n  \n  const resetForm = () => {\n    form.value = { ...initialValues };\n    errors.value = {};\n  };\n  \n  const validate = (rules) => {\n    const newErrors = {};\n    \n    Object.keys(rules).forEach(field => {\n      const fieldRules = rules[field];\n      const value = form.value[field];\n      \n      // Required validation\n      if (fieldRules.required && (!value || value === '')) {\n        newErrors[field] = fieldRules.required === true \n          ? `${field} is required` \n          : fieldRules.required;\n      }\n      \n      // Min length validation\n      if (fieldRules.minLength && value && value.length < fieldRules.minLength) {\n        newErrors[field] = `${field} must be at least ${fieldRules.minLength} characters`;\n      }\n      \n      // Max length validation\n      if (fieldRules.maxLength && value && value.length > fieldRules.maxLength) {\n        newErrors[field] = `${field} must be less than ${fieldRules.maxLength} characters`;\n      }\n      \n      // Pattern validation\n      if (fieldRules.pattern && value && !fieldRules.pattern.test(value)) {\n        newErrors[field] = fieldRules.patternMessage || `${field} format is invalid`;\n      }\n      \n      // Custom validation\n      if (fieldRules.custom && typeof fieldRules.custom === 'function') {\n        const customError = fieldRules.custom(value, form.value);\n        if (customError) {\n          newErrors[field] = customError;\n        }\n      }\n    });\n    \n    errors.value = newErrors;\n    return Object.keys(newErrors).length === 0;\n  };\n  \n  const hasErrors = computed(() => Object.keys(errors.value).length > 0);\n  \n  return {\n    form,\n    errors,\n    processing,\n    resetForm,\n    validate,\n    hasErrors\n  };\n}\n```\n\n3. Create responsive layout components:\n```vue\n<!-- resources/js/Layouts/AppLayout.vue -->\n<template>\n  <div class=\"app-layout bg-tg-bg text-tg-text min-h-tg-viewport flex flex-col\">\n    <header class=\"app-header bg-tg-secondary-bg p-4 flex items-center justify-between\">\n      <div class=\"flex items-center\">\n        <button v-if=\"showBackButton\" @click=\"goBack\" class=\"mr-2\">\n          <Icon name=\"chevronLeft\" />\n        </button>\n        <h1 class=\"text-xl font-bold\">{{ title }}</h1>\n      </div>\n      \n      <slot name=\"header-actions\"></slot>\n    </header>\n    \n    <main class=\"app-content p-4 flex-grow\">\n      <Alert v-if=\"$page.props.flash?.message\" :variant=\"$page.props.flash.type || 'info'\" class=\"mb-4\">\n        {{ $page.props.flash.message }}\n      </Alert>\n      \n      <slot />\n    </main>\n    \n    <footer v-if=\"$slots.footer\" class=\"app-footer bg-tg-secondary-bg p-4\">\n      <slot name=\"footer\" />\n    </footer>\n    \n    <nav v-if=\"showNavigation\" class=\"app-navigation bg-tg-secondary-bg p-2 flex justify-around items-center border-t border-tg-hint border-opacity-20\">\n      <NavLink :href=\"route('search.index')\" :active=\"route().current('search.*')\">\n        <Icon name=\"search\" />\n        <span>Search</span>\n      </NavLink>\n      \n      <NavLink :href=\"route('bookings.upcoming')\" :active=\"route().current('bookings.*')\">\n        <Icon name=\"calendar\" />\n        <span>Bookings</span>\n      </NavLink>\n      \n      <NavLink v-if=\"$page.props.auth.user.provider\" :href=\"route('provider.dashboard')\" :active=\"route().current('provider.*')\">\n        <Icon name=\"store\" />\n        <span>Provider</span>\n      </NavLink>\n      \n      <NavLink :href=\"route('profile.show')\" :active=\"route().current('profile.*')\">\n        <Icon name=\"user\" />\n        <span>Profile</span>\n      </NavLink>\n    </nav>\n  </div>\n</template>\n\n<script setup>\nimport { computed } from 'vue';\nimport { usePage, Link } from '@inertiajs/inertia-vue3';\nimport { Alert, Icon } from '@/Components/shadcn';\n\nconst props = defineProps({\n  title: String,\n  showBackButton: {\n    type: Boolean,\n    default: false\n  },\n  showNavigation: {\n    type: Boolean,\n    default: true\n  }\n});\n\nfunction goBack() {\n  window.history.back();\n}\n\nconst NavLink = {\n  components: { Link, Icon },\n  props: ['href', 'active'],\n  template: `\n    <Link :href=\"href\" class=\"nav-link flex flex-col items-center p-2\" :class=\"{ 'active': active }\">\n      <slot></slot>\n    </Link>\n  `\n};\n</script>\n\n<style scoped>\n.nav-link {\n  color: var(--tg-theme-hint-color);\n  font-size: 0.75rem;\n}\n\n.nav-link.active {\n  color: var(--tg-theme-link-color);\n}\n\n.nav-link span {\n  margin-top: 0.25rem;\n}\n</style>\n```\n\n4. Create reusable form components:\n```vue\n<!-- resources/js/Components/FormField.vue -->\n<template>\n  <div class=\"form-field mb-4\">\n    <label v-if=\"label\" :for=\"id\" class=\"block text-sm font-medium mb-1\">{{ label }}</label>\n    \n    <slot></slot>\n    \n    <p v-if=\"error\" class=\"text-red-500 text-sm mt-1\">{{ error }}</p>\n    <p v-else-if=\"hint\" class=\"text-tg-hint text-sm mt-1\">{{ hint }}</p>\n  </div>\n</template>\n\n<script setup>\nimport { computed } from 'vue';\n\nconst props = defineProps({\n  id: String,\n  label: String,\n  error: String,\n  hint: String\n});\n</script>\n```\n\n5. Create a loading overlay component:\n```vue\n<!-- resources/js/Components/LoadingOverlay.vue -->\n<template>\n  <div v-if=\"show\" class=\"loading-overlay\">\n    <div class=\"loading-content\">\n      <Spinner size=\"lg\" />\n      <p v-if=\"message\" class=\"mt-2\">{{ message }}</p>\n    </div>\n  </div>\n</template>\n\n<script setup>\nimport { Spinner } from '@/Components/shadcn';\n\ndefineProps({\n  show: {\n    type: Boolean,\n    default: false\n  },\n  message: String\n});\n</script>\n\n<style scoped>\n.loading-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  background-color: rgba(0, 0, 0, 0.5);\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  z-index: 9999;\n}\n\n.loading-content {\n  background-color: var(--tg-theme-bg-color);\n  padding: 2rem;\n  border-radius: 0.5rem;\n  text-align: center;\n}\n</style>\n```\n\n6. Create a confirmation dialog component:\n```vue\n<!-- resources/js/Components/ConfirmDialog.vue -->\n<template>\n  <Dialog :open=\"show\" @close=\"onCancel\">\n    <div class=\"p-4\">\n      <h3 class=\"text-lg font-medium mb-2\">{{ title }}</h3>\n      <p class=\"mb-4\">{{ message }}</p>\n      \n      <div class=\"flex justify-end space-x-2\">\n        <Button variant=\"outline\" @click=\"onCancel\">{{ cancelText }}</Button>\n        <Button variant=\"destructive\" @click=\"onConfirm\">{{ confirmText }}</Button>\n      </div>\n    </div>\n  </Dialog>\n</template>\n\n<script setup>\nimport { Dialog, Button } from '@/Components/shadcn';\n\nconst props = defineProps({\n  show: Boolean,\n  title: {\n    type: String,\n    default: 'Confirm Action'\n  },\n  message: {\n    type: String,\n    default: 'Are you sure you want to proceed?'\n  },\n  confirmText: {\n    type: String,\n    default: 'Confirm'\n  },\n  cancelText: {\n    type: String,\n    default: 'Cancel'\n  }\n});\n\nconst emit = defineEmits(['confirm', 'cancel']);\n\nfunction onConfirm() {\n  emit('confirm');\n}\n\nfunction onCancel() {\n  emit('cancel');\n}\n</script>\n```",
+        "testStrategy": "1. Test responsive layout on various screen sizes\n2. Verify form validation works correctly with different input types\n3. Test loading overlay during async operations\n4. Verify confirmation dialogs work for destructive actions\n5. Test navigation components and active state\n6. Verify shadcn-vue components render correctly with Telegram theme\n7. Test accessibility features like keyboard navigation and screen reader support",
+        "priority": "medium",
+        "dependencies": [
+          24
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement shadcn-vue component registry and icon system",
+            "description": "Create the component registry file that exports all shadcn-vue components and implement the icon system using Lucide icons for consistent usage throughout the application.",
+            "dependencies": [],
+            "details": "1. Create the resources/js/Components/shadcn/index.js file\n2. Import and export all shadcn-vue components\n3. Set up the Icon component wrapper for Lucide icons\n4. Test icon rendering with different names\n5. Update import statements in existing components to use the registry",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Create form validation composable and reusable form components",
+            "description": "Implement a form validation composable for consistent form handling and create reusable form components that integrate with the validation system.",
+            "dependencies": [
+              "26.1"
+            ],
+            "details": "1. Create useFormValidation.js composable with validation rules\n2. Implement FormField.vue component for consistent field layout\n3. Create form-specific components that use shadcn-vue components\n4. Add error handling and display\n5. Test validation with different form scenarios",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Develop responsive layout components with Telegram theme integration",
+            "description": "Create responsive layout components that adapt to different screen sizes and properly integrate with Telegram theme variables for consistent styling.",
+            "dependencies": [
+              "26.1"
+            ],
+            "details": "1. Implement AppLayout.vue with header, content, footer, and navigation sections\n2. Create navigation components with active state handling\n3. Add responsive breakpoints for different screen sizes\n4. Integrate Telegram theme CSS variables\n5. Test layouts on mobile, tablet, and desktop viewports",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement loading overlay and confirmation dialog components",
+            "description": "Create reusable loading overlay and confirmation dialog components for consistent user experience during async operations and destructive actions.",
+            "dependencies": [
+              "26.1"
+            ],
+            "details": "1. Implement LoadingOverlay.vue component with spinner and message\n2. Create ConfirmDialog.vue component with customizable content\n3. Add animation for smooth transitions\n4. Implement z-index management for proper stacking\n5. Test components in different scenarios (network requests, form submissions, deletions)",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Apply UI/UX polish to existing pages and ensure mobile responsiveness",
+            "description": "Update all existing pages to use the new component system and ensure proper mobile responsiveness throughout the application.",
+            "dependencies": [
+              "26.1",
+              "26.2",
+              "26.3",
+              "26.4"
+            ],
+            "details": "1. Audit existing pages and identify components to replace\n2. Update search, booking, provider, and profile pages with new components\n3. Test responsive behavior on all pages\n4. Fix any mobile-specific issues (touch targets, scrolling, etc.)\n5. Ensure consistent styling and spacing throughout the application",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 27,
+        "title": "Implement Performance Optimization",
+        "description": "Optimize database queries, implement caching strategies, and improve overall application performance.",
+        "details": "1. Create a QueryCacheService:\n```php\nclass QueryCacheService\n{\n    protected $cacheEnabled;\n    protected $defaultTtl;\n    \n    public function __construct()\n    {\n        $this->cacheEnabled = config('cache.query_cache_enabled', true);\n        $this->defaultTtl = config('cache.query_cache_ttl', 3600); // 1 hour default\n    }\n    \n    public function remember($key, $callback, $ttl = null)\n    {\n        if (!$this->cacheEnabled) {\n            return $callback();\n        }\n        \n        $ttl = $ttl ?? $this->defaultTtl;\n        \n        return Cache::remember($key, $ttl, $callback);\n    }\n    \n    public function forget($key)\n    {\n        return Cache::forget($key);\n    }\n    \n    public function generateKey($prefix, $params = [])\n    {\n        $paramString = '';\n        \n        if (!empty($params)) {\n            $paramString = '_' . md5(json_encode($params));\n        }\n        \n        return \"query_{$prefix}{$paramString}\";\n    }\n}\n```\n\n2. Create a ServiceRepository with optimized queries:\n```php\nclass ServiceRepository\n{\n    protected $queryCacheService;\n    \n    public function __construct(QueryCacheService $queryCacheService)\n    {\n        $this->queryCacheService = $queryCacheService;\n    }\n    \n    public function search($query, $page = 1, $perPage = 10)\n    {\n        $cacheKey = $this->queryCacheService->generateKey('service_search', [\n            'query' => $query,\n            'page' => $page,\n            'perPage' => $perPage\n        ]);\n        \n        return $this->queryCacheService->remember($cacheKey, function () use ($query, $page, $perPage) {\n            return Service::query()\n                ->select('services.*', 'providers.business_name')\n                ->join('providers', 'services.provider_id', '=', 'providers.id')\n                ->when($query, function ($q) use ($query) {\n                    return $q->where(function ($subQuery) use ($query) {\n                        $subQuery->where('services.title', 'like', \"%{$query}%\")\n                            ->orWhere('services.description', 'like', \"%{$query}%\")\n                            ->orWhere('providers.business_name', 'like', \"%{$query}%\");\n                    });\n                })\n                ->orderBy('services.title')\n                ->paginate($perPage, ['*'], 'page', $page);\n        }, 600); // 10 minutes cache\n    }\n    \n    public function getProviderServices($providerId)\n    {\n        $cacheKey = $this->queryCacheService->generateKey('provider_services', [\n            'provider_id' => $providerId\n        ]);\n        \n        return $this->queryCacheService->remember($cacheKey, function () use ($providerId) {\n            return Service::where('provider_id', $providerId)\n                ->orderBy('title')\n                ->get();\n        }, 1800); // 30 minutes cache\n    }\n    \n    public function invalidateProviderCache($providerId)\n    {\n        $cacheKey = $this->queryCacheService->generateKey('provider_services', [\n            'provider_id' => $providerId\n        ]);\n        \n        $this->queryCacheService->forget($cacheKey);\n    }\n}\n```\n\n3. Create a BookingRepository with optimized queries:\n```php\nclass BookingRepository\n{\n    protected $queryCacheService;\n    \n    public function __construct(QueryCacheService $queryCacheService)\n    {\n        $this->queryCacheService = $queryCacheService;\n    }\n    \n    public function getProviderBookings($providerId, $date)\n    {\n        return Booking::where('provider_id', $providerId)\n            ->whereDate('start_datetime', $date)\n            ->with(['user', 'service'])\n            ->orderBy('start_datetime')\n            ->get();\n    }\n    \n    public function getUserUpcomingBookings($userId)\n    {\n        $cacheKey = $this->queryCacheService->generateKey('user_upcoming_bookings', [\n            'user_id' => $userId\n        ]);\n        \n        return $this->queryCacheService->remember($cacheKey, function () use ($userId) {\n            return Booking::where('user_id', $userId)\n                ->where('start_datetime', '>=', Carbon::now())\n                ->where('status', '!=', 'cancelled')\n                ->with(['service', 'provider.user'])\n                ->orderBy('start_datetime')\n                ->get();\n        }, 300); // 5 minutes cache\n    }\n    \n    public function invalidateUserBookingsCache($userId)\n    {\n        $cacheKey = $this->queryCacheService->generateKey('user_upcoming_bookings', [\n            'user_id' => $userId\n        ]);\n        \n        $this->queryCacheService->forget($cacheKey);\n    }\n    \n    public function checkSlotAvailability($providerId, $startDatetime, $endDatetime)\n    {\n        return Booking::where('provider_id', $providerId)\n            ->where(function ($query) use ($startDatetime, $endDatetime) {\n                $query->whereBetween('start_datetime', [$startDatetime, $endDatetime])\n                    ->orWhereBetween('end_datetime', [$startDatetime, $endDatetime])\n                    ->orWhere(function ($q) use ($startDatetime, $endDatetime) {\n                        $q->where('start_datetime', '<=', $startDatetime)\n                          ->where('end_datetime', '>=', $endDatetime);\n                    });\n            })\n            ->where('status', '!=', 'cancelled')\n            ->exists();\n    }\n}\n```\n\n4. Optimize Inertia responses with partial reloads:\n```php\nclass BookingController extends Controller\n{\n    // Example of optimized controller method\n    public function confirm(Booking $booking)\n    {\n        $this->authorize('manage', $booking);\n        \n        $booking->status = 'confirmed';\n        $booking->save();\n        \n        // Invalidate relevant caches\n        $this->bookingRepository->invalidateUserBookingsCache($booking->user_id);\n        \n        if (request()->wantsJson()) {\n            return response()->json([\n                'success' => true,\n                'booking' => $booking->fresh()\n            ]);\n        }\n        \n        return Inertia::render('Provider/Bookings', [\n            'bookings' => $this->bookingRepository->getProviderBookings(\n                $booking->provider_id,\n                Carbon::parse($booking->start_datetime)->format('Y-m-d')\n            ),\n            'date' => Carbon::parse($booking->start_datetime)->format('Y-m-d'),\n            'flash' => [\n                'message' => 'Booking confirmed successfully',\n                'type' => 'success'\n            ]\n        ]);\n    }\n}\n```\n\n5. Add database indexes for common queries:\n```php\n// In a migration file\nSchema::table('bookings', function (Blueprint $table) {\n    // Add indexes for common queries\n    $table->index(['provider_id', 'start_datetime']);\n    $table->index(['user_id', 'start_datetime']);\n    $table->index(['status']);\n});\n\nSchema::table('services', function (Blueprint $table) {\n    $table->index(['provider_id']);\n    $table->index(['title']);\n});\n\nSchema::table('schedules', function (Blueprint $table) {\n    $table->index(['provider_id', 'day_of_week']);\n});\n```\n\n6. Implement eager loading for common relationships:\n```php\n// In ServiceController\npublic function index()\n{\n    $services = auth()->user()->provider->services()\n        ->withCount('bookings')\n        ->get();\n    \n    return Inertia::render('Service/Index', [\n        'services' => $services\n    ]);\n}\n\n// In SearchController\npublic function providers()\n{\n    $providers = Provider::with(['user' => function ($query) {\n            $query->select('id', 'name', 'profile_photo_path');\n        }])\n        ->withCount('services')\n        ->orderBy('business_name')\n        ->paginate(10);\n    \n    return Inertia::render('Search/Providers', [\n        'providers' => $providers\n    ]);\n}\n```\n\n7. Implement asset optimization:\n```javascript\n// webpack.mix.js\nconst mix = require('laravel-mix');\n\nmix.js('resources/js/app.js', 'public/js')\n    .vue()\n    .postCss('resources/css/app.css', 'public/css', [\n        require('tailwindcss'),\n    ])\n    .version()\n    .extract(['vue', '@inertiajs/inertia', '@inertiajs/inertia-vue3'])\n    .webpackConfig({\n        optimization: {\n            providedExports: true,\n            sideEffects: true,\n            usedExports: true\n        }\n    });\n\nif (mix.inProduction()) {\n    mix.version();\n}\n```",
+        "testStrategy": "1. Benchmark database query performance before and after optimization\n2. Test cache hit rates for common queries\n3. Verify cache invalidation works correctly when data changes\n4. Test application performance with large datasets\n5. Verify eager loading reduces the number of database queries\n6. Test asset loading times with browser developer tools\n7. Verify indexes improve query performance for common operations",
+        "priority": "low",
+        "dependencies": [
+          16,
+          20,
+          21,
+          22,
+          23
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement QueryCacheService",
+            "description": "Create and implement the QueryCacheService class for caching database query results",
+            "dependencies": [],
+            "details": "1. Create the QueryCacheService class with methods for remembering, forgetting, and generating cache keys\n2. Implement configuration options for enabling/disabling cache and setting default TTL\n3. Create unit tests for the QueryCacheService\n4. Register the service in the service container\n5. Create cache configuration options in config/cache.php",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Repository Pattern with Caching",
+            "description": "Create ServiceRepository and BookingRepository with optimized queries and caching",
+            "dependencies": [
+              "27.1"
+            ],
+            "details": "1. Create ServiceRepository with methods for searching services, getting provider services, and cache invalidation\n2. Create BookingRepository with methods for retrieving bookings and checking slot availability\n3. Implement caching strategies with appropriate TTL values for different query types\n4. Create unit tests for both repositories\n5. Update relevant controllers to use the repository pattern instead of direct model queries",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Add Database Indexes for Performance",
+            "description": "Create and apply database migrations to add indexes for commonly queried columns",
+            "dependencies": [],
+            "details": "1. Create a migration to add indexes to the bookings table (provider_id, start_datetime, user_id, status)\n2. Create a migration to add indexes to the services table (provider_id, title)\n3. Create a migration to add indexes to the schedules table (provider_id, day_of_week)\n4. Run and test the migrations\n5. Verify query performance improvements with EXPLAIN queries",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement Eager Loading for Common Relationships",
+            "description": "Update controllers to use eager loading for reducing N+1 query problems",
+            "dependencies": [],
+            "details": "1. Identify controllers with N+1 query issues using Laravel Debugbar\n2. Update ServiceController to use eager loading with withCount for bookings\n3. Update SearchController to use eager loading for provider relationships\n4. Update BookingController to use eager loading for service and user relationships\n5. Verify reduction in query count using Laravel Debugbar",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Optimize Inertia Responses with Partial Reloads",
+            "description": "Update controllers to support partial data reloads and JSON responses for AJAX requests",
+            "dependencies": [
+              "27.2"
+            ],
+            "details": "1. Update BookingController to support JSON responses for AJAX requests\n2. Implement partial data reloads in Inertia responses\n3. Add cache invalidation calls when data is modified\n4. Update frontend components to use partial reloads where appropriate\n5. Test performance improvements with network monitoring tools",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Configure Asset Optimization",
+            "description": "Implement frontend asset optimization with Laravel Mix",
+            "dependencies": [],
+            "details": "1. Update webpack.mix.js to extract vendor libraries\n2. Configure versioning for production builds\n3. Implement code splitting for route-based components\n4. Configure optimization settings for webpack\n5. Implement CSS minification and purging\n6. Test build process and verify reduced asset sizes",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-08-28T07:00:10.708Z",
+      "updated": "2025-08-28T07:00:10.709Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

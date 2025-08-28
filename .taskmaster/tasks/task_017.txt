@@ -1,0 +1,156 @@
+# Task ID: 17
+# Title: Implement Provider Profile Management
+# Status: pending
+# Dependencies: 16
+# Priority: high
+# Description: Create business profile CRUD functionality for providers using Inertia.js forms and shadcn-vue components.
+# Details:
+1. Create Provider Controller:
+```php
+class ProviderController extends Controller
+{
+    public function create()
+    {
+        return Inertia::render('Provider/Create');
+    }
+    
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'business_name' => 'required|string|max:255',
+            'address' => 'required|string|max:255',
+            'contact_phone' => 'required|string|max:20',
+            'description' => 'nullable|string|max:1000',
+            'profile_image' => 'nullable|image|max:2048'
+        ]);
+        
+        $provider = new Provider($validated);
+        $provider->user_id = auth()->id();
+        
+        if ($request->hasFile('profile_image')) {
+            $provider->profile_image = $request->file('profile_image')
+                ->store('profile-images', 'public');
+        }
+        
+        $provider->save();
+        
+        return redirect()->route('provider.dashboard');
+    }
+    
+    public function edit()
+    {
+        $provider = auth()->user()->provider;
+        
+        return Inertia::render('Provider/Edit', [
+            'provider' => $provider
+        ]);
+    }
+    
+    public function update(Request $request)
+    {
+        $provider = auth()->user()->provider;
+        
+        $validated = $request->validate([
+            'business_name' => 'required|string|max:255',
+            'address' => 'required|string|max:255',
+            'contact_phone' => 'required|string|max:20',
+            'description' => 'nullable|string|max:1000',
+            'profile_image' => 'nullable|image|max:2048'
+        ]);
+        
+        if ($request->hasFile('profile_image')) {
+            // Delete old image if exists
+            if ($provider->profile_image) {
+                Storage::disk('public')->delete($provider->profile_image);
+            }
+            
+            $validated['profile_image'] = $request->file('profile_image')
+                ->store('profile-images', 'public');
+        }
+        
+        $provider->update($validated);
+        
+        return redirect()->route('provider.dashboard');
+    }
+}
+```
+
+2. Create Vue components for provider profile forms using shadcn-vue:
+   - Create.vue - New provider profile form
+   - Edit.vue - Edit existing provider profile
+   - Components should use shadcn-vue form elements and Lucide icons
+   - Implement file upload for profile images
+
+3. Add routes in web.php:
+```php
+Route::middleware(['auth'])->group(function () {
+    Route::get('/provider/create', [ProviderController::class, 'create'])->name('provider.create');
+    Route::post('/provider', [ProviderController::class, 'store'])->name('provider.store');
+    Route::get('/provider/edit', [ProviderController::class, 'edit'])->name('provider.edit');
+    Route::put('/provider', [ProviderController::class, 'update'])->name('provider.update');
+});
+```
+
+# Test Strategy:
+1. Manual testing of form submission with valid and invalid data
+2. Verify validation error messages display correctly
+3. Test image upload functionality with various file types and sizes
+4. Verify redirect flows after successful form submission
+5. Test form prefilling when editing existing provider profiles
+
+# Subtasks:
+## 1. Create Provider Model and Database Migration [pending]
+### Dependencies: None
+### Description: Set up the Provider model and database migration with the required fields for business profile management.
+### Details:
+1. Create Provider model with fillable fields: business_name, address, contact_phone, description, profile_image
+2. Set up relationship with User model (belongsTo)
+3. Create migration file with all required fields
+4. Add foreign key constraint to user_id
+5. Run migration and verify database structure
+
+## 2. Implement Create.vue Component [pending]
+### Dependencies: 17.1
+### Description: Create the Vue component for new provider profile creation using shadcn-vue form elements.
+### Details:
+1. Create Provider/Create.vue component with form layout
+2. Implement form fields using shadcn-vue components (Input, Textarea, FileInput)
+3. Add validation error handling for each field
+4. Implement file upload preview for profile image
+5. Add form submission handler with proper error handling
+6. Style the form using Tailwind CSS
+
+## 3. Implement Edit.vue Component [pending]
+### Dependencies: 17.1, 17.2
+### Description: Create the Vue component for editing existing provider profiles with pre-filled data.
+### Details:
+1. Create Provider/Edit.vue component with form layout similar to Create.vue
+2. Pre-fill form fields with existing provider data
+3. Implement image preview for existing profile image
+4. Add image replacement functionality
+5. Implement form submission with PUT method
+6. Add success/error notifications
+
+## 4. Complete ProviderController Implementation [pending]
+### Dependencies: 17.1
+### Description: Finalize the ProviderController with all required methods and proper validation.
+### Details:
+1. Complete the create() method to check if user already has a provider profile
+2. Enhance store() method with additional validation and error handling
+3. Implement edit() method with proper authorization checks
+4. Complete update() method with image handling and validation
+5. Add delete() method for profile removal if needed
+6. Implement proper error responses for API requests
+
+## 5. Configure Routes and Test End-to-End Functionality [pending]
+### Dependencies: 17.2, 17.3, 17.4
+### Description: Set up all required routes and test the complete provider profile management functionality.
+### Details:
+1. Configure all routes in web.php with proper middleware
+2. Add route names and controller method bindings
+3. Test form submission with valid and invalid data
+4. Verify image upload and storage functionality
+5. Test edit functionality with existing profiles
+6. Verify redirects and navigation flow
+7. Test mobile responsiveness of all forms
+

@@ -1,0 +1,256 @@
+# Task ID: 24
+# Title: Implement Telegram Theme Integration
+# Status: pending
+# Dependencies: None
+# Priority: medium
+# Description: Create dynamic color adaptation based on user's Telegram theme and optimize UI for Telegram's mobile environment.
+# Details:
+1. Create a Telegram theme service in JavaScript:
+```javascript
+// resources/js/Services/TelegramTheme.js
+export default class TelegramTheme {
+  constructor() {
+    this.telegram = window.Telegram?.WebApp;
+    this.themeParams = this.telegram?.themeParams || {};
+    this.colorScheme = this.telegram?.colorScheme || 'light';
+  }
+  
+  init() {
+    if (!this.telegram) {
+      console.warn('Telegram WebApp is not available, using fallback theme');
+      this.useFallbackTheme();
+      return;
+    }
+    
+    this.applyThemeColors();
+    this.setupViewportHandling();
+    
+    // Listen for theme changes
+    this.telegram.onEvent('themeChanged', () => {
+      this.colorScheme = this.telegram.colorScheme;
+      this.themeParams = this.telegram.themeParams;
+      this.applyThemeColors();
+    });
+  }
+  
+  applyThemeColors() {
+    const root = document.documentElement;
+    
+    // Apply Telegram theme colors to CSS variables
+    root.style.setProperty('--tg-theme-bg-color', this.themeParams.bg_color || '#ffffff');
+    root.style.setProperty('--tg-theme-text-color', this.themeParams.text_color || '#000000');
+    root.style.setProperty('--tg-theme-hint-color', this.themeParams.hint_color || '#999999');
+    root.style.setProperty('--tg-theme-link-color', this.themeParams.link_color || '#2481cc');
+    root.style.setProperty('--tg-theme-button-color', this.themeParams.button_color || '#2481cc');
+    root.style.setProperty('--tg-theme-button-text-color', this.themeParams.button_text_color || '#ffffff');
+    root.style.setProperty('--tg-theme-secondary-bg-color', this.themeParams.secondary_bg_color || '#f0f0f0');
+    
+    // Set color scheme attribute for conditional styling
+    document.body.setAttribute('data-theme', this.colorScheme);
+  }
+  
+  setupViewportHandling() {
+    if (!this.telegram) return;
+    
+    // Expand the WebApp to maximum available height
+    this.telegram.expand();
+    
+    // Handle viewport changes
+    this.telegram.onEvent('viewportChanged', () => {
+      const viewportHeight = this.telegram.viewportHeight;
+      document.documentElement.style.setProperty('--tg-viewport-height', `${viewportHeight}px`);
+    });
+    
+    // Initial viewport setup
+    document.documentElement.style.setProperty('--tg-viewport-height', `${this.telegram.viewportHeight}px`);
+  }
+  
+  useFallbackTheme() {
+    const root = document.documentElement;
+    
+    // Fallback colors for development
+    root.style.setProperty('--tg-theme-bg-color', '#ffffff');
+    root.style.setProperty('--tg-theme-text-color', '#000000');
+    root.style.setProperty('--tg-theme-hint-color', '#999999');
+    root.style.setProperty('--tg-theme-link-color', '#2481cc');
+    root.style.setProperty('--tg-theme-button-color', '#2481cc');
+    root.style.setProperty('--tg-theme-button-text-color', '#ffffff');
+    root.style.setProperty('--tg-theme-secondary-bg-color', '#f0f0f0');
+    
+    document.body.setAttribute('data-theme', 'light');
+  }
+}
+```
+
+2. Initialize the Telegram theme in the main app entry point:
+```javascript
+// resources/js/app.js
+import './bootstrap';
+import { createApp, h } from 'vue';
+import { createInertiaApp } from '@inertiajs/inertia-vue3';
+import TelegramTheme from './Services/TelegramTheme';
+
+createInertiaApp({
+  resolve: name => require(`./Pages/${name}`),
+  setup({ el, App, props, plugin }) {
+    const app = createApp({ render: () => h(App, props) });
+    
+    app.use(plugin);
+    
+    // Initialize Telegram theme
+    const telegramTheme = new TelegramTheme();
+    telegramTheme.init();
+    
+    // Make Telegram WebApp available globally in components
+    app.config.globalProperties.$telegram = window.Telegram?.WebApp;
+    
+    app.mount(el);
+  },
+});
+```
+
+3. Create Tailwind CSS theme configuration:
+```javascript
+// tailwind.config.js
+module.exports = {
+  content: [
+    './resources/**/*.blade.php',
+    './resources/**/*.js',
+    './resources/**/*.vue',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        // Map Telegram theme variables to Tailwind colors
+        'tg-bg': 'var(--tg-theme-bg-color)',
+        'tg-text': 'var(--tg-theme-text-color)',
+        'tg-hint': 'var(--tg-theme-hint-color)',
+        'tg-link': 'var(--tg-theme-link-color)',
+        'tg-button': 'var(--tg-theme-button-color)',
+        'tg-button-text': 'var(--tg-theme-button-text-color)',
+        'tg-secondary-bg': 'var(--tg-theme-secondary-bg-color)',
+      },
+      height: {
+        'tg-viewport': 'var(--tg-viewport-height, 100vh)',
+      },
+    },
+  },
+  plugins: [],
+};
+```
+
+4. Create a base layout component that uses Telegram theme:
+```vue
+<template>
+  <div class="telegram-app bg-tg-bg text-tg-text min-h-tg-viewport">
+    <header class="app-header bg-tg-secondary-bg p-4">
+      <slot name="header">
+        <h1 class="text-xl font-bold">{{ title }}</h1>
+      </slot>
+    </header>
+    
+    <main class="app-content p-4">
+      <slot />
+    </main>
+    
+    <footer v-if="$slots.footer" class="app-footer bg-tg-secondary-bg p-4">
+      <slot name="footer" />
+    </footer>
+  </div>
+</template>
+
+<script setup>
+defineProps({
+  title: {
+    type: String,
+    default: 'Service Booking App'
+  }
+});
+</script>
+
+<style>
+/* Base Telegram theme styles */
+[data-theme="dark"] .telegram-app {
+  color-scheme: dark;
+}
+
+[data-theme="light"] .telegram-app {
+  color-scheme: light;
+}
+
+/* Adjust shadcn-vue components to use Telegram theme */
+.btn-primary {
+  background-color: var(--tg-theme-button-color) !important;
+  color: var(--tg-theme-button-text-color) !important;
+}
+
+.link {
+  color: var(--tg-theme-link-color) !important;
+}
+</style>
+```
+
+# Test Strategy:
+1. Test theme integration in both light and dark Telegram themes
+2. Verify responsive layout adapts to different viewport sizes
+3. Test theme changes are applied dynamically when user switches themes
+4. Verify shadcn-vue components correctly use Telegram theme colors
+5. Test fallback theme for development environment
+6. Verify viewport handling for different mobile devices
+7. Test accessibility with various color contrast combinations
+
+# Subtasks:
+## 1. Create and implement TelegramTheme service [pending]
+### Dependencies: None
+### Description: Implement the TelegramTheme JavaScript service to detect and apply Telegram theme colors to the application.
+### Details:
+1. Create the TelegramTheme.js service file in resources/js/Services/
+2. Implement constructor to detect Telegram WebApp availability
+3. Add theme detection methods for colors and color scheme
+4. Implement fallback theme for development environment
+5. Add event listeners for theme changes
+6. Test the service with both light and dark Telegram themes
+
+## 2. Configure Tailwind CSS for Telegram theme variables [pending]
+### Dependencies: 24.1
+### Description: Update Tailwind configuration to use Telegram theme CSS variables for consistent styling across the application.
+### Details:
+1. Modify tailwind.config.js to include Telegram theme color mappings
+2. Add custom height variables for Telegram viewport
+3. Create utility classes for Telegram-specific styling
+4. Test the configuration with different theme colors
+5. Ensure proper fallback colors are defined for non-Telegram environments
+
+## 3. Implement viewport handling for Telegram WebApp [pending]
+### Dependencies: 24.1
+### Description: Add functionality to properly handle Telegram WebApp viewport changes and ensure the application adapts to different screen sizes.
+### Details:
+1. Implement the setupViewportHandling method in TelegramTheme service
+2. Add event listeners for viewportChanged events
+3. Create CSS variables for viewport height
+4. Implement expand() method call to maximize available height
+5. Test viewport adaptation on different mobile devices
+6. Ensure scrolling behavior works correctly within Telegram WebApp
+
+## 4. Create base layout component with Telegram theme support [pending]
+### Dependencies: 24.1, 24.2, 24.3
+### Description: Develop a base layout Vue component that properly applies Telegram theme colors and adapts to viewport changes.
+### Details:
+1. Create a TelegramLayout.vue component
+2. Implement slots for header, content, and footer
+3. Apply Telegram theme classes from Tailwind configuration
+4. Add conditional styling based on data-theme attribute
+5. Test layout in both light and dark themes
+6. Ensure proper height calculations with Telegram viewport
+
+## 5. Adapt UI components to use Telegram theme colors [pending]
+### Dependencies: 24.1, 24.2, 24.4
+### Description: Update existing UI components to use Telegram theme colors and ensure consistent styling across the application.
+### Details:
+1. Create CSS overrides for shadcn-vue components to use Telegram theme variables
+2. Update button styles to use Telegram button colors
+3. Modify form elements to match Telegram theme
+4. Implement theme-aware card and panel components
+5. Test all components in both light and dark themes
+6. Create documentation for developers on using theme-aware components
+

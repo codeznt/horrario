@@ -1,0 +1,212 @@
+# Task ID: 19
+# Title: Implement Schedule Management System
+# Status: pending
+# Dependencies: 16, 17
+# Priority: high
+# Description: Create functionality for providers to set their weekly working hours with opening and closing times.
+# Details:
+1. Create Schedule Controller:
+```php
+class ScheduleController extends Controller
+{
+    public function index()
+    {
+        $schedules = auth()->user()->provider->schedules
+            ->groupBy('day_of_week');
+        
+        return Inertia::render('Schedule/Index', [
+            'schedules' => $schedules,
+            'days' => [
+                0 => 'Sunday',
+                1 => 'Monday',
+                2 => 'Tuesday',
+                3 => 'Wednesday',
+                4 => 'Thursday',
+                5 => 'Friday',
+                6 => 'Saturday',
+            ]
+        ]);
+    }
+    
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'day_of_week' => 'required|integer|between:0,6',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time'
+        ]);
+        
+        $schedule = new Schedule($validated);
+        $schedule->provider_id = auth()->user()->provider->id;
+        $schedule->save();
+        
+        return redirect()->route('schedules.index');
+    }
+    
+    public function update(Request $request, Schedule $schedule)
+    {
+        $this->authorize('update', $schedule);
+        
+        $validated = $request->validate([
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time'
+        ]);
+        
+        $schedule->update($validated);
+        
+        return redirect()->route('schedules.index');
+    }
+    
+    public function destroy(Schedule $schedule)
+    {
+        $this->authorize('delete', $schedule);
+        
+        $schedule->delete();
+        
+        return redirect()->route('schedules.index');
+    }
+}
+```
+
+2. Create Schedule Policy:
+```php
+class SchedulePolicy
+{
+    public function update(User $user, Schedule $schedule)
+    {
+        return $user->provider && $user->provider->id === $schedule->provider_id;
+    }
+    
+    public function delete(User $user, Schedule $schedule)
+    {
+        return $user->provider && $user->provider->id === $schedule->provider_id;
+    }
+}
+```
+
+3. Create Vue components for schedule management:
+   - Index.vue - Weekly schedule view with time slots
+   - ScheduleForm.vue - Component for adding/editing time slots
+   - Use shadcn-vue time picker components
+   - Implement visual weekly calendar grid
+
+4. Add routes in web.php:
+```php
+Route::middleware(['auth'])->group(function () {
+    Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
+    Route::post('/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
+    Route::put('/schedules/{schedule}', [ScheduleController::class, 'update'])->name('schedules.update');
+    Route::delete('/schedules/{schedule}', [ScheduleController::class, 'destroy'])->name('schedules.destroy');
+});
+```
+
+5. Create a TimeSlotService for generating available time slots:
+```php
+class TimeSlotService
+{
+    public function generateTimeSlots(Provider $provider, $date)
+    {
+        $dayOfWeek = Carbon::parse($date)->dayOfWeek;
+        $schedules = $provider->schedules()->where('day_of_week', $dayOfWeek)->get();
+        
+        $slots = [];
+        
+        foreach ($schedules as $schedule) {
+            $start = Carbon::parse($date . ' ' . $schedule->start_time);
+            $end = Carbon::parse($date . ' ' . $schedule->end_time);
+            
+            $current = clone $start;
+            
+            // Generate 30-minute slots
+            while ($current->lt($end)) {
+                $slotEnd = (clone $current)->addMinutes(30);
+                if ($slotEnd->lte($end)) {
+                    $slots[] = [
+                        'start' => $current->format('H:i'),
+                        'end' => $slotEnd->format('H:i')
+                    ];
+                }
+                $current->addMinutes(30);
+            }
+        }
+        
+        return $slots;
+    }
+}
+```
+
+# Test Strategy:
+1. Test schedule creation with valid and invalid time ranges
+2. Verify validation prevents overlapping schedules
+3. Test time slot generation algorithm
+4. Verify visual weekly calendar correctly displays schedules
+5. Test schedule editing and deletion
+6. Verify policy enforcement prevents unauthorized access
+
+# Subtasks:
+## 1. Create Schedule Model and Migration [pending]
+### Dependencies: None
+### Description: Create the Schedule model with relationships and database migration for storing provider schedules
+### Details:
+1. Create a Schedule model with fields: provider_id, day_of_week, start_time, end_time
+2. Define relationships in the model (belongs to Provider)
+3. Create migration file with appropriate schema
+4. Add fillable properties to the model
+5. Register the model policy in AuthServiceProvider
+6. Run the migration
+
+## 2. Implement Schedule Controller Methods [pending]
+### Dependencies: 19.1
+### Description: Complete the Schedule controller with all required methods for CRUD operations
+### Details:
+1. Finalize the index method to display schedules grouped by day
+2. Implement store method with validation for creating new schedules
+3. Create update method with proper validation and authorization
+4. Implement destroy method with authorization check
+5. Add error handling and success messages
+6. Test all controller methods with different scenarios
+
+## 3. Create Schedule Policy [pending]
+### Dependencies: 19.1
+### Description: Implement authorization policy for schedule management to ensure providers can only manage their own schedules
+### Details:
+1. Create the SchedulePolicy class
+2. Implement update method to verify ownership
+3. Implement delete method to verify ownership
+4. Add viewAny method for listing schedules
+5. Add create method to check if user is a provider
+6. Register policy in AuthServiceProvider
+
+## 4. Develop TimeSlotService [pending]
+### Dependencies: 19.1, 19.2
+### Description: Create service class for generating available time slots based on provider schedules
+### Details:
+1. Create TimeSlotService class
+2. Implement generateTimeSlots method to create 30-minute slots
+3. Add logic to handle multiple schedule blocks in a day
+4. Implement filtering for already booked slots
+5. Add caching for performance optimization
+6. Create unit tests for the service
+
+## 5. Build Vue Schedule Components [pending]
+### Dependencies: 19.1, 19.2, 19.3
+### Description: Create Vue components for the weekly schedule management interface
+### Details:
+1. Create Index.vue component with weekly calendar grid
+2. Implement ScheduleForm.vue for adding/editing time slots
+3. Integrate shadcn-vue time picker components
+4. Add form validation for time inputs
+5. Create visual representation of scheduled time blocks
+6. Implement drag-and-drop functionality for schedule adjustment
+
+## 6. Configure Routes and Test Integration [pending]
+### Dependencies: 19.1, 19.2, 19.3, 19.4, 19.5
+### Description: Set up routes and test the complete schedule management system
+### Details:
+1. Add routes in web.php for all schedule controller methods
+2. Implement middleware for route protection
+3. Create feature tests for the schedule management workflow
+4. Test validation for overlapping schedules
+5. Verify visual calendar correctly displays schedules
+6. Test the complete system with real data
+

@@ -1,0 +1,248 @@
+# Task ID: 20
+# Title: Implement Booking Engine
+# Status: pending
+# Dependencies: 16, 19
+# Priority: high
+# Description: Create the core booking functionality allowing consumers to book available time slots for services.
+# Details:
+1. Create Booking Controller:
+```php
+class BookingController extends Controller
+{
+    protected $timeSlotService;
+    
+    public function __construct(TimeSlotService $timeSlotService)
+    {
+        $this->timeSlotService = $timeSlotService;
+    }
+    
+    public function create(Service $service)
+    {
+        $provider = $service->provider;
+        
+        // Get next 7 days
+        $dates = [];
+        $startDate = Carbon::today();
+        
+        for ($i = 0; $i < 7; $i++) {
+            $date = $startDate->copy()->addDays($i);
+            $slots = $this->timeSlotService->generateTimeSlots($provider, $date->format('Y-m-d'));
+            
+            // Filter out slots that are already booked
+            $bookedSlots = Booking::where('provider_id', $provider->id)
+                ->whereDate('start_datetime', $date)
+                ->where('status', '!=', 'cancelled')
+                ->get()
+                ->map(function ($booking) {
+                    return [
+                        'start' => Carbon::parse($booking->start_datetime)->format('H:i'),
+                        'end' => Carbon::parse($booking->end_datetime)->format('H:i')
+                    ];
+                })->toArray();
+            
+            $availableSlots = array_filter($slots, function ($slot) use ($bookedSlots) {
+                foreach ($bookedSlots as $bookedSlot) {
+                    if ($slot['start'] === $bookedSlot['start']) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+            
+            $dates[] = [
+                'date' => $date->format('Y-m-d'),
+                'day' => $date->format('D'),
+                'slots' => array_values($availableSlots)
+            ];
+        }
+        
+        return Inertia::render('Booking/Create', [
+            'service' => $service,
+            'provider' => $provider,
+            'dates' => $dates
+        ]);
+    }
+    
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'service_id' => 'required|exists:services,id',
+            'date' => 'required|date|after_or_equal:today',
+            'start_time' => 'required|date_format:H:i',
+        ]);
+        
+        $service = Service::findOrFail($validated['service_id']);
+        $provider = $service->provider;
+        
+        // Calculate end time based on service duration
+        $startDatetime = Carbon::parse($validated['date'] . ' ' . $validated['start_time']);
+        $endDatetime = (clone $startDatetime)->addMinutes($service->duration_minutes);
+        
+        // Check if slot is available
+        $conflictingBooking = Booking::where('provider_id', $provider->id)
+            ->where(function ($query) use ($startDatetime, $endDatetime) {
+                $query->whereBetween('start_datetime', [$startDatetime, $endDatetime])
+                    ->orWhereBetween('end_datetime', [$startDatetime, $endDatetime]);
+            })
+            ->where('status', '!=', 'cancelled')
+            ->exists();
+        
+        if ($conflictingBooking) {
+            return back()->withErrors(['start_time' => 'This time slot is no longer available.']);
+        }
+        
+        $booking = new Booking([
+            'user_id' => auth()->id(),
+            'provider_id' => $provider->id,
+            'service_id' => $service->id,
+            'start_datetime' => $startDatetime,
+            'end_datetime' => $endDatetime,
+            'status' => 'pending',
+            'notes' => $request->input('notes')
+        ]);
+        
+        $booking->save();
+        
+        return redirect()->route('bookings.show', $booking);
+    }
+    
+    public function show(Booking $booking)
+    {
+        $this->authorize('view', $booking);
+        
+        return Inertia::render('Booking/Show', [
+            'booking' => $booking->load(['service', 'provider.user'])
+        ]);
+    }
+    
+    public function cancel(Booking $booking)
+    {
+        $this->authorize('cancel', $booking);
+        
+        $booking->status = 'cancelled';
+        $booking->save();
+        
+        return redirect()->route('bookings.index');
+    }
+}
+```
+
+2. Create Booking Policy:
+```php
+class BookingPolicy
+{
+    public function view(User $user, Booking $booking)
+    {
+        return $user->id === $booking->user_id || 
+               ($user->provider && $user->provider->id === $booking->provider_id);
+    }
+    
+    public function cancel(User $user, Booking $booking)
+    {
+        return $user->id === $booking->user_id && $booking->status === 'pending';
+    }
+}
+```
+
+3. Create Vue components for booking:
+   - Create.vue - Date and time slot selection
+   - Show.vue - Booking details view
+   - Use shadcn-vue calendar and time picker components
+
+4. Add routes in web.php:
+```php
+Route::middleware(['auth'])->group(function () {
+    Route::get('/services/{service}/book', [BookingController::class, 'create'])->name('bookings.create');
+    Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
+    Route::get('/bookings/{booking}', [BookingController::class, 'show'])->name('bookings.show');
+    Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
+});
+```
+
+# Test Strategy:
+1. Test booking creation with valid and invalid time slots
+2. Verify double-booking prevention works correctly
+3. Test booking cancellation functionality
+4. Verify booking details display correctly
+5. Test date and time picker components
+6. Verify policy enforcement prevents unauthorized access
+7. Test edge cases like booking at the end of provider's availability
+
+# Subtasks:
+## 1. Create TimeSlotService for Availability Management [pending]
+### Dependencies: None
+### Description: Implement the TimeSlotService class to handle time slot generation, filtering, and availability checking based on provider schedules and existing bookings.
+### Details:
+1. Create TimeSlotService.php in app/Services directory
+2. Implement generateTimeSlots method to create time slots based on provider availability
+3. Add methods to check for booking conflicts
+4. Implement logic to filter out already booked slots
+5. Add helper methods for time manipulation and validation
+6. Write unit tests for the service
+
+## 2. Implement Booking Controller Methods [pending]
+### Dependencies: 20.1
+### Description: Complete the BookingController implementation with all required methods for creating, viewing, and canceling bookings.
+### Details:
+1. Finalize the create method to display available time slots
+2. Complete the store method with proper validation and conflict detection
+3. Implement the show method to display booking details
+4. Add the cancel method with proper authorization
+5. Add error handling and validation messages
+6. Implement any missing helper methods
+
+## 3. Create Booking Policy and Authorization [pending]
+### Dependencies: None
+### Description: Implement the BookingPolicy class to handle authorization for viewing and canceling bookings.
+### Details:
+1. Complete the BookingPolicy implementation
+2. Register the policy in AuthServiceProvider
+3. Add methods for additional actions if needed (reschedule, etc.)
+4. Ensure proper authorization checks in controller methods
+5. Test policy with different user roles
+
+## 4. Develop Booking Creation Vue Component [pending]
+### Dependencies: 20.1, 20.2
+### Description: Create the booking creation Vue component with date selection and time slot picking functionality.
+### Details:
+1. Create Booking/Create.vue component
+2. Implement date selection using shadcn-vue calendar
+3. Add time slot selection grid with available/unavailable states
+4. Implement form for additional booking information
+5. Add validation and error handling
+6. Create loading states for async operations
+
+## 5. Implement Booking Details and Management Vue Components [pending]
+### Dependencies: 20.2, 20.3
+### Description: Create Vue components for viewing booking details and managing existing bookings.
+### Details:
+1. Create Booking/Show.vue component to display booking details
+2. Implement booking cancellation functionality with confirmation
+3. Add status indicators and badges
+4. Create a booking list component for user's bookings
+5. Implement filtering and sorting options
+6. Add responsive design for mobile devices
+
+## 6. Configure Routes and Navigation [pending]
+### Dependencies: 20.2, 20.4, 20.5
+### Description: Set up all required routes for the booking system and integrate with the application navigation.
+### Details:
+1. Add all booking routes to web.php
+2. Implement middleware for route protection
+3. Update navigation components to include booking-related links
+4. Add breadcrumbs for booking pages
+5. Implement route transitions
+6. Test all routes with different user roles
+
+## 7. Implement Double-Booking Prevention and Edge Cases [pending]
+### Dependencies: 20.1, 20.2
+### Description: Add robust validation and conflict detection to prevent double-bookings and handle edge cases in the booking process.
+### Details:
+1. Enhance conflict detection algorithm in the store method
+2. Implement database transaction for booking creation
+3. Add real-time validation of slot availability
+4. Handle timezone differences and DST changes
+5. Implement booking expiration for pending bookings
+6. Add notifications for booking status changes
+7. Test with concurrent booking attempts
+

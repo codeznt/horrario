@@ -1,0 +1,166 @@
+# Task ID: 23
+# Title: Implement Service Discovery and Search
+# Status: pending
+# Dependencies: 16, 18
+# Priority: medium
+# Description: Create functionality for consumers to search services by name and browse providers.
+# Details:
+1. Create Search Controller:
+```php
+class SearchController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = $request->input('query', '');
+        
+        $services = Service::query()
+            ->with('provider')
+            ->when($query, function ($q) use ($query) {
+                return $q->where('title', 'like', "%{$query}%")
+                    ->orWhere('description', 'like', "%{$query}%");
+            })
+            ->orderBy('title')
+            ->paginate(10)
+            ->withQueryString();
+        
+        return Inertia::render('Search/Index', [
+            'services' => $services,
+            'query' => $query
+        ]);
+    }
+    
+    public function providers()
+    {
+        $providers = Provider::with('user')
+            ->withCount('services')
+            ->orderBy('business_name')
+            ->paginate(10);
+        
+        return Inertia::render('Search/Providers', [
+            'providers' => $providers
+        ]);
+    }
+    
+    public function providerDetail(Provider $provider)
+    {
+        $services = $provider->services;
+        
+        return Inertia::render('Search/ProviderDetail', [
+            'provider' => $provider->load('user'),
+            'services' => $services
+        ]);
+    }
+}
+```
+
+2. Create Vue components for search and discovery:
+   - Index.vue - Search form and results
+   - Providers.vue - Provider listing
+   - ProviderDetail.vue - Provider profile with services
+   - ServiceCard.vue - Reusable service card component
+   - Use shadcn-vue input, card, and pagination components
+
+3. Add routes in web.php:
+```php
+Route::middleware(['auth'])->group(function () {
+    Route::get('/search', [SearchController::class, 'index'])->name('search.index');
+    Route::get('/providers', [SearchController::class, 'providers'])->name('search.providers');
+    Route::get('/providers/{provider}', [SearchController::class, 'providerDetail'])->name('search.provider.detail');
+});
+```
+
+4. Create a ServiceCard.vue component:
+```vue
+<template>
+  <div class="service-card">
+    <div class="card-header">
+      <h3>{{ service.title }}</h3>
+      <span class="price">{{ service.display_price }}</span>
+    </div>
+    
+    <div class="card-body">
+      <p v-if="service.description">{{ service.description }}</p>
+      <p><Icon name="clock" /> {{ service.duration_minutes }} minutes</p>
+      <p v-if="showProvider"><Icon name="store" /> {{ service.provider.business_name }}</p>
+    </div>
+    
+    <div class="card-footer">
+      <Button @click="bookService">
+        <Icon name="calendar-plus" class="mr-2" />
+        Book Now
+      </Button>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { Button, Icon } from '@/Components/shadcn';
+import { Inertia } from '@inertiajs/inertia';
+
+const props = defineProps({
+  service: Object,
+  required: true,
+  showProvider: {
+    type: Boolean,
+    default: true
+  }
+});
+
+function bookService() {
+  Inertia.visit(route('bookings.create', props.service.id));
+}
+</script>
+```
+
+5. Create a search form component:
+```vue
+<template>
+  <form @submit.prevent="search">
+    <div class="search-container">
+      <Input 
+        v-model="searchQuery" 
+        placeholder="Search services..." 
+        type="search"
+        class="search-input"
+      />
+      <Button type="submit">
+        <Icon name="search" />
+        Search
+      </Button>
+    </div>
+  </form>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import { Inertia } from '@inertiajs/inertia';
+import { Input, Button, Icon } from '@/Components/shadcn';
+
+const props = defineProps({
+  initialQuery: {
+    type: String,
+    default: ''
+  }
+});
+
+const searchQuery = ref(props.initialQuery);
+
+function search() {
+  Inertia.get(route('search.index'), {
+    query: searchQuery.value
+  }, {
+    preserveState: true,
+    replace: true
+  });
+}
+</script>
+```
+
+# Test Strategy:
+1. Test search functionality with various queries
+2. Verify provider listing and pagination
+3. Test provider detail view with services
+4. Verify booking flow from search results
+5. Test responsive layout for mobile Telegram clients
+6. Verify empty state handling when no results exist
+7. Test search form validation and submission

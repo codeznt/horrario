@@ -1,0 +1,441 @@
+# Task ID: 26
+# Title: Implement UI/UX Polish with shadcn-vue Components
+# Status: pending
+# Dependencies: 24
+# Priority: medium
+# Description: Enhance the user interface with consistent shadcn-vue components, better mobile experience, and comprehensive form validation.
+# Details:
+1. Create a shadcn-vue component registry:
+```javascript
+// resources/js/Components/shadcn/index.js
+import Button from './Button.vue';
+import Input from './Input.vue';
+import Select from './Select.vue';
+import Checkbox from './Checkbox.vue';
+import Card from './Card.vue';
+import Badge from './Badge.vue';
+import Calendar from './Calendar.vue';
+import TimePicker from './TimePicker.vue';
+import Tabs from './Tabs.vue';
+import TabPanel from './TabPanel.vue';
+import Alert from './Alert.vue';
+import Spinner from './Spinner.vue';
+import Avatar from './Avatar.vue';
+import Dialog from './Dialog.vue';
+
+// Import Lucide icons
+import { 
+  Calendar as IconCalendar,
+  Clock as IconClock,
+  Search as IconSearch,
+  User as IconUser,
+  Store as IconStore,
+  Plus as IconPlus,
+  Edit as IconEdit,
+  Trash as IconTrash,
+  Check as IconCheck,
+  X as IconX,
+  ChevronLeft as IconChevronLeft,
+  ChevronRight as IconChevronRight,
+  CalendarPlus as IconCalendarPlus
+} from 'lucide-vue-next';
+
+// Create Icon component that wraps Lucide icons
+const Icon = {
+  name: 'Icon',
+  props: ['name'],
+  components: {
+    IconCalendar,
+    IconClock,
+    IconSearch,
+    IconUser,
+    IconStore,
+    IconPlus,
+    IconEdit,
+    IconTrash,
+    IconCheck,
+    IconX,
+    IconChevronLeft,
+    IconChevronRight,
+    IconCalendarPlus
+  },
+  render() {
+    const IconComponent = this.$options.components[`Icon${this.name.charAt(0).toUpperCase() + this.name.slice(1)}`];
+    return IconComponent ? h(IconComponent) : null;
+  }
+};
+
+export {
+  Button,
+  Input,
+  Select,
+  Checkbox,
+  Card,
+  Badge,
+  Calendar,
+  TimePicker,
+  Tabs,
+  TabPanel,
+  Alert,
+  Spinner,
+  Avatar,
+  Dialog,
+  Icon
+};
+```
+
+2. Create form validation composable:
+```javascript
+// resources/js/Composables/useFormValidation.js
+import { ref, computed } from 'vue';
+
+export function useFormValidation(initialValues = {}) {
+  const form = ref({ ...initialValues });
+  const errors = ref({});
+  const processing = ref(false);
+  
+  const resetForm = () => {
+    form.value = { ...initialValues };
+    errors.value = {};
+  };
+  
+  const validate = (rules) => {
+    const newErrors = {};
+    
+    Object.keys(rules).forEach(field => {
+      const fieldRules = rules[field];
+      const value = form.value[field];
+      
+      // Required validation
+      if (fieldRules.required && (!value || value === '')) {
+        newErrors[field] = fieldRules.required === true 
+          ? `${field} is required` 
+          : fieldRules.required;
+      }
+      
+      // Min length validation
+      if (fieldRules.minLength && value && value.length < fieldRules.minLength) {
+        newErrors[field] = `${field} must be at least ${fieldRules.minLength} characters`;
+      }
+      
+      // Max length validation
+      if (fieldRules.maxLength && value && value.length > fieldRules.maxLength) {
+        newErrors[field] = `${field} must be less than ${fieldRules.maxLength} characters`;
+      }
+      
+      // Pattern validation
+      if (fieldRules.pattern && value && !fieldRules.pattern.test(value)) {
+        newErrors[field] = fieldRules.patternMessage || `${field} format is invalid`;
+      }
+      
+      // Custom validation
+      if (fieldRules.custom && typeof fieldRules.custom === 'function') {
+        const customError = fieldRules.custom(value, form.value);
+        if (customError) {
+          newErrors[field] = customError;
+        }
+      }
+    });
+    
+    errors.value = newErrors;
+    return Object.keys(newErrors).length === 0;
+  };
+  
+  const hasErrors = computed(() => Object.keys(errors.value).length > 0);
+  
+  return {
+    form,
+    errors,
+    processing,
+    resetForm,
+    validate,
+    hasErrors
+  };
+}
+```
+
+3. Create responsive layout components:
+```vue
+<!-- resources/js/Layouts/AppLayout.vue -->
+<template>
+  <div class="app-layout bg-tg-bg text-tg-text min-h-tg-viewport flex flex-col">
+    <header class="app-header bg-tg-secondary-bg p-4 flex items-center justify-between">
+      <div class="flex items-center">
+        <button v-if="showBackButton" @click="goBack" class="mr-2">
+          <Icon name="chevronLeft" />
+        </button>
+        <h1 class="text-xl font-bold">{{ title }}</h1>
+      </div>
+      
+      <slot name="header-actions"></slot>
+    </header>
+    
+    <main class="app-content p-4 flex-grow">
+      <Alert v-if="$page.props.flash?.message" :variant="$page.props.flash.type || 'info'" class="mb-4">
+        {{ $page.props.flash.message }}
+      </Alert>
+      
+      <slot />
+    </main>
+    
+    <footer v-if="$slots.footer" class="app-footer bg-tg-secondary-bg p-4">
+      <slot name="footer" />
+    </footer>
+    
+    <nav v-if="showNavigation" class="app-navigation bg-tg-secondary-bg p-2 flex justify-around items-center border-t border-tg-hint border-opacity-20">
+      <NavLink :href="route('search.index')" :active="route().current('search.*')">
+        <Icon name="search" />
+        <span>Search</span>
+      </NavLink>
+      
+      <NavLink :href="route('bookings.upcoming')" :active="route().current('bookings.*')">
+        <Icon name="calendar" />
+        <span>Bookings</span>
+      </NavLink>
+      
+      <NavLink v-if="$page.props.auth.user.provider" :href="route('provider.dashboard')" :active="route().current('provider.*')">
+        <Icon name="store" />
+        <span>Provider</span>
+      </NavLink>
+      
+      <NavLink :href="route('profile.show')" :active="route().current('profile.*')">
+        <Icon name="user" />
+        <span>Profile</span>
+      </NavLink>
+    </nav>
+  </div>
+</template>
+
+<script setup>
+import { computed } from 'vue';
+import { usePage, Link } from '@inertiajs/inertia-vue3';
+import { Alert, Icon } from '@/Components/shadcn';
+
+const props = defineProps({
+  title: String,
+  showBackButton: {
+    type: Boolean,
+    default: false
+  },
+  showNavigation: {
+    type: Boolean,
+    default: true
+  }
+});
+
+function goBack() {
+  window.history.back();
+}
+
+const NavLink = {
+  components: { Link, Icon },
+  props: ['href', 'active'],
+  template: `
+    <Link :href="href" class="nav-link flex flex-col items-center p-2" :class="{ 'active': active }">
+      <slot></slot>
+    </Link>
+  `
+};
+</script>
+
+<style scoped>
+.nav-link {
+  color: var(--tg-theme-hint-color);
+  font-size: 0.75rem;
+}
+
+.nav-link.active {
+  color: var(--tg-theme-link-color);
+}
+
+.nav-link span {
+  margin-top: 0.25rem;
+}
+</style>
+```
+
+4. Create reusable form components:
+```vue
+<!-- resources/js/Components/FormField.vue -->
+<template>
+  <div class="form-field mb-4">
+    <label v-if="label" :for="id" class="block text-sm font-medium mb-1">{{ label }}</label>
+    
+    <slot></slot>
+    
+    <p v-if="error" class="text-red-500 text-sm mt-1">{{ error }}</p>
+    <p v-else-if="hint" class="text-tg-hint text-sm mt-1">{{ hint }}</p>
+  </div>
+</template>
+
+<script setup>
+import { computed } from 'vue';
+
+const props = defineProps({
+  id: String,
+  label: String,
+  error: String,
+  hint: String
+});
+</script>
+```
+
+5. Create a loading overlay component:
+```vue
+<!-- resources/js/Components/LoadingOverlay.vue -->
+<template>
+  <div v-if="show" class="loading-overlay">
+    <div class="loading-content">
+      <Spinner size="lg" />
+      <p v-if="message" class="mt-2">{{ message }}</p>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { Spinner } from '@/Components/shadcn';
+
+defineProps({
+  show: {
+    type: Boolean,
+    default: false
+  },
+  message: String
+});
+</script>
+
+<style scoped>
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loading-content {
+  background-color: var(--tg-theme-bg-color);
+  padding: 2rem;
+  border-radius: 0.5rem;
+  text-align: center;
+}
+</style>
+```
+
+6. Create a confirmation dialog component:
+```vue
+<!-- resources/js/Components/ConfirmDialog.vue -->
+<template>
+  <Dialog :open="show" @close="onCancel">
+    <div class="p-4">
+      <h3 class="text-lg font-medium mb-2">{{ title }}</h3>
+      <p class="mb-4">{{ message }}</p>
+      
+      <div class="flex justify-end space-x-2">
+        <Button variant="outline" @click="onCancel">{{ cancelText }}</Button>
+        <Button variant="destructive" @click="onConfirm">{{ confirmText }}</Button>
+      </div>
+    </div>
+  </Dialog>
+</template>
+
+<script setup>
+import { Dialog, Button } from '@/Components/shadcn';
+
+const props = defineProps({
+  show: Boolean,
+  title: {
+    type: String,
+    default: 'Confirm Action'
+  },
+  message: {
+    type: String,
+    default: 'Are you sure you want to proceed?'
+  },
+  confirmText: {
+    type: String,
+    default: 'Confirm'
+  },
+  cancelText: {
+    type: String,
+    default: 'Cancel'
+  }
+});
+
+const emit = defineEmits(['confirm', 'cancel']);
+
+function onConfirm() {
+  emit('confirm');
+}
+
+function onCancel() {
+  emit('cancel');
+}
+</script>
+```
+
+# Test Strategy:
+1. Test responsive layout on various screen sizes
+2. Verify form validation works correctly with different input types
+3. Test loading overlay during async operations
+4. Verify confirmation dialogs work for destructive actions
+5. Test navigation components and active state
+6. Verify shadcn-vue components render correctly with Telegram theme
+7. Test accessibility features like keyboard navigation and screen reader support
+
+# Subtasks:
+## 1. Implement shadcn-vue component registry and icon system [pending]
+### Dependencies: None
+### Description: Create the component registry file that exports all shadcn-vue components and implement the icon system using Lucide icons for consistent usage throughout the application.
+### Details:
+1. Create the resources/js/Components/shadcn/index.js file
+2. Import and export all shadcn-vue components
+3. Set up the Icon component wrapper for Lucide icons
+4. Test icon rendering with different names
+5. Update import statements in existing components to use the registry
+
+## 2. Create form validation composable and reusable form components [pending]
+### Dependencies: 26.1
+### Description: Implement a form validation composable for consistent form handling and create reusable form components that integrate with the validation system.
+### Details:
+1. Create useFormValidation.js composable with validation rules
+2. Implement FormField.vue component for consistent field layout
+3. Create form-specific components that use shadcn-vue components
+4. Add error handling and display
+5. Test validation with different form scenarios
+
+## 3. Develop responsive layout components with Telegram theme integration [pending]
+### Dependencies: 26.1
+### Description: Create responsive layout components that adapt to different screen sizes and properly integrate with Telegram theme variables for consistent styling.
+### Details:
+1. Implement AppLayout.vue with header, content, footer, and navigation sections
+2. Create navigation components with active state handling
+3. Add responsive breakpoints for different screen sizes
+4. Integrate Telegram theme CSS variables
+5. Test layouts on mobile, tablet, and desktop viewports
+
+## 4. Implement loading overlay and confirmation dialog components [pending]
+### Dependencies: 26.1
+### Description: Create reusable loading overlay and confirmation dialog components for consistent user experience during async operations and destructive actions.
+### Details:
+1. Implement LoadingOverlay.vue component with spinner and message
+2. Create ConfirmDialog.vue component with customizable content
+3. Add animation for smooth transitions
+4. Implement z-index management for proper stacking
+5. Test components in different scenarios (network requests, form submissions, deletions)
+
+## 5. Apply UI/UX polish to existing pages and ensure mobile responsiveness [pending]
+### Dependencies: 26.1, 26.2, 26.3, 26.4
+### Description: Update all existing pages to use the new component system and ensure proper mobile responsiveness throughout the application.
+### Details:
+1. Audit existing pages and identify components to replace
+2. Update search, booking, provider, and profile pages with new components
+3. Test responsive behavior on all pages
+4. Fix any mobile-specific issues (touch targets, scrolling, etc.)
+5. Ensure consistent styling and spacing throughout the application
+
