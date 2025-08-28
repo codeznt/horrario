@@ -18,7 +18,7 @@ const alertVariants = cva(
   }
 )
 
-interface AlertProps extends VariantProps<typeof alertVariants> {
+interface AlertProps extends /* @vue-ignore */ VariantProps<typeof alertVariants> {
   class?: string
 }
 

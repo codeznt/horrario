@@ -33,6 +33,7 @@ class User extends Authenticatable
         'allows_write_to_pm',
         'role',
         'telegram_auth_date',
+        'profile_photo_path',
     ];
 
     /**
@@ -113,43 +114,9 @@ class User extends Authenticatable
      */
     public static function findOrCreateFromTelegram(array $telegramData): static
     {
-        $telegramId = $telegramData['id'];
-
-        $user = static::where('telegram_id', $telegramId)->first();
-
-        if ($user) {
-            // Update existing user with latest Telegram data
-            $user->update([
-                'first_name' => $telegramData['first_name'] ?? null,
-                'last_name' => $telegramData['last_name'] ?? null,
-                'username' => $telegramData['username'] ?? null,
-                'language_code' => $telegramData['language_code'] ?? null,
-                'is_premium' => $telegramData['is_premium'] ?? false,
-                'allows_write_to_pm' => $telegramData['allows_write_to_pm'] ?? false,
-                'telegram_auth_date' => now(),
-            ]);
-
-            return $user;
-        }
-
-        // Create new user from Telegram data
-        $fullName = trim(($telegramData['first_name'] ?? '').' '.($telegramData['last_name'] ?? ''));
-        $email = $telegramData['username'] ? $telegramData['username'].'@telegram.local' : 'user'.$telegramId.'@telegram.local';
-
-        return static::create([
-            'telegram_id' => $telegramId,
-            'name' => $fullName ?: 'Telegram User',
-            'email' => $email,
-            'password' => '', // Empty password since we authenticate via Telegram
-            'first_name' => $telegramData['first_name'] ?? null,
-            'last_name' => $telegramData['last_name'] ?? null,
-            'username' => $telegramData['username'] ?? null,
-            'language_code' => $telegramData['language_code'] ?? null,
-            'is_premium' => $telegramData['is_premium'] ?? false,
-            'allows_write_to_pm' => $telegramData['allows_write_to_pm'] ?? false,
-            'role' => 'user',
-            'telegram_auth_date' => now(),
-        ]);
+        $telegramProfileService = app(\App\Services\TelegramProfileService::class);
+        
+        return $telegramProfileService->findOrCreateUser($telegramData);
     }
 
     /**

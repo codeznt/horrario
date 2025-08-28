@@ -40,7 +40,7 @@
                   id="description"
                   v-model="form.description"
                   placeholder="Describe your service (optional)"
-                  rows="3"
+                  :rows="3"
                   :class="{ 'border-destructive': errors.description }"
                 />
                 <p v-if="errors.description" class="text-sm text-destructive">{{ errors.description }}</p>

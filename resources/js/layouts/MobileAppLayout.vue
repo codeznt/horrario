@@ -1,0 +1,182 @@
+<template>
+  <TelegramAppLayout :padded="true" :fill="true" class="mobile-app-layout">
+    <!-- Header -->
+    <header class="app-header bg-tg-secondary-bg border-b border-tg-section-separator">
+      <div class="flex items-center justify-between p-4">
+        <div class="flex items-center gap-3">
+          <Button
+            v-if="showBackButton"
+            variant="ghost"
+            size="sm"
+            @click="goBack"
+            class="p-2 -ml-2"
+          >
+            <Icon name="ChevronLeft" class="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 class="text-lg font-semibold text-tg-text">{{ title }}</h1>
+            <p v-if="subtitle" class="text-sm text-tg-subtitle-text">{{ subtitle }}</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <slot name="header-actions" />
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="app-content flex-1 overflow-y-auto">
+      <!-- Flash Messages -->
+      <div v-if="$page.props.flash?.message" class="p-4">
+        <Alert :variant="getFlashVariant($page.props.flash.type)" class="mb-4">
+          <Icon :name="getFlashIcon($page.props.flash.type)" class="h-4 w-4" />
+          <AlertTitle>{{ getFlashTitle($page.props.flash.type) }}</AlertTitle>
+          <AlertDescription>{{ $page.props.flash.message }}</AlertDescription>
+        </Alert>
+      </div>
+
+      <!-- Page Content -->
+      <div class="px-4 pb-4">
+        <slot />
+      </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav v-if="showNavigation" class="app-navigation bg-tg-secondary-bg border-t border-tg-section-separator">
+      <div class="flex justify-around items-center py-2">
+        <NavLink 
+          :href="servicesIndex.url()"
+          :active="isCurrentRoute('/services')"
+          icon="Search"
+          label="Services"
+        />
+        
+        <NavLink 
+          :href="bookingsIndex.url()" 
+          :active="isCurrentRoute('/bookings')"
+          icon="Calendar"
+          label="Bookings"
+        />
+        
+        <NavLink 
+          v-if="page.props.auth.user"
+          :href="providerDashboard.url()" 
+          :active="isCurrentRoute('/provider')"
+          icon="Store"
+          label="Provider"
+        />
+        
+        <NavLink 
+          :href="profileShow.url()" 
+          :active="isCurrentRoute('/profile')"
+          icon="User"
+          label="Profile"
+        />
+      </div>
+    </nav>
+
+    <!-- Sticky Actions (if provided) -->
+    <template v-if="$slots.actions" #actions>
+      <div class="p-4 bg-tg-bg border-t border-tg-section-separator">
+        <slot name="actions" />
+      </div>
+    </template>
+  </TelegramAppLayout>
+</template>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import { router, usePage } from '@inertiajs/vue3'
+import TelegramAppLayout from '@/layouts/TelegramAppLayout.vue'
+import NavLink from '@/components/NavLink.vue'
+import { Button, Alert, AlertTitle, AlertDescription } from '@/components/ui'
+import Icon from '@/components/Icon.vue'
+import { index as servicesIndex } from '@/routes/services'
+import { index as bookingsIndex } from '@/routes/bookings'
+import { edit as profileShow } from '@/routes/profile'
+import { create as providerDashboard } from '@/routes/provider'
+
+interface Props {
+  title: string
+  subtitle?: string
+  showBackButton?: boolean
+  showNavigation?: boolean
+}
+
+interface FlashMessage {
+  message?: string
+  type?: string
+}
+
+interface PageProps {
+  flash?: FlashMessage
+  auth: {
+    user?: {
+      id: number
+      name: string
+      email: string
+    }
+  }
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  showBackButton: false,
+  showNavigation: true,
+})
+
+const page = usePage<PageProps>()
+
+function goBack() {
+  if (window.history.length > 1) {
+    window.history.back()
+  } else {
+    router.visit('/')
+  }
+}
+
+function isCurrentRoute(path: string): boolean {
+  return window.location.pathname.startsWith(path)
+}
+
+function getFlashVariant(type?: string) {
+  switch (type) {
+    case 'success': return 'default'
+    case 'error': return 'destructive'
+    case 'warning': return 'default'
+    default: return 'default'
+  }
+}
+
+function getFlashIcon(type?: string) {
+  switch (type) {
+    case 'success': return 'CheckCircle'
+    case 'error': return 'XCircle'
+    case 'warning': return 'AlertTriangle'
+    default: return 'Info'
+  }
+}
+
+function getFlashTitle(type?: string) {
+  switch (type) {
+    case 'success': return 'Success'
+    case 'error': return 'Error'
+    case 'warning': return 'Warning'
+    default: return 'Information'
+  }
+}
+</script>
+
+<style scoped>
+.mobile-app-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+</style>

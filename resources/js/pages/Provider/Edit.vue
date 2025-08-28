@@ -122,7 +122,7 @@ const submit = () => {
                 id="address"
                 v-model="form.address"
                 placeholder="Enter your business address"
-                rows="2"
+                :rows="2"
                 :class="{ 'border-red-500': form.errors.address }"
               />
               <p v-if="form.errors.address" class="text-sm text-red-600">
@@ -158,7 +158,7 @@ const submit = () => {
                 id="description"
                 v-model="form.description"
                 placeholder="Describe your business and services"
-                rows="4"
+                :rows="4"
                 :class="{ 'border-red-500': form.errors.description }"
               />
               <p v-if="form.errors.description" class="text-sm text-red-600">
