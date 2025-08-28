@@ -66,6 +66,16 @@ Route::middleware(['telegram.auth'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('Dashboard');
     })->middleware(['auth', 'verified'])->name('dashboard');
+
+    // Provider routes
+    Route::prefix('provider')->name('provider.')->group(function () {
+        Route::get('/create', [App\Http\Controllers\ProviderController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\ProviderController::class, 'store'])->name('store');
+        Route::get('/dashboard', [App\Http\Controllers\ProviderController::class, 'show'])->name('dashboard');
+        Route::get('/edit', [App\Http\Controllers\ProviderController::class, 'edit'])->name('edit');
+        Route::put('/', [App\Http\Controllers\ProviderController::class, 'update'])->name('update');
+        Route::delete('/', [App\Http\Controllers\ProviderController::class, 'destroy'])->name('destroy');
+    });
 });
 
 require __DIR__.'/settings.php';
