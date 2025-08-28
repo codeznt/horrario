@@ -88,6 +88,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
+import type { Page } from '@inertiajs/core'
 import TelegramAppLayout from '@/layouts/TelegramAppLayout.vue'
 import NavLink from '@/components/NavLink.vue'
 import { Button, Alert, AlertTitle, AlertDescription } from '@/components/ui'
@@ -109,7 +110,8 @@ interface FlashMessage {
   type?: string
 }
 
-interface PageProps {
+// Define our app-specific page props
+interface AppPageProps {
   flash?: FlashMessage
   auth: {
     user?: {
@@ -120,12 +122,17 @@ interface PageProps {
   }
 }
 
+// Extend Inertia's Page interface with our custom props
+declare module '@inertiajs/core' {
+  interface PageProps extends AppPageProps {}
+}
+
 const props = withDefaults(defineProps<Props>(), {
   showBackButton: false,
   showNavigation: true,
 })
 
-const page = usePage<PageProps>()
+const page = usePage()
 
 function goBack() {
   if (window.history.length > 1) {

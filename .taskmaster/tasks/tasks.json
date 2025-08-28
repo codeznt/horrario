@@ -595,7 +595,7 @@
         "dependencies": [
           24
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -603,7 +603,7 @@
             "description": "Create the component registry file that exports all shadcn-vue components and implement the icon system using Lucide icons for consistent usage throughout the application.",
             "dependencies": [],
             "details": "1. Create the resources/js/Components/shadcn/index.js file\n2. Import and export all shadcn-vue components\n3. Set up the Icon component wrapper for Lucide icons\n4. Test icon rendering with different names\n5. Update import statements in existing components to use the registry",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -614,7 +614,7 @@
               "26.1"
             ],
             "details": "1. Create useFormValidation.js composable with validation rules\n2. Implement FormField.vue component for consistent field layout\n3. Create form-specific components that use shadcn-vue components\n4. Add error handling and display\n5. Test validation with different form scenarios",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -625,7 +625,7 @@
               "26.1"
             ],
             "details": "1. Implement AppLayout.vue with header, content, footer, and navigation sections\n2. Create navigation components with active state handling\n3. Add responsive breakpoints for different screen sizes\n4. Integrate Telegram theme CSS variables\n5. Test layouts on mobile, tablet, and desktop viewports",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -636,7 +636,7 @@
               "26.1"
             ],
             "details": "1. Implement LoadingOverlay.vue component with spinner and message\n2. Create ConfirmDialog.vue component with customizable content\n3. Add animation for smooth transitions\n4. Implement z-index management for proper stacking\n5. Test components in different scenarios (network requests, form submissions, deletions)",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -650,7 +650,7 @@
               "26.4"
             ],
             "details": "1. Audit existing pages and identify components to replace\n2. Update search, booking, provider, and profile pages with new components\n3. Test responsive behavior on all pages\n4. Fix any mobile-specific issues (touch targets, scrolling, etc.)\n5. Ensure consistent styling and spacing throughout the application",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -734,7 +734,7 @@
     ],
     "metadata": {
       "created": "2025-08-28T07:00:10.708Z",
-      "updated": "2025-08-28T10:30:48.820Z",
+      "updated": "2025-08-28T11:08:45.964Z",
       "description": "Tasks for master context"
     }
   }
