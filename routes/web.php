@@ -94,6 +94,18 @@ Route::middleware(['telegram.auth'])->group(function () {
         Route::put('/{schedule}', [App\Http\Controllers\ScheduleController::class, 'update'])->name('update');
         Route::delete('/{schedule}', [App\Http\Controllers\ScheduleController::class, 'destroy'])->name('destroy');
     });
+
+    // Booking routes
+    Route::prefix('bookings')->name('bookings.')->group(function () {
+        Route::get('/', [App\Http\Controllers\BookingController::class, 'index'])->name('index');
+        Route::get('/{booking}', [App\Http\Controllers\BookingController::class, 'show'])->name('show');
+        Route::post('/{booking}/cancel', [App\Http\Controllers\BookingController::class, 'cancel'])->name('cancel');
+        Route::post('/{booking}/status', [App\Http\Controllers\BookingController::class, 'updateStatus'])->name('updateStatus');
+    });
+
+    // Service booking routes
+    Route::get('/services/{service}/book', [App\Http\Controllers\BookingController::class, 'create'])->name('bookings.create');
+    Route::post('/bookings', [App\Http\Controllers\BookingController::class, 'store'])->name('bookings.store');
 });
 
 require __DIR__.'/settings.php';
