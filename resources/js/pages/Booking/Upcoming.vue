@@ -1,12 +1,12 @@
 <template>
-  <Head title="My Bookings" />
+  <Head title="Upcoming Bookings" />
   
-  <MobileAppLayout title="My Bookings">
+  <MobileAppLayout title="Upcoming Bookings">
     <template #header-actions>
       <div class="flex gap-2">
-        <Button @click="router.visit('/bookings/upcoming')" size="sm" variant="outline">
-          <Icon name="Clock" class="h-4 w-4 mr-1" />
-          Upcoming
+        <Button @click="router.visit('/bookings')" size="sm" variant="outline">
+          <Icon name="Calendar" class="h-4 w-4 mr-1" />
+          All
         </Button>
         <Button @click="router.visit('/bookings/past')" size="sm" variant="outline">
           <Icon name="History" class="h-4 w-4 mr-1" />
@@ -19,13 +19,13 @@
       </div>
     </template>
 
-    <div v-if="Object.keys(bookingsByDate).length === 0" class="text-center py-12">
+    <div v-if="bookings.length === 0" class="text-center py-12">
       <div class="bg-tg-section-bg rounded-full p-6 w-24 h-24 mx-auto mb-4 flex items-center justify-center">
-        <Icon name="Calendar" class="h-12 w-12 text-tg-hint" />
+        <Icon name="Clock" class="h-12 w-12 text-tg-hint" />
       </div>
-      <h3 class="text-xl font-semibold mb-2 text-tg-text">No bookings yet</h3>
+      <h3 class="text-xl font-semibold mb-2 text-tg-text">No upcoming bookings</h3>
       <p class="text-tg-subtitle-text mb-6 px-4">
-        You haven't made any bookings. Browse our services to get started.
+        You don't have any upcoming bookings. Browse our services to book your next appointment.
       </p>
       <Button @click="router.visit('/services')" class="mx-auto">
         <Icon name="Search" class="h-4 w-4 mr-2" />
@@ -33,23 +33,31 @@
       </Button>
     </div>
 
-    <div v-else class="space-y-6">
-      <div v-for="(bookings, date) in bookingsByDate" :key="date" class="space-y-3">
-        <!-- Date Header -->
-        <div class="sticky top-0 bg-tg-bg z-10 py-2">
-          <h2 class="text-lg font-semibold text-tg-text">{{ formatDate(date) }}</h2>
-          <p class="text-sm text-tg-subtitle-text">{{ bookings.length }} {{ bookings.length === 1 ? 'booking' : 'bookings' }}</p>
-        </div>
+    <div v-else class="space-y-4">
+      <!-- Summary Card -->
+      <Card class="bg-tg-section-bg border-tg-section-separator">
+        <CardContent class="p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-semibold text-tg-text">Upcoming Bookings</h3>
+              <p class="text-sm text-tg-subtitle-text">Your scheduled appointments</p>
+            </div>
+            <div class="text-right">
+              <div class="text-2xl font-bold text-tg-accent">{{ bookings.length }}</div>
+              <div class="text-sm text-tg-subtitle-text">{{ bookings.length === 1 ? 'Booking' : 'Bookings' }}</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-        <!-- Bookings for this date -->
-        <div class="space-y-3">
-          <BookingCard 
-            v-for="booking in bookings" 
-            :key="booking.id" 
-            :booking="booking"
-            @cancel="cancelBooking"
-          />
-        </div>
+      <!-- Bookings List -->
+      <div class="space-y-3">
+        <BookingCard 
+          v-for="booking in bookings" 
+          :key="booking.id" 
+          :booking="booking"
+          @cancel="cancelBooking"
+        />
       </div>
     </div>
 
@@ -72,7 +80,7 @@ import MobileAppLayout from '@/layouts/MobileAppLayout.vue'
 import BookingCard from '../../components/BookingCard.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import Icon from '@/components/Icon.vue'
-import { Button } from '@/components/ui'
+import { Button, Card, CardContent } from '@/components/ui'
 
 interface Booking {
   id: number
@@ -95,22 +103,13 @@ interface Booking {
 }
 
 interface Props {
-  bookingsByDate: Record<string, Booking[]>
+  bookings: Booking[]
 }
 
 const props = defineProps<Props>()
 
 const showCancelDialog = ref(false)
 const bookingToCancel = ref<number | null>(null)
-
-function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
-}
 
 function cancelBooking(bookingId: number) {
   bookingToCancel.value = bookingId

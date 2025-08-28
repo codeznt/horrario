@@ -100,6 +100,8 @@ Route::middleware(['telegram.auth'])->group(function () {
     // Booking routes
     Route::prefix('bookings')->name('bookings.')->group(function () {
         Route::get('/', [App\Http\Controllers\BookingController::class, 'index'])->name('index');
+        Route::get('/upcoming', [App\Http\Controllers\BookingController::class, 'upcoming'])->name('upcoming');
+        Route::get('/past', [App\Http\Controllers\BookingController::class, 'past'])->name('past');
         Route::get('/{booking}', [App\Http\Controllers\BookingController::class, 'show'])->name('show');
         Route::post('/{booking}/cancel', [App\Http\Controllers\BookingController::class, 'cancel'])->name('cancel');
         Route::post('/{booking}/confirm', [App\Http\Controllers\BookingController::class, 'confirm'])->name('confirm');

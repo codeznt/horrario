@@ -23,16 +23,52 @@ class BookingController extends Controller
     }
 
     /**
-     * Display a listing of the user's bookings.
+     * Display a listing of the user's bookings grouped by date.
      */
     public function index()
     {
         $bookings = auth()->user()->bookings()
             ->with(['service', 'provider.user'])
+            ->orderBy('start_datetime')
+            ->get()
+            ->groupBy(function ($booking) {
+                return Carbon::parse($booking->start_datetime)->format('Y-m-d');
+            });
+
+        return Inertia::render('Booking/Index', [
+            'bookingsByDate' => $bookings
+        ]);
+    }
+
+    /**
+     * Display upcoming bookings for the user.
+     */
+    public function upcoming()
+    {
+        $bookings = auth()->user()->bookings()
+            ->with(['service', 'provider.user'])
+            ->where('start_datetime', '>=', Carbon::now())
+            ->where('status', '!=', 'cancelled')
+            ->orderBy('start_datetime')
+            ->get();
+
+        return Inertia::render('Booking/Upcoming', [
+            'bookings' => $bookings
+        ]);
+    }
+
+    /**
+     * Display past bookings for the user.
+     */
+    public function past()
+    {
+        $bookings = auth()->user()->bookings()
+            ->with(['service', 'provider.user'])
+            ->where('start_datetime', '<', Carbon::now())
             ->orderBy('start_datetime', 'desc')
             ->get();
 
-        return Inertia::render('Booking/Index', [
+        return Inertia::render('Booking/Past', [
             'bookings' => $bookings
         ]);
     }

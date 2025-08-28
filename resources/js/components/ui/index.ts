@@ -6,6 +6,15 @@ export { Textarea } from './textarea'
 export { Badge } from './badge'
 export { Separator } from './separator'
 
+// Select Components
+export {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './select'
+
 // Card Components
 export {
   Card,
