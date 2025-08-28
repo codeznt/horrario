@@ -112,6 +112,11 @@ Route::middleware(['telegram.auth'])->group(function () {
     // Service booking routes
     Route::get('/services/{service}/book', [App\Http\Controllers\BookingController::class, 'create'])->name('bookings.create');
     Route::post('/bookings', [App\Http\Controllers\BookingController::class, 'store'])->name('bookings.store');
+    
+    // Search routes
+    Route::get('/search', [App\Http\Controllers\SearchController::class, 'index'])->name('search');
+    Route::get('/search/results', [App\Http\Controllers\SearchController::class, 'search'])->name('search.results');
+    Route::get('/search/provider/{provider}', [App\Http\Controllers\SearchController::class, 'providerServices'])->name('search.provider');
 });
 
 require __DIR__.'/settings.php';
