@@ -71,7 +71,9 @@ Route::middleware(['telegram.auth'])->group(function () {
     Route::prefix('provider')->name('provider.')->group(function () {
         Route::get('/create', [App\Http\Controllers\ProviderController::class, 'create'])->name('create');
         Route::post('/', [App\Http\Controllers\ProviderController::class, 'store'])->name('store');
-        Route::get('/dashboard', [App\Http\Controllers\ProviderController::class, 'show'])->name('dashboard');
+        Route::get('/profile', [App\Http\Controllers\ProviderController::class, 'show'])->name('profile');
+        Route::get('/dashboard', [App\Http\Controllers\BookingController::class, 'providerDashboard'])->name('dashboard');
+        Route::get('/bookings', [App\Http\Controllers\BookingController::class, 'providerBookings'])->name('bookings');
         Route::get('/edit', [App\Http\Controllers\ProviderController::class, 'edit'])->name('edit');
         Route::put('/', [App\Http\Controllers\ProviderController::class, 'update'])->name('update');
         Route::delete('/', [App\Http\Controllers\ProviderController::class, 'destroy'])->name('destroy');
@@ -100,6 +102,8 @@ Route::middleware(['telegram.auth'])->group(function () {
         Route::get('/', [App\Http\Controllers\BookingController::class, 'index'])->name('index');
         Route::get('/{booking}', [App\Http\Controllers\BookingController::class, 'show'])->name('show');
         Route::post('/{booking}/cancel', [App\Http\Controllers\BookingController::class, 'cancel'])->name('cancel');
+        Route::post('/{booking}/confirm', [App\Http\Controllers\BookingController::class, 'confirm'])->name('confirm');
+        Route::post('/{booking}/decline', [App\Http\Controllers\BookingController::class, 'decline'])->name('decline');
         Route::post('/{booking}/status', [App\Http\Controllers\BookingController::class, 'updateStatus'])->name('updateStatus');
     });
 

@@ -1,102 +1,151 @@
-<script setup lang="ts">
-import { Head } from '@inertiajs/vue3'
-import TelegramAppLayout from '@/layouts/TelegramAppLayout.vue'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Building2, Edit, User, Phone, MapPin, FileText } from 'lucide-vue-next'
-
-interface Provider {
-  id: number
-  business_name: string
-  address: string | null
-  contact_phone: string | null
-  description: string | null
-  profile_image: string | null
-}
-
-const props = defineProps<{
-  provider: Provider
-}>()
-
-const profileImageUrl = props.provider.profile_image 
-  ? `/storage/${props.provider.profile_image}` 
-  : null
-</script>
-
 <template>
   <Head title="Provider Dashboard" />
+  
+  <MobileAppLayout title="Today's Bookings" :subtitle="formatDate(date)">
+    <template #header-actions>
+      <Button @click="router.visit('/provider/bookings')" size="sm" variant="outline">
+        <Icon name="Calendar" class="h-4 w-4 mr-1" />
+        Calendar
+      </Button>
+    </template>
 
-  <TelegramAppLayout>
-    <div class="container mx-auto px-4 py-6 max-w-2xl">
-      <Card>
-        <CardHeader>
-          <CardTitle class="flex items-center gap-2">
-            <Building2 class="h-5 w-5" />
-            Provider Dashboard
-          </CardTitle>
-          <CardDescription>
-            Manage your business profile and services
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent class="space-y-6">
-          <!-- Profile Image -->
-          <div v-if="profileImageUrl" class="flex justify-center">
-            <img 
-              :src="profileImageUrl" 
-              :alt="provider.business_name"
-              class="w-24 h-24 object-cover rounded-lg border"
-            />
-          </div>
+    <div v-if="bookings.length === 0" class="text-center py-12">
+      <div class="bg-tg-section-bg rounded-full p-6 w-24 h-24 mx-auto mb-4 flex items-center justify-center">
+        <Icon name="Calendar" class="h-12 w-12 text-tg-hint" />
+      </div>
+      <h3 class="text-xl font-semibold mb-2 text-tg-text">No bookings today</h3>
+      <p class="text-tg-subtitle-text mb-6 px-4">
+        You don't have any bookings scheduled for today.
+      </p>
+    </div>
 
-          <!-- Business Information -->
-          <div class="space-y-4">
-            <div class="flex items-center gap-3">
-              <Building2 class="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p class="font-medium">{{ provider.business_name }}</p>
-                <p class="text-sm text-muted-foreground">Business Name</p>
-              </div>
+    <div v-else class="space-y-4">
+      <!-- Summary Card -->
+      <Card class="bg-tg-section-bg border-tg-section-separator">
+        <CardContent class="p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-semibold text-tg-text">Today's Summary</h3>
+              <p class="text-sm text-tg-subtitle-text">{{ formatDate(date) }}</p>
             </div>
-
-            <div v-if="provider.address" class="flex items-center gap-3">
-              <MapPin class="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p class="font-medium">{{ provider.address }}</p>
-                <p class="text-sm text-muted-foreground">Address</p>
-              </div>
+            <div class="text-right">
+              <div class="text-2xl font-bold text-tg-accent">{{ bookings.length }}</div>
+              <div class="text-sm text-tg-subtitle-text">{{ bookings.length === 1 ? 'Booking' : 'Bookings' }}</div>
             </div>
-
-            <div v-if="provider.contact_phone" class="flex items-center gap-3">
-              <Phone class="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p class="font-medium">{{ provider.contact_phone }}</p>
-                <p class="text-sm text-muted-foreground">Contact Phone</p>
-              </div>
-            </div>
-
-            <div v-if="provider.description" class="flex items-start gap-3">
-              <FileText class="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p class="font-medium">{{ provider.description }}</p>
-                <p class="text-sm text-muted-foreground">Description</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Actions -->
-          <div class="flex gap-3 pt-4">
-            <Button 
-              as="a" 
-              href="/provider/edit"
-              class="flex-1"
-            >
-              <Edit class="h-4 w-4 mr-2" />
-              Edit Profile
-            </Button>
           </div>
         </CardContent>
       </Card>
+
+      <!-- Bookings List -->
+      <div class="space-y-3">
+        <BookingItem 
+          v-for="booking in bookings" 
+          :key="booking.id" 
+          :booking="booking"
+          @confirm="confirmBooking"
+          @decline="declineBooking"
+        />
+      </div>
     </div>
-  </TelegramAppLayout>
+
+    <!-- Confirmation Dialog -->
+    <ConfirmDialog
+      :show="showConfirmDialog"
+      title="Confirm Booking"
+      message="Are you sure you want to confirm this booking?"
+      @confirm="handleConfirm"
+      @cancel="showConfirmDialog = false"
+    />
+
+    <!-- Decline Dialog -->
+    <ConfirmDialog
+      :show="showDeclineDialog"
+      title="Decline Booking"
+      message="Are you sure you want to decline this booking? The customer will be notified."
+      variant="destructive"
+      @confirm="handleDecline"
+      @cancel="showDeclineDialog = false"
+    />
+  </MobileAppLayout>
 </template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import { Head, router } from '@inertiajs/vue3'
+import MobileAppLayout from '@/layouts/MobileAppLayout.vue'
+import BookingItem from '@/components/BookingItem.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import Icon from '@/components/Icon.vue'
+import { Button, Card, CardContent } from '@/components/ui'
+
+interface Booking {
+  id: number
+  status: string
+  start_datetime: string
+  end_datetime: string
+  notes?: string
+  service: {
+    id: number
+    title: string
+    duration_minutes: number
+    price: number
+  }
+  user: {
+    id: number
+    name: string
+    email: string
+  }
+}
+
+interface Props {
+  bookings: Booking[]
+  date: string
+}
+
+const props = defineProps<Props>()
+
+const showConfirmDialog = ref(false)
+const showDeclineDialog = ref(false)
+const selectedBookingId = ref<number | null>(null)
+
+function formatDate(dateString: string) {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+}
+
+function confirmBooking(bookingId: number) {
+  selectedBookingId.value = bookingId
+  showConfirmDialog.value = true
+}
+
+function declineBooking(bookingId: number) {
+  selectedBookingId.value = bookingId
+  showDeclineDialog.value = true
+}
+
+function handleConfirm() {
+  if (!selectedBookingId.value) return
+  
+  router.post(`/bookings/${selectedBookingId.value}/confirm`, {}, {
+    onFinish: () => {
+      showConfirmDialog.value = false
+      selectedBookingId.value = null
+    }
+  })
+}
+
+function handleDecline() {
+  if (!selectedBookingId.value) return
+  
+  router.post(`/bookings/${selectedBookingId.value}/decline`, {}, {
+    onFinish: () => {
+      showDeclineDialog.value = false
+      selectedBookingId.value = null
+    }
+  })
+}
+</script>

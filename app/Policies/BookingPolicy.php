@@ -59,4 +59,12 @@ class BookingPolicy
         return $user->provider && 
                $user->provider->id === $booking->provider_id;
     }
+
+    /**
+     * Determine whether the user can manage the booking (confirm/decline).
+     */
+    public function manage(User $user, Booking $booking): bool
+    {
+        return $user->provider && $user->provider->id === $booking->provider_id;
+    }
 }

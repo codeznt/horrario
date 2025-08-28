@@ -217,4 +217,78 @@ class BookingController extends Controller
 
         return back()->with('success', 'Booking status updated successfully!');
     }
+
+    /**
+     * Display provider dashboard with today's bookings.
+     */
+    public function providerDashboard()
+    {
+        $provider = auth()->user()->provider;
+        
+        if (!$provider) {
+            return redirect()->route('home');
+        }
+        
+        $today = Carbon::today();
+        $bookings = $provider->bookings()
+            ->with(['user', 'service'])
+            ->whereDate('start_datetime', $today)
+            ->orderBy('start_datetime')
+            ->get();
+        
+        return Inertia::render('Provider/Dashboard', [
+            'bookings' => $bookings,
+            'date' => $today->format('Y-m-d')
+        ]);
+    }
+    
+    /**
+     * Display provider bookings for a specific date.
+     */
+    public function providerBookings(Request $request)
+    {
+        $provider = auth()->user()->provider;
+        
+        if (!$provider) {
+            return redirect()->route('home');
+        }
+        
+        $date = $request->input('date', Carbon::today()->format('Y-m-d'));
+        $bookings = $provider->bookings()
+            ->with(['user', 'service'])
+            ->whereDate('start_datetime', $date)
+            ->orderBy('start_datetime')
+            ->get();
+        
+        return Inertia::render('Provider/Bookings', [
+            'bookings' => $bookings,
+            'date' => $date
+        ]);
+    }
+    
+    /**
+     * Confirm a booking.
+     */
+    public function confirm(Booking $booking)
+    {
+        $this->authorize('manage', $booking);
+        
+        $booking->status = 'confirmed';
+        $booking->save();
+        
+        return redirect()->back()->with('success', 'Booking confirmed successfully!');
+    }
+    
+    /**
+     * Decline a booking.
+     */
+    public function decline(Booking $booking)
+    {
+        $this->authorize('manage', $booking);
+        
+        $booking->status = 'declined';
+        $booking->save();
+        
+        return redirect()->back()->with('success', 'Booking declined successfully!');
+    }
 }
