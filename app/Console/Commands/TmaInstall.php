@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Process;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Process;
 
 class TmaInstall extends Command
 {
@@ -27,13 +27,14 @@ class TmaInstall extends Command
      */
     public function handle()
     {
-        $fs = new Filesystem();
+        $fs = new Filesystem;
         $base = base_path();
 
         $writeIfMissing = function (string $path, string $contents) use ($fs, $base) {
             $full = $base.DIRECTORY_SEPARATOR.$path;
             if ($fs->exists($full)) {
                 $this->info("[TMA] Skipping (exists): {$path}");
+
                 return;
             }
             $fs->ensureDirectoryExists(dirname($full));
@@ -116,13 +117,13 @@ class TmaInstall extends Command
         $appTs = $base.'/resources/js/app.ts';
         if ($fs->exists($appTs)) {
             $src = $fs->get($appTs);
-            if (!str_contains($src, "./telegram/mockEnv")) {
-                $src = preg_replace('/^(import\\s+[^;]+;\n)/', "$0"."import { telegramEnvReady } from './telegram/mockEnv';\n", $src, 1);
+            if (! str_contains($src, './telegram/mockEnv')) {
+                $src = preg_replace('/^(import\\s+[^;]+;\n)/', '$0'."import { telegramEnvReady } from './telegram/mockEnv';\n", $src, 1);
             }
-            if (!str_contains($src, "./telegram/init")) {
-                $src = preg_replace('/^(import\\s+[^;]+;\n)/', "$0"."import { initTelegram } from './telegram/init';\n", $src, 1);
+            if (! str_contains($src, './telegram/init')) {
+                $src = preg_replace('/^(import\\s+[^;]+;\n)/', '$0'."import { initTelegram } from './telegram/init';\n", $src, 1);
             }
-            if (!str_contains($src, 'await telegramEnvReady;')) {
+            if (! str_contains($src, 'await telegramEnvReady;')) {
                 // Inject awaits before createInertiaApp call
                 $src = preg_replace('/(createInertiaApp\s*\()/m', "\nawait telegramEnvReady;\nawait initTelegram(import.meta.env.DEV);\n\ncreateInertiaApp(", $src, 1);
             }
@@ -136,7 +137,7 @@ class TmaInstall extends Command
         $appCss = $base.'/resources/css/app.css';
         if ($fs->exists($appCss)) {
             $css = $fs->get($appCss);
-            if (!str_contains($css, '--color-tg-bg')) {
+            if (! str_contains($css, '--color-tg-bg')) {
                 $css .= <<<'CSS'
 
                 /* Telegram theme tokens */
@@ -167,7 +168,7 @@ class TmaInstall extends Command
         }
 
         // 5) Install NPM deps (optional)
-        if (!$this->option('no-install')) {
+        if (! $this->option('no-install')) {
             $this->info('[TMA] Installing npm packages…');
             try {
                 // Prefer npm, fallback if missing.

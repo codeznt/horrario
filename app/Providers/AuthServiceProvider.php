@@ -2,12 +2,12 @@
 
 namespace App\Providers;
 
-use App\Models\Service;
-use App\Models\Schedule;
 use App\Models\Booking;
-use App\Policies\ServicePolicy;
-use App\Policies\SchedulePolicy;
+use App\Models\Schedule;
+use App\Models\Service;
 use App\Policies\BookingPolicy;
+use App\Policies\SchedulePolicy;
+use App\Policies\ServicePolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider

@@ -21,7 +21,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'confirmed', 'cancelled', 'completed'])->default('pending');
             $table->text('notes')->nullable();
             $table->timestamps();
-            
+
             $table->index('user_id');
             $table->index('provider_id');
             $table->index('service_id');

@@ -115,7 +115,7 @@ class User extends Authenticatable
     public static function findOrCreateFromTelegram(array $telegramData): static
     {
         $telegramProfileService = app(\App\Services\TelegramProfileService::class);
-        
+
         return $telegramProfileService->findOrCreateUser($telegramData);
     }
 

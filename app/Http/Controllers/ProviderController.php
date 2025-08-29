@@ -32,7 +32,7 @@ class ProviderController extends Controller
             'address' => 'nullable|string|max:500',
             'contact_phone' => 'nullable|string|max:20',
             'description' => 'nullable|string|max:1000',
-            'profile_image' => 'nullable|image|max:2048'
+            'profile_image' => 'nullable|image|max:2048',
         ]);
 
         $provider = new Provider($validated);
@@ -53,12 +53,12 @@ class ProviderController extends Controller
     {
         $provider = auth()->user()->provider;
 
-        if (!$provider) {
+        if (! $provider) {
             return redirect()->route('provider.create');
         }
 
         return Inertia::render('Provider/Dashboard', [
-            'provider' => $provider
+            'provider' => $provider,
         ]);
     }
 
@@ -66,12 +66,12 @@ class ProviderController extends Controller
     {
         $provider = auth()->user()->provider;
 
-        if (!$provider) {
+        if (! $provider) {
             return redirect()->route('provider.create');
         }
 
         return Inertia::render('Provider/Edit', [
-            'provider' => $provider
+            'provider' => $provider,
         ]);
     }
 
@@ -79,7 +79,7 @@ class ProviderController extends Controller
     {
         $provider = auth()->user()->provider;
 
-        if (!$provider) {
+        if (! $provider) {
             return redirect()->route('provider.create');
         }
 
@@ -88,7 +88,7 @@ class ProviderController extends Controller
             'address' => 'nullable|string|max:500',
             'contact_phone' => 'nullable|string|max:20',
             'description' => 'nullable|string|max:1000',
-            'profile_image' => 'nullable|image|max:2048'
+            'profile_image' => 'nullable|image|max:2048',
         ]);
 
         if ($request->hasFile('profile_image')) {
@@ -111,7 +111,7 @@ class ProviderController extends Controller
     {
         $provider = auth()->user()->provider;
 
-        if (!$provider) {
+        if (! $provider) {
             return redirect()->route('dashboard');
         }
 

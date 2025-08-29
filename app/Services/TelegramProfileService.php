@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Models\User;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class TelegramProfileService
@@ -17,8 +17,8 @@ class TelegramProfileService
         // Update basic profile information
         $firstName = $telegramData['first_name'] ?? '';
         $lastName = $telegramData['last_name'] ?? '';
-        $fullName = trim($firstName . ' ' . $lastName);
-        
+        $fullName = trim($firstName.' '.$lastName);
+
         $user->update([
             'name' => $fullName ?: 'Telegram User',
             'first_name' => $firstName,
@@ -31,7 +31,7 @@ class TelegramProfileService
         ]);
 
         // Sync profile photo if available
-        if (isset($telegramData['photo_url']) && !empty($telegramData['photo_url'])) {
+        if (isset($telegramData['photo_url']) && ! empty($telegramData['photo_url'])) {
             $this->syncProfilePhoto($user, $telegramData['photo_url']);
         }
 
@@ -69,6 +69,7 @@ class TelegramProfileService
                     'user_id' => $user->id,
                     'photo_url' => $photoUrl,
                 ]);
+
                 return;
             }
 
@@ -79,13 +80,14 @@ class TelegramProfileService
                     'user_id' => $user->id,
                     'photo_url' => $photoUrl,
                 ]);
+
                 return;
             }
 
             // Generate unique filename
             $extension = $this->getImageExtension($imageInfo['mime']);
-            $filename = 'telegram_' . $user->id . '_' . time() . '.' . $extension;
-            $path = 'profile-photos/' . $filename;
+            $filename = 'telegram_'.$user->id.'_'.time().'.'.$extension;
+            $path = 'profile-photos/'.$filename;
 
             // Store the new photo
             $stored = Storage::disk('public')->put($path, $photoContents);
@@ -148,13 +150,13 @@ class TelegramProfileService
         // Create new user
         $firstName = $telegramData['first_name'] ?? '';
         $lastName = $telegramData['last_name'] ?? '';
-        $fullName = trim($firstName . ' ' . $lastName);
+        $fullName = trim($firstName.' '.$lastName);
         $username = $telegramData['username'] ?? null;
 
         // Generate unique email
-        $email = $username 
-            ? $username . '@telegram.local'
-            : 'user' . $telegramId . '@telegram.local';
+        $email = $username
+            ? $username.'@telegram.local'
+            : 'user'.$telegramId.'@telegram.local';
 
         $user = User::create([
             'telegram_id' => $telegramId,
@@ -172,7 +174,7 @@ class TelegramProfileService
         ]);
 
         // Sync profile photo for new user
-        if (isset($telegramData['photo_url']) && !empty($telegramData['photo_url'])) {
+        if (isset($telegramData['photo_url']) && ! empty($telegramData['photo_url'])) {
             $this->syncProfilePhoto($user, $telegramData['photo_url']);
         }
 
@@ -190,7 +192,7 @@ class TelegramProfileService
      */
     public function getProfilePhotoUrl(User $user): ?string
     {
-        if (!$user->profile_photo_path) {
+        if (! $user->profile_photo_path) {
             return null;
         }
 
@@ -204,18 +206,18 @@ class TelegramProfileService
     {
         try {
             $directory = 'profile-photos';
-            $pattern = 'telegram_' . $user->id . '_';
-            
+            $pattern = 'telegram_'.$user->id.'_';
+
             $files = Storage::disk('public')->files($directory);
-            
+
             foreach ($files as $file) {
                 $filename = basename($file);
-                
+
                 // Skip current photo
                 if ($user->profile_photo_path && $file === $user->profile_photo_path) {
                     continue;
                 }
-                
+
                 // Delete old photos for this user
                 if (Str::startsWith($filename, $pattern)) {
                     Storage::disk('public')->delete($file);

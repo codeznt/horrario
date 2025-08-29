@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { backButton, miniApp } from '@telegram-apps/sdk';
+import { useTranslations } from '@/composables/useTranslations';
 import TelegramAppLayout from '@/layouts/TelegramAppLayout.vue';
-import { ref, computed } from 'vue';
+import { Head, router } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+const { t } = useTranslations();
 
 // shadcn-vue components
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
 // Icons
-import { ChevronLeft, Building2, User, Sparkles } from 'lucide-vue-next';
+import { Building2, ChevronLeft, Sparkles, User } from 'lucide-vue-next';
 
 // Onboarding state
 const currentStep = ref(1);
@@ -20,94 +21,7 @@ const selectedRole = ref<string>('');
 // Progress calculation
 const progress = computed(() => (currentStep.value / totalSteps) * 100);
 
-// Touch/drag handling
-const containerRef = ref<HTMLElement>();
-const isDragging = ref(false);
-const startX = ref(0);
-const currentX = ref(0);
-const translateX = ref(0);
-const threshold = 80; // Minimum distance to trigger slide
-
-// Touch event handlers
-function handleTouchStart(e: TouchEvent) {
-    isDragging.value = true;
-    startX.value = e.touches[0].clientX;
-    currentX.value = e.touches[0].clientX;
-}
-
-function handleTouchMove(e: TouchEvent) {
-    if (!isDragging.value) return;
-
-    currentX.value = e.touches[0].clientX;
-    const deltaX = currentX.value - startX.value;
-
-    // Limit drag distance
-    const maxDrag = 100;
-    translateX.value = Math.max(-maxDrag, Math.min(maxDrag, deltaX));
-}
-
-function handleTouchEnd() {
-    if (!isDragging.value) return;
-
-    const deltaX = currentX.value - startX.value;
-
-    // Determine slide direction and threshold
-    if (Math.abs(deltaX) > threshold) {
-        if (deltaX > 0 && currentStep.value > 1) {
-            // Swipe right - go back
-            goBack();
-        } else if (deltaX < 0 && currentStep.value < totalSteps) {
-            // Swipe left - go forward (only if role is selected on step 2)
-            if (currentStep.value === 2 && selectedRole.value) {
-                goNext();
-            } else if (currentStep.value !== 2) {
-                goNext();
-            }
-        }
-    }
-
-    // Reset drag state
-    isDragging.value = false;
-    translateX.value = 0;
-}
-
-// Mouse event handlers for desktop
-function handleMouseDown(e: MouseEvent) {
-    isDragging.value = true;
-    startX.value = e.clientX;
-    currentX.value = e.clientX;
-}
-
-function handleMouseMove(e: MouseEvent) {
-    if (!isDragging.value) return;
-
-    currentX.value = e.clientX;
-    const deltaX = currentX.value - startX.value;
-
-    const maxDrag = 100;
-    translateX.value = Math.max(-maxDrag, Math.min(maxDrag, deltaX));
-}
-
-function handleMouseUp() {
-    if (!isDragging.value) return;
-
-    const deltaX = currentX.value - startX.value;
-
-    if (Math.abs(deltaX) > threshold) {
-        if (deltaX > 0 && currentStep.value > 1) {
-            goBack();
-        } else if (deltaX < 0 && currentStep.value < totalSteps) {
-            if (currentStep.value === 2 && selectedRole.value) {
-                goNext();
-            } else if (currentStep.value !== 2) {
-                goNext();
-            }
-        }
-    }
-
-    isDragging.value = false;
-    translateX.value = 0;
-}
+// (Removed unused touch/mouse drag handlers to satisfy lint)
 
 // Navigation functions
 function goBack() {
@@ -138,10 +52,9 @@ function selectRole(role: 'business' | 'customer') {
 function completeOnboarding() {
     // Save user role and redirect
     router.post('/onboarding/complete', {
-        role: selectedRole.value
+        role: selectedRole.value,
     });
 }
-
 </script>
 
 <template>
@@ -151,15 +64,9 @@ function completeOnboarding() {
         <div class="flex min-h-[--spacing-viewport-h] flex-col">
             <!-- Header -->
             <div class="flex items-center justify-between p-4 pb-2">
-                <Button
-                    v-if="currentStep > 1"
-                    variant="ghost"
-                    size="sm"
-                    class="text-tg-text hover:bg-tg-secondary-bg"
-                    @click="goBack"
-                >
+                <Button v-if="currentStep > 1" variant="ghost" size="sm" class="text-tg-text hover:bg-tg-secondary-bg" @click="goBack">
                     <ChevronLeft class="size-4" />
-                    Назад
+                    {{ t('app.back') }}
                 </Button>
                 <div v-else></div>
 
@@ -167,62 +74,54 @@ function completeOnboarding() {
                     {{ currentStep }}
                 </div>
 
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    class="text-tg-hint hover:bg-tg-secondary-bg"
-                    @click="skipOnboarding"
-                >
-                    Пропустити
-                </Button>
+                <Button variant="ghost" size="sm" class="text-tg-hint hover:bg-tg-secondary-bg" @click="skipOnboarding"> {{ t('app.skip') }} </Button>
             </div>
 
             <!-- Progress Bar -->
             <div class="px-4 pb-6">
-                <div class="h-1 w-full bg-tg-secondary-bg rounded-full overflow-hidden">
-                    <div
-                        class="h-full bg-tg-accent transition-all duration-300 ease-out rounded-full"
-                        :style="`width: ${progress}%`"
-                    ></div>
+                <div class="h-1 w-full overflow-hidden rounded-full bg-tg-secondary-bg">
+                    <div class="h-full rounded-full bg-tg-accent transition-all duration-300 ease-out" :style="`width: ${progress}%`"></div>
                 </div>
             </div>
 
             <!-- Content Area -->
-            <div class="flex-1 flex flex-col items-center justify-center px-6 pb-8">
+            <div class="flex flex-1 flex-col items-center justify-center px-6 pb-8">
                 <!-- Step 1: Welcome -->
-                <div v-if="currentStep === 1" class="flex flex-col items-center text-center space-y-8 max-w-sm animate-in fade-in slide-in-from-right-4 duration-300">
+                <div
+                    v-if="currentStep === 1"
+                    class="flex max-w-sm animate-in flex-col items-center space-y-8 text-center duration-300 fade-in slide-in-from-right-4"
+                >
                     <!-- Illustration placeholder -->
-                    <div class="flex items-center justify-center w-32 h-32 bg-gradient-to-br from-tg-accent/20 to-tg-link/20 rounded-3xl border border-tg-section-separator">
-                        <div class="flex items-center justify-center w-16 h-16 bg-tg-accent/10 rounded-2xl">
+                    <div
+                        class="flex h-32 w-32 items-center justify-center rounded-3xl border border-tg-section-separator bg-gradient-to-br from-tg-accent/20 to-tg-link/20"
+                    >
+                        <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-tg-accent/10">
                             <Sparkles class="size-8 text-tg-accent" />
                         </div>
                     </div>
 
                     <div class="space-y-4">
                         <h1 class="text-2xl font-bold text-tg-text">
-                            Прощавайте,<br>
-                            записник та ручка
+                            {{ t('app.goodbye_notebook') }}
                         </h1>
                         <div class="space-y-3">
-                            <h2 class="text-xl font-semibold text-tg-text">
-                                Привіт,<br>
-                                Horario
-                            </h2>
-                            <p class="text-tg-hint text-sm leading-relaxed">
-                                Ваш розклад та записи в одному місці.
-                            </p>
+                            <h2 class="text-xl font-semibold text-tg-text">{{ t('app.hello_horario') }}</h2>
+                            <p class="text-sm leading-relaxed text-tg-hint">{{ t('app.schedule_description') }}</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Step 2: Role Selection -->
-                <div v-if="currentStep === 2" class="flex flex-col items-center text-center space-y-8 max-w-sm animate-in fade-in slide-in-from-right-4 duration-300">
+                <div
+                    v-if="currentStep === 2"
+                    class="flex max-w-sm animate-in flex-col items-center space-y-8 text-center duration-300 fade-in slide-in-from-right-4"
+                >
                     <div class="space-y-4">
                         <h1 class="text-2xl font-bold text-tg-text">
-                            Оберіть ваш профіль
+                            {{ t('app.choose_profile') }}
                         </h1>
-                        <p class="text-tg-hint text-sm">
-                            Допоможіть нам організувати ваш досвід
+                        <p class="text-sm text-tg-hint">
+                            {{ t('app.help_organize_experience') }}
                         </p>
                     </div>
 
@@ -230,9 +129,11 @@ function completeOnboarding() {
                         <!-- Business Option -->
                         <Card
                             class="cursor-pointer border-2 transition-all duration-200 hover:scale-[0.98] active:scale-95"
-                            :class="selectedRole === 'business'
-                                ? 'border-tg-accent bg-tg-accent/5'
-                                : 'border-tg-section-separator bg-tg-section-bg hover:bg-tg-secondary-bg'"
+                            :class="
+                                selectedRole === 'business'
+                                    ? 'border-tg-accent bg-tg-accent/5'
+                                    : 'border-tg-section-separator bg-tg-section-bg hover:bg-tg-secondary-bg'
+                            "
                             @click="selectRole('business')"
                         >
                             <CardContent class="flex items-center gap-4 p-4">
@@ -240,8 +141,8 @@ function completeOnboarding() {
                                     <Building2 class="size-6 text-tg-accent" />
                                 </div>
                                 <div class="flex-1 text-left">
-                                    <h3 class="font-semibold text-tg-text">Бізнес</h3>
-                                    <p class="text-sm text-tg-hint">Надаєте послуги</p>
+                                    <h3 class="font-semibold text-tg-text">{{ t('app.business') }}</h3>
+                                    <p class="text-sm text-tg-hint">{{ t('app.provide_services') }}</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -249,9 +150,11 @@ function completeOnboarding() {
                         <!-- Customer Option -->
                         <Card
                             class="cursor-pointer border-2 transition-all duration-200 hover:scale-[0.98] active:scale-95"
-                            :class="selectedRole === 'customer'
-                                ? 'border-tg-accent bg-tg-accent/5'
-                                : 'border-tg-section-separator bg-tg-section-bg hover:bg-tg-secondary-bg'"
+                            :class="
+                                selectedRole === 'customer'
+                                    ? 'border-tg-accent bg-tg-accent/5'
+                                    : 'border-tg-section-separator bg-tg-section-bg hover:bg-tg-secondary-bg'
+                            "
                             @click="selectRole('customer')"
                         >
                             <CardContent class="flex items-center gap-4 p-4">
@@ -259,8 +162,8 @@ function completeOnboarding() {
                                     <User class="size-6 text-tg-link" />
                                 </div>
                                 <div class="flex-1 text-left">
-                                    <h3 class="font-semibold text-tg-text">Клієнт</h3>
-                                    <p class="text-sm text-tg-hint">Користуєтесь послугами</p>
+                                    <h3 class="font-semibold text-tg-text">{{ t('app.customer') }}</h3>
+                                    <p class="text-sm text-tg-hint">{{ t('app.use_services') }}</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -268,19 +171,24 @@ function completeOnboarding() {
                 </div>
 
                 <!-- Step 3: Completion -->
-                <div v-if="currentStep === 3" class="flex flex-col items-center text-center space-y-8 max-w-sm animate-in fade-in slide-in-from-right-4 duration-300">
-                    <div class="flex items-center justify-center w-32 h-32 bg-gradient-to-br from-green-500/20 to-tg-accent/20 rounded-3xl border border-tg-section-separator">
-                        <div class="flex items-center justify-center w-16 h-16 bg-green-500/10 rounded-2xl">
+                <div
+                    v-if="currentStep === 3"
+                    class="flex max-w-sm animate-in flex-col items-center space-y-8 text-center duration-300 fade-in slide-in-from-right-4"
+                >
+                    <div
+                        class="flex h-32 w-32 items-center justify-center rounded-3xl border border-tg-section-separator bg-gradient-to-br from-green-500/20 to-tg-accent/20"
+                    >
+                        <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-green-500/10">
                             <AppLogoIcon class="size-8 text-tg-accent" />
                         </div>
                     </div>
 
                     <div class="space-y-4">
                         <h1 class="text-2xl font-bold text-tg-text">
-                            Все готово!
+                            {{ t('app.all_ready') }}
                         </h1>
-                        <p class="text-tg-hint text-sm leading-relaxed">
-                            Вітаємо в Horario. Організацію ваших {{ selectedRole === 'business' ? 'розкладів' : 'записів' }}.
+                        <p class="text-sm leading-relaxed text-tg-hint">
+                            {{ t('app.welcome_horario_organize') }} {{ selectedRole === 'business' ? t('app.schedules') : t('app.appointments') }}.
                         </p>
                     </div>
                 </div>
@@ -289,20 +197,14 @@ function completeOnboarding() {
             <!-- Bottom Actions -->
             <div class="px-6 pb-6">
                 <div v-if="currentStep === 1" class="flex gap-3">
-                    <Button
-                        class="flex-1 bg-tg-accent text-tg-accent-foreground hover:opacity-90"
-                        @click="goNext"
-                    >
-                        Розпочати
+                    <Button class="flex-1 bg-tg-accent text-tg-accent-foreground hover:opacity-90" @click="goNext">
+                        {{ t('app.get_started') }}
                     </Button>
                 </div>
 
                 <div v-if="currentStep === 3" class="flex gap-3">
-                    <Button
-                        class="flex-1 bg-tg-accent text-tg-accent-foreground hover:opacity-90"
-                        @click="completeOnboarding"
-                    >
-                        В кабінет
+                    <Button class="flex-1 bg-tg-accent text-tg-accent-foreground hover:opacity-90" @click="completeOnboarding">
+                        {{ t('app.to_dashboard') }}
                     </Button>
                 </div>
             </div>
@@ -330,6 +232,8 @@ function completeOnboarding() {
 }
 
 .animate-in {
-    animation: fade-in 300ms ease-out, slide-in-from-right-4 300ms ease-out;
+    animation:
+        fade-in 300ms ease-out,
+        slide-in-from-right-4 300ms ease-out;
 }
 </style>

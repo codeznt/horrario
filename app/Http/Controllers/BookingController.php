@@ -36,7 +36,7 @@ class BookingController extends Controller
             });
 
         return Inertia::render('Booking/Index', [
-            'bookingsByDate' => $bookings
+            'bookingsByDate' => $bookings,
         ]);
     }
 
@@ -53,7 +53,7 @@ class BookingController extends Controller
             ->get();
 
         return Inertia::render('Booking/Upcoming', [
-            'bookings' => $bookings
+            'bookings' => $bookings,
         ]);
     }
 
@@ -69,7 +69,7 @@ class BookingController extends Controller
             ->get();
 
         return Inertia::render('Booking/Past', [
-            'bookings' => $bookings
+            'bookings' => $bookings,
         ]);
     }
 
@@ -79,8 +79,8 @@ class BookingController extends Controller
     public function create(Service $service)
     {
         $provider = $service->provider;
-        
-        if (!$provider) {
+
+        if (! $provider) {
             return redirect()->back()
                 ->with('error', 'Service provider not found.');
         }
@@ -92,10 +92,10 @@ class BookingController extends Controller
         for ($i = 0; $i < 7; $i++) {
             $date = $startDate->copy()->addDays($i);
             $dateString = $date->format('Y-m-d');
-            
+
             // Generate time slots for this date
             $slots = $this->timeSlotService->generateTimeSlots($provider, $dateString, $service->duration_minutes);
-            
+
             // Filter out slots that are already booked
             $bookedSlots = Booking::where('provider_id', $provider->id)
                 ->whereDate('start_datetime', $date)
@@ -104,7 +104,7 @@ class BookingController extends Controller
                 ->map(function ($booking) {
                     return [
                         'start' => Carbon::parse($booking->start_datetime)->format('H:i'),
-                        'end' => Carbon::parse($booking->end_datetime)->format('H:i')
+                        'end' => Carbon::parse($booking->end_datetime)->format('H:i'),
                     ];
                 })->toArray();
 
@@ -114,6 +114,7 @@ class BookingController extends Controller
                         return false;
                     }
                 }
+
                 return true;
             });
 
@@ -123,14 +124,14 @@ class BookingController extends Controller
                 'day_short' => $date->format('D'),
                 'day_number' => $date->format('j'),
                 'month' => $date->format('M'),
-                'slots' => array_values($availableSlots)
+                'slots' => array_values($availableSlots),
             ];
         }
 
         return Inertia::render('Booking/Create', [
             'service' => $service->load('provider.user'),
             'provider' => $provider->load('user'),
-            'dates' => $dates
+            'dates' => $dates,
         ]);
     }
 
@@ -143,20 +144,20 @@ class BookingController extends Controller
             'service_id' => 'required|exists:services,id',
             'date' => 'required|date|after_or_equal:today',
             'start_time' => 'required|date_format:H:i',
-            'notes' => 'nullable|string|max:500'
+            'notes' => 'nullable|string|max:500',
         ]);
 
         $service = Service::with('provider')->findOrFail($validated['service_id']);
         $provider = $service->provider;
 
         // Calculate start and end datetime
-        $startDatetime = Carbon::parse($validated['date'] . ' ' . $validated['start_time']);
+        $startDatetime = Carbon::parse($validated['date'].' '.$validated['start_time']);
         $endDatetime = (clone $startDatetime)->addMinutes($service->duration_minutes);
 
         // Check if provider is available at this time
-        if (!$this->timeSlotService->isProviderAvailable($provider, $startDatetime->toISOString())) {
+        if (! $this->timeSlotService->isProviderAvailable($provider, $startDatetime->toISOString())) {
             return back()->withErrors([
-                'start_time' => 'Provider is not available at this time.'
+                'start_time' => 'Provider is not available at this time.',
             ]);
         }
 
@@ -169,10 +170,10 @@ class BookingController extends Controller
                 ->where(function ($query) use ($startDatetime, $endDatetime) {
                     $query->where(function ($q) use ($startDatetime, $endDatetime) {
                         $q->whereBetween('start_datetime', [$startDatetime, $endDatetime->subSecond()])
-                          ->orWhereBetween('end_datetime', [$startDatetime->addSecond(), $endDatetime]);
+                            ->orWhereBetween('end_datetime', [$startDatetime->addSecond(), $endDatetime]);
                     })->orWhere(function ($q) use ($startDatetime, $endDatetime) {
                         $q->where('start_datetime', '<=', $startDatetime)
-                          ->where('end_datetime', '>=', $endDatetime);
+                            ->where('end_datetime', '>=', $endDatetime);
                     });
                 })
                 ->where('status', '!=', 'cancelled')
@@ -181,8 +182,9 @@ class BookingController extends Controller
 
             if ($conflictingBooking) {
                 DB::rollBack();
+
                 return back()->withErrors([
-                    'start_time' => 'This time slot is no longer available.'
+                    'start_time' => 'This time slot is no longer available.',
                 ]);
             }
 
@@ -193,7 +195,7 @@ class BookingController extends Controller
                 'start_datetime' => $startDatetime,
                 'end_datetime' => $endDatetime,
                 'status' => 'pending',
-                'notes' => $validated['notes']
+                'notes' => $validated['notes'],
             ]);
 
             $booking->save();
@@ -205,8 +207,9 @@ class BookingController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->withErrors([
-                'error' => 'An error occurred while creating the booking. Please try again.'
+                'error' => 'An error occurred while creating the booking. Please try again.',
             ]);
         }
     }
@@ -219,7 +222,7 @@ class BookingController extends Controller
         $this->authorize('view', $booking);
 
         return Inertia::render('Booking/Show', [
-            'booking' => $booking->load(['service', 'provider.user', 'user'])
+            'booking' => $booking->load(['service', 'provider.user', 'user']),
         ]);
     }
 
@@ -245,7 +248,7 @@ class BookingController extends Controller
         $this->authorize('updateStatus', $booking);
 
         $validated = $request->validate([
-            'status' => 'required|in:confirmed,completed,cancelled'
+            'status' => 'required|in:confirmed,completed,cancelled',
         ]);
 
         $booking->status = $validated['status'];
@@ -260,71 +263,71 @@ class BookingController extends Controller
     public function providerDashboard()
     {
         $provider = auth()->user()->provider;
-        
-        if (!$provider) {
+
+        if (! $provider) {
             return redirect()->route('home');
         }
-        
+
         $today = Carbon::today();
         $bookings = $provider->bookings()
             ->with(['user', 'service'])
             ->whereDate('start_datetime', $today)
             ->orderBy('start_datetime')
             ->get();
-        
+
         return Inertia::render('Provider/Dashboard', [
             'bookings' => $bookings,
-            'date' => $today->format('Y-m-d')
+            'date' => $today->format('Y-m-d'),
         ]);
     }
-    
+
     /**
      * Display provider bookings for a specific date.
      */
     public function providerBookings(Request $request)
     {
         $provider = auth()->user()->provider;
-        
-        if (!$provider) {
+
+        if (! $provider) {
             return redirect()->route('home');
         }
-        
+
         $date = $request->input('date', Carbon::today()->format('Y-m-d'));
         $bookings = $provider->bookings()
             ->with(['user', 'service'])
             ->whereDate('start_datetime', $date)
             ->orderBy('start_datetime')
             ->get();
-        
+
         return Inertia::render('Provider/Bookings', [
             'bookings' => $bookings,
-            'date' => $date
+            'date' => $date,
         ]);
     }
-    
+
     /**
      * Confirm a booking.
      */
     public function confirm(Booking $booking)
     {
         $this->authorize('manage', $booking);
-        
+
         $booking->status = 'confirmed';
         $booking->save();
-        
+
         return redirect()->back()->with('success', 'Booking confirmed successfully!');
     }
-    
+
     /**
      * Decline a booking.
      */
     public function decline(Booking $booking)
     {
         $this->authorize('manage', $booking);
-        
+
         $booking->status = 'declined';
         $booking->save();
-        
+
         return redirect()->back()->with('success', 'Booking declined successfully!');
     }
 }

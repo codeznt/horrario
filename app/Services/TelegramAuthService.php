@@ -11,26 +11,25 @@ class TelegramAuthService
     public function __construct()
     {
         $botToken = config('telegram.bot_token');
-        
+
         if (empty($botToken)) {
             throw new InvalidArgumentException(
-                'Telegram bot token not configured. Please set TELEGRAM_BOT_TOKEN in your .env file. ' .
+                'Telegram bot token not configured. Please set TELEGRAM_BOT_TOKEN in your .env file. '.
                 'For development, you can use a mock token like: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ-0123456789'
             );
         }
-        
+
         $this->botToken = $botToken;
     }
 
     /**
      * Verify Telegram WebApp data hash according to official documentation.
      *
-     * @param array<string, mixed> $data
-     * @return bool
+     * @param  array<string, mixed>  $data
      */
     public function verifyTelegramHash(array $data): bool
     {
-        if (!isset($data['hash'])) {
+        if (! isset($data['hash'])) {
             return false;
         }
 
@@ -52,7 +51,6 @@ class TelegramAuthService
     /**
      * Parse and validate Telegram init data from query string format.
      *
-     * @param string $initData
      * @return array<string, mixed>|null
      */
     public function parseAndValidateTelegramData(string $initData): ?array
@@ -60,7 +58,7 @@ class TelegramAuthService
         // Parse query string format
         parse_str($initData, $data);
 
-        if (!$this->verifyTelegramHash($data)) {
+        if (! $this->verifyTelegramHash($data)) {
             return null;
         }
 
@@ -79,12 +77,12 @@ class TelegramAuthService
     /**
      * Extract user data from validated Telegram data.
      *
-     * @param array<string, mixed> $telegramData
+     * @param  array<string, mixed>  $telegramData
      * @return array<string, mixed>|null
      */
     public function extractUserData(array $telegramData): ?array
     {
-        if (!isset($telegramData['user'])) {
+        if (! isset($telegramData['user'])) {
             return null;
         }
 
@@ -93,21 +91,20 @@ class TelegramAuthService
 
     /**
      * Create data check string according to Telegram WebApp documentation.
-     * 
-     * @param array<string, mixed> $data
-     * @return string
+     *
+     * @param  array<string, mixed>  $data
      */
     private function createDataCheckString(array $data): string
     {
         // Sort data by key and create key=value pairs
         ksort($data);
-        
+
         $pairs = [];
         foreach ($data as $key => $value) {
             if (is_array($value) || is_object($value)) {
                 $value = json_encode($value);
             }
-            $pairs[] = $key . '=' . $value;
+            $pairs[] = $key.'='.$value;
         }
 
         return implode("\n", $pairs);
@@ -116,13 +113,12 @@ class TelegramAuthService
     /**
      * Check if auth date is within acceptable time window (24 hours by default).
      *
-     * @param array<string, mixed> $telegramData
-     * @param int $maxAge Maximum age in seconds (default: 86400 = 24 hours)
-     * @return bool
+     * @param  array<string, mixed>  $telegramData
+     * @param  int  $maxAge  Maximum age in seconds (default: 86400 = 24 hours)
      */
     public function isAuthDateValid(array $telegramData, int $maxAge = 86400): bool
     {
-        if (!isset($telegramData['auth_date'])) {
+        if (! isset($telegramData['auth_date'])) {
             return false;
         }
 

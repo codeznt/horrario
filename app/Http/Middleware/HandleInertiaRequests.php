@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -43,6 +42,32 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'translations' => $this->getTranslations(),
+            'locale' => app()->getLocale(),
+            'fallbackLocale' => config('app.fallback_locale'),
         ];
+    }
+
+    /**
+     * Get all translations for the current locale
+     */
+    private function getTranslations(): array
+    {
+        $locale = app()->getLocale();
+        $langPath = lang_path($locale);
+
+        if (! is_dir($langPath)) {
+            return [];
+        }
+
+        $translations = [];
+        $files = glob($langPath.'/*.php');
+
+        foreach ($files as $file) {
+            $key = basename($file, '.php');
+            $translations[$key] = include $file;
+        }
+
+        return $translations;
     }
 }

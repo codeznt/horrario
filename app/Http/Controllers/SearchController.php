@@ -19,9 +19,9 @@ class SearchController extends Controller
             ->orderBy('created_at', 'desc')
             ->take(6)
             ->get();
-            
+
         return Inertia::render('Search/Index', [
-            'popularServices' => $popularServices
+            'popularServices' => $popularServices,
         ]);
     }
 
@@ -44,19 +44,19 @@ class SearchController extends Controller
         $servicesQuery = Service::with('provider.user');
 
         // Apply search filters
-        if (!empty($query)) {
+        if (! empty($query)) {
             $servicesQuery->where(function ($q) use ($query) {
                 $q->where('title', 'like', "%{$query}%")
-                  ->orWhere('description', 'like', "%{$query}%")
-                  ->orWhereHas('provider', function ($pq) use ($query) {
-                      $pq->where('business_name', 'like', "%{$query}%")
-                         ->orWhere('description', 'like', "%{$query}%");
-                  });
+                    ->orWhere('description', 'like', "%{$query}%")
+                    ->orWhereHas('provider', function ($pq) use ($query) {
+                        $pq->where('business_name', 'like', "%{$query}%")
+                            ->orWhere('description', 'like', "%{$query}%");
+                    });
             });
         }
-        
+
         // Apply category filter if provided
-        if (!empty($category)) {
+        if (! empty($category)) {
             $servicesQuery->where('category', $category);
         }
 
@@ -84,7 +84,7 @@ class SearchController extends Controller
 
         // Get providers that match the search query
         $providers = collect();
-        if (!empty($query)) {
+        if (! empty($query)) {
             $providers = Provider::where('business_name', 'like', "%{$query}%")
                 ->orWhere('description', 'like', "%{$query}%")
                 ->with('user')

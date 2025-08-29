@@ -59,11 +59,11 @@ class UserFactory extends Factory
         $firstName = fake()->firstName();
         $lastName = fake()->lastName();
         $username = fake()->userName();
-        
+
         return $this->state(fn (array $attributes) => [
             'telegram_id' => fake()->unique()->numberBetween(100000, 999999999),
-            'name' => $firstName . ' ' . $lastName,
-            'email' => $username . '@telegram.local',
+            'name' => $firstName.' '.$lastName,
+            'email' => $username.'@telegram.local',
             'password' => '',
             'first_name' => $firstName,
             'last_name' => $lastName,

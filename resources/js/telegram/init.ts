@@ -1,5 +1,5 @@
-import { init as initSDK, backButton, miniApp, themeParams, viewport, initData } from '@telegram-apps/sdk';
 import { setDebug } from '@telegram-apps/bridge';
+import { backButton, initData, init as initSDK, miniApp, themeParams, viewport } from '@telegram-apps/sdk';
 
 /**
  * Configure Telegram SDK, mount components, and bind CSS variables.
@@ -49,8 +49,8 @@ export async function initTelegram(debug = import.meta.env.DEV): Promise<void> {
     }
 
     // Always try to restore initData, even in mock environments
-    try { 
-        initData.restore(); 
+    try {
+        initData.restore();
     } catch {}
 
     // Ensure required components are supported
@@ -70,9 +70,15 @@ export async function initTelegram(debug = import.meta.env.DEV): Promise<void> {
     }
 
     // Mount components (non-blocking where applicable)
-    try { backButton.mount(); } catch {}
-    try { miniApp.mount(); } catch {}
-    try { themeParams.mount(); } catch {}
+    try {
+        backButton.mount();
+    } catch {}
+    try {
+        miniApp.mount();
+    } catch {}
+    try {
+        themeParams.mount();
+    } catch {}
 
     // Mount viewport and bind its CSS vars without blocking app init
     viewport

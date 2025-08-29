@@ -17,8 +17,8 @@ class ScheduleController extends Controller
     public function index()
     {
         $provider = auth()->user()->provider;
-        
-        if (!$provider) {
+
+        if (! $provider) {
             return redirect()->route('provider.create')
                 ->with('error', 'You need to create a provider profile first.');
         }
@@ -31,7 +31,7 @@ class ScheduleController extends Controller
 
         $days = [
             0 => 'Sunday',
-            1 => 'Monday', 
+            1 => 'Monday',
             2 => 'Tuesday',
             3 => 'Wednesday',
             4 => 'Thursday',
@@ -41,7 +41,7 @@ class ScheduleController extends Controller
 
         return Inertia::render('Schedule/Index', [
             'schedules' => $schedules,
-            'days' => $days
+            'days' => $days,
         ]);
     }
 
@@ -51,8 +51,8 @@ class ScheduleController extends Controller
     public function store(Request $request)
     {
         $provider = auth()->user()->provider;
-        
-        if (!$provider) {
+
+        if (! $provider) {
             return redirect()->route('provider.create')
                 ->with('error', 'You need to create a provider profile first.');
         }
@@ -60,7 +60,7 @@ class ScheduleController extends Controller
         $validated = $request->validate([
             'day_of_week' => 'required|integer|between:0,6',
             'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time'
+            'end_time' => 'required|date_format:H:i|after:start_time',
         ]);
 
         // Check for overlapping schedules
@@ -71,14 +71,14 @@ class ScheduleController extends Controller
                     ->orWhereBetween('end_time', [$validated['start_time'], $validated['end_time']])
                     ->orWhere(function ($q) use ($validated) {
                         $q->where('start_time', '<=', $validated['start_time'])
-                          ->where('end_time', '>=', $validated['end_time']);
+                            ->where('end_time', '>=', $validated['end_time']);
                     });
             })
             ->exists();
 
         if ($overlapping) {
             return back()->withErrors([
-                'time_conflict' => 'This time slot overlaps with an existing schedule.'
+                'time_conflict' => 'This time slot overlaps with an existing schedule.',
             ]);
         }
 
@@ -99,7 +99,7 @@ class ScheduleController extends Controller
 
         $validated = $request->validate([
             'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time'
+            'end_time' => 'required|date_format:H:i|after:start_time',
         ]);
 
         // Check for overlapping schedules (excluding current one)
@@ -111,14 +111,14 @@ class ScheduleController extends Controller
                     ->orWhereBetween('end_time', [$validated['start_time'], $validated['end_time']])
                     ->orWhere(function ($q) use ($validated) {
                         $q->where('start_time', '<=', $validated['start_time'])
-                          ->where('end_time', '>=', $validated['end_time']);
+                            ->where('end_time', '>=', $validated['end_time']);
                     });
             })
             ->exists();
 
         if ($overlapping) {
             return back()->withErrors([
-                'time_conflict' => 'This time slot overlaps with an existing schedule.'
+                'time_conflict' => 'This time slot overlaps with an existing schedule.',
             ]);
         }
 

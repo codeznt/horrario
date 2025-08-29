@@ -10,14 +10,15 @@ use Inertia\Inertia;
 class ServiceController extends Controller
 {
     use AuthorizesRequests;
+
     /**
      * Display a listing of the services for the authenticated provider.
      */
     public function index()
     {
         $provider = auth()->user()->provider;
-        
-        if (!$provider) {
+
+        if (! $provider) {
             return redirect()->route('provider.create')
                 ->with('error', 'You need to create a provider profile first.');
         }
@@ -25,7 +26,7 @@ class ServiceController extends Controller
         $services = $provider->services()->orderBy('created_at', 'desc')->get();
 
         return Inertia::render('Service/Index', [
-            'services' => $services
+            'services' => $services,
         ]);
     }
 
@@ -35,8 +36,8 @@ class ServiceController extends Controller
     public function create()
     {
         $provider = auth()->user()->provider;
-        
-        if (!$provider) {
+
+        if (! $provider) {
             return redirect()->route('provider.create')
                 ->with('error', 'You need to create a provider profile first.');
         }
@@ -50,8 +51,8 @@ class ServiceController extends Controller
     public function store(Request $request)
     {
         $provider = auth()->user()->provider;
-        
-        if (!$provider) {
+
+        if (! $provider) {
             return redirect()->route('provider.create')
                 ->with('error', 'You need to create a provider profile first.');
         }
@@ -60,7 +61,7 @@ class ServiceController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
             'duration_minutes' => 'required|integer|min:5|max:480',
-            'display_price' => 'required|string|max:50'
+            'display_price' => 'required|string|max:50',
         ]);
 
         $service = new Service($validated);
@@ -79,7 +80,7 @@ class ServiceController extends Controller
         $this->authorize('update', $service);
 
         return Inertia::render('Service/Edit', [
-            'service' => $service
+            'service' => $service,
         ]);
     }
 
@@ -94,7 +95,7 @@ class ServiceController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
             'duration_minutes' => 'required|integer|min:5|max:480',
-            'display_price' => 'required|string|max:50'
+            'display_price' => 'required|string|max:50',
         ]);
 
         $service->update($validated);

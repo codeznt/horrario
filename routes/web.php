@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LanguageController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -35,6 +36,9 @@ Route::post('/onboarding/complete', function () {
     // Redirect to dashboard after onboarding
     return redirect()->route('dashboard');
 })->middleware(['telegram.auth'])->name('onboarding.complete');
+
+// Language switching route
+Route::post('/language/{locale}', [LanguageController::class, 'switch'])->name('language.switch');
 
 // Telegram protected routes
 Route::middleware(['telegram.auth'])->group(function () {
@@ -112,11 +116,16 @@ Route::middleware(['telegram.auth'])->group(function () {
     // Service booking routes
     Route::get('/services/{service}/book', [App\Http\Controllers\BookingController::class, 'create'])->name('bookings.create');
     Route::post('/bookings', [App\Http\Controllers\BookingController::class, 'store'])->name('bookings.store');
-    
+
     // Search routes
     Route::get('/search', [App\Http\Controllers\SearchController::class, 'index'])->name('search');
     Route::get('/search/results', [App\Http\Controllers\SearchController::class, 'search'])->name('search.results');
     Route::get('/search/provider/{provider}', [App\Http\Controllers\SearchController::class, 'providerServices'])->name('search.provider');
+
+    // Page links for review
+    Route::get('/page-links', function () {
+        return Inertia::render('ExampleLinks');
+    })->name('page-links');
 });
 
 require __DIR__.'/settings.php';

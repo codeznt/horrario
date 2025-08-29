@@ -20,7 +20,7 @@ class BookingPolicy
      */
     public function view(User $user, Booking $booking): bool
     {
-        return $user->id === $booking->user_id || 
+        return $user->id === $booking->user_id ||
                ($user->provider && $user->provider->id === $booking->provider_id);
     }
 
@@ -37,7 +37,7 @@ class BookingPolicy
      */
     public function cancel(User $user, Booking $booking): bool
     {
-        return $user->id === $booking->user_id && 
+        return $user->id === $booking->user_id &&
                in_array($booking->status, ['pending', 'confirmed']);
     }
 
@@ -46,7 +46,7 @@ class BookingPolicy
      */
     public function updateStatus(User $user, Booking $booking): bool
     {
-        return $user->provider && 
+        return $user->provider &&
                $user->provider->id === $booking->provider_id &&
                $booking->status !== 'cancelled';
     }
@@ -56,7 +56,7 @@ class BookingPolicy
      */
     public function delete(User $user, Booking $booking): bool
     {
-        return $user->provider && 
+        return $user->provider &&
                $user->provider->id === $booking->provider_id;
     }
 

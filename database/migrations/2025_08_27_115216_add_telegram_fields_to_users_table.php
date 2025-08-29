@@ -39,7 +39,7 @@ return new class extends Migration
                 'is_premium',
                 'allows_write_to_pm',
                 'role',
-                'telegram_auth_date'
+                'telegram_auth_date',
             ]);
         });
     }

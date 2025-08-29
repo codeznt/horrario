@@ -1,18 +1,19 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { backButton, miniApp } from '@telegram-apps/sdk';
+import { useTranslations } from '@/composables/useTranslations';
 import TelegramAppLayout from '@/layouts/TelegramAppLayout.vue';
-import { ref, computed, inject } from 'vue';
+import { Head, router } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+const { t } = useTranslations();
 
 // shadcn-vue components
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
-import { Stepper, StepperItem, StepperTrigger, StepperIndicator } from '@/components/ui/stepper';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
+import { Stepper, StepperIndicator, StepperItem, StepperTrigger } from '@/components/ui/stepper';
 
 // Icons
-import { Building2, User, Sparkles, UserCheck, CheckCircle } from 'lucide-vue-next';
+import { Building2, CheckCircle, Sparkles, User, UserCheck } from 'lucide-vue-next';
 
 // Onboarding state
 const currentStep = ref(1);
@@ -30,7 +31,7 @@ const carouselApi = ref<any>();
 // Handle carousel slide changes
 function onSlideChanged(index: number) {
     const newStep = index + 1; // Convert 0-based index to 1-based step
-    
+
     // Prevent advancing past step 2 without role selection
     if (newStep > 2 && !selectedRole.value) {
         showRoleRequiredWarning();
@@ -40,7 +41,7 @@ function onSlideChanged(index: number) {
         }, 100);
         return;
     }
-    
+
     currentStep.value = newStep;
 }
 
@@ -88,43 +89,39 @@ function onStepperChange(step: number) {
     goToStep(step);
 }
 
-function skipOnboarding() {
-    // Don't allow skipping on step 2 without role selection
-    if (currentStep.value === 2 && !selectedRole.value) {
-        showRoleRequiredWarning();
-        return;
-    }
-    // Skip to dashboard or home
-    router.get('/dashboard');
-}
+// Removed unused skipOnboarding function to satisfy lint
 
 function selectRole(role: 'business' | 'customer') {
     selectedRole.value = role;
     savingRole.value = true;
     showRoleWarning.value = false; // Clear warning when role is selected
-    
+
     // Immediately save role to backend for dynamic flow
-    router.post('/onboarding/role', {
-        role: role
-    }, {
-        preserveState: true,
-        preserveScroll: true,
-        onSuccess: () => {
-            savingRole.value = false;
-            // Auto-advance to next step after backend confirms
-            setTimeout(() => {
-                goNext();
-            }, 300);
+    router.post(
+        '/onboarding/role',
+        {
+            role: role,
         },
-        onError: (errors) => {
-            console.error('Failed to save role:', errors);
-            savingRole.value = false;
-            // Still advance on error to prevent blocking UX
-            setTimeout(() => {
-                goNext();
-            }, 300);
-        }
-    });
+        {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                savingRole.value = false;
+                // Auto-advance to next step after backend confirms
+                setTimeout(() => {
+                    goNext();
+                }, 300);
+            },
+            onError: (errors) => {
+                console.error('Failed to save role:', errors);
+                savingRole.value = false;
+                // Still advance on error to prevent blocking UX
+                setTimeout(() => {
+                    goNext();
+                }, 300);
+            },
+        },
+    );
 }
 
 function completeOnboarding() {
@@ -133,7 +130,6 @@ function completeOnboarding() {
         // Role already saved in selectRole, just complete the flow
     });
 }
-
 </script>
 
 <template>
@@ -144,11 +140,7 @@ function completeOnboarding() {
             <!-- Header with Stepper -->
             <div class="flex justify-center p-4 pb-2">
                 <!-- Stepper Navigation -->
-                <Stepper 
-                    :model-value="currentStep" 
-                    class="max-w-sm"
-                    @step-change="onStepperChange"
-                >
+                <Stepper :model-value="currentStep" class="max-w-sm" @step-change="onStepperChange">
                     <StepperItem :step="1">
                         <StepperTrigger :step="1" class="p-1">
                             <StepperIndicator :step="1" :icon="Sparkles" />
@@ -166,11 +158,7 @@ function completeOnboarding() {
                     <div class="h-[2px] w-12 bg-tg-section-separator"></div>
 
                     <StepperItem :step="3">
-                        <StepperTrigger 
-                            :step="3" 
-                            :disabled="!selectedRole"
-                            class="p-1"
-                        >
+                        <StepperTrigger :step="3" :disabled="!selectedRole" class="p-1">
                             <StepperIndicator :step="3" :icon="CheckCircle" />
                         </StepperTrigger>
                     </StepperItem>
@@ -179,41 +167,38 @@ function completeOnboarding() {
 
             <!-- Progress Bar -->
             <div class="px-4 pb-6">
-                <div class="h-1 w-full bg-tg-secondary-bg rounded-full overflow-hidden">
-                    <div
-                        class="h-full bg-tg-accent transition-all duration-300 ease-out rounded-full"
-                        :style="`width: ${progress}%`"
-                    ></div>
+                <div class="h-1 w-full overflow-hidden rounded-full bg-tg-secondary-bg">
+                    <div class="h-full rounded-full bg-tg-accent transition-all duration-300 ease-out" :style="`width: ${progress}%`"></div>
                 </div>
             </div>
 
             <!-- Content Area with Carousel -->
-            <div class="flex-1 flex flex-col items-center justify-center px-6 pb-8">
+            <div class="flex flex-1 flex-col items-center justify-center px-6 pb-8">
                 <Carousel class="w-full max-w-sm" @slide-changed="onSlideChanged" @init-api="onInitApi">
                     <CarouselContent class="-ml-4">
                         <!-- Step 1: Welcome -->
                         <CarouselItem class="pl-4">
-                            <div class="flex flex-col items-center text-center space-y-8">
+                            <div class="flex flex-col items-center space-y-8 text-center">
                                 <!-- Illustration placeholder -->
-                                <div class="flex items-center justify-center w-32 h-32 bg-gradient-to-br from-tg-accent/20 to-tg-link/20 rounded-3xl border border-tg-section-separator">
-                                    <div class="flex items-center justify-center w-16 h-16 bg-tg-accent/10 rounded-2xl">
+                                <div
+                                    class="flex h-32 w-32 items-center justify-center rounded-3xl border border-tg-section-separator bg-gradient-to-br from-tg-accent/20 to-tg-link/20"
+                                >
+                                    <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-tg-accent/10">
                                         <Sparkles class="size-8 text-tg-accent" />
                                     </div>
                                 </div>
 
                                 <div class="space-y-4">
                                     <h1 class="text-2xl font-bold text-tg-text">
-                                        Прощавайте,<br>
+                                        Прощавайте,<br />
                                         записник та ручка
                                     </h1>
                                     <div class="space-y-3">
                                         <h2 class="text-xl font-semibold text-tg-text">
-                                            Привіт,<br>
+                                            Привіт,<br />
                                             Horario
                                         </h2>
-                                        <p class="text-tg-hint text-sm leading-relaxed">
-                                            Ваш розклад та записи в одному місці.
-                                        </p>
+                                        <p class="text-sm leading-relaxed text-tg-hint">Ваш розклад та записи в одному місці.</p>
                                     </div>
                                 </div>
                             </div>
@@ -221,23 +206,17 @@ function completeOnboarding() {
 
                         <!-- Step 2: Role Selection -->
                         <CarouselItem class="pl-4">
-                            <div class="flex flex-col items-center text-center space-y-8">
+                            <div class="flex flex-col items-center space-y-8 text-center">
                                 <div class="space-y-4">
-                                    <h1 class="text-2xl font-bold text-tg-text">
-                                        Оберіть ваш профіль
-                                    </h1>
-                                    <p class="text-tg-hint text-sm">
-                                        Допоможіть нам організувати ваш досвід
-                                    </p>
-                                    
+                                    <h1 class="text-2xl font-bold text-tg-text">Оберіть ваш профіль</h1>
+                                    <p class="text-sm text-tg-hint">Допоможіть нам організувати ваш досвід</p>
+
                                     <!-- Warning Message -->
-                                    <div 
+                                    <div
                                         v-if="showRoleWarning"
-                                        class="p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg transition-all duration-300"
+                                        class="rounded-lg border border-orange-500/20 bg-orange-500/10 p-3 transition-all duration-300"
                                     >
-                                        <p class="text-sm text-orange-600 font-medium">
-                                            ⚠️ Будь ласка, оберіть свій профіль щоб продовжити
-                                        </p>
+                                        <p class="text-sm font-medium text-orange-600">⚠️ Будь ласка, оберіть свій профіль щоб продовжити</p>
                                     </div>
                                 </div>
 
@@ -250,7 +229,7 @@ function completeOnboarding() {
                                                 ? 'border-tg-accent bg-tg-accent/5'
                                                 : 'border-tg-section-separator bg-tg-section-bg hover:bg-tg-secondary-bg',
                                             !savingRole && 'hover:scale-[0.98] active:scale-95',
-                                            savingRole && selectedRole === 'business' && 'opacity-75'
+                                            savingRole && selectedRole === 'business' && 'opacity-75',
                                         ]"
                                         @click="!savingRole && selectRole('business')"
                                     >
@@ -259,8 +238,8 @@ function completeOnboarding() {
                                                 <Building2 class="size-6 text-tg-accent" />
                                             </div>
                                             <div class="flex-1 text-left">
-                                                <h3 class="font-semibold text-tg-text">Бізнес</h3>
-                                                <p class="text-sm text-tg-hint">Надаєте послуги</p>
+                                                <h3 class="font-semibold text-tg-text">{{ t('app.business') }}</h3>
+                                                <p class="text-sm text-tg-hint">{{ t('app.provide_services') }}</p>
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -273,7 +252,7 @@ function completeOnboarding() {
                                                 ? 'border-tg-accent bg-tg-accent/5'
                                                 : 'border-tg-section-separator bg-tg-section-bg hover:bg-tg-secondary-bg',
                                             !savingRole && 'hover:scale-[0.98] active:scale-95',
-                                            savingRole && selectedRole === 'customer' && 'opacity-75'
+                                            savingRole && selectedRole === 'customer' && 'opacity-75',
                                         ]"
                                         @click="!savingRole && selectRole('customer')"
                                     >
@@ -282,8 +261,8 @@ function completeOnboarding() {
                                                 <User class="size-6 text-tg-link" />
                                             </div>
                                             <div class="flex-1 text-left">
-                                                <h3 class="font-semibold text-tg-text">Клієнт</h3>
-                                                <p class="text-sm text-tg-hint">Користуєтесь послугами</p>
+                                                <h3 class="font-semibold text-tg-text">{{ t('app.customer') }}</h3>
+                                                <p class="text-sm text-tg-hint">{{ t('app.use_services') }}</p>
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -293,19 +272,21 @@ function completeOnboarding() {
 
                         <!-- Step 3: Completion -->
                         <CarouselItem class="pl-4">
-                            <div class="flex flex-col items-center text-center space-y-8">
-                                <div class="flex items-center justify-center w-32 h-32 bg-gradient-to-br from-green-500/20 to-tg-accent/20 rounded-3xl border border-tg-section-separator">
-                                    <div class="flex items-center justify-center w-16 h-16 bg-green-500/10 rounded-2xl">
+                            <div class="flex flex-col items-center space-y-8 text-center">
+                                <div
+                                    class="flex h-32 w-32 items-center justify-center rounded-3xl border border-tg-section-separator bg-gradient-to-br from-green-500/20 to-tg-accent/20"
+                                >
+                                    <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-green-500/10">
                                         <AppLogoIcon class="size-8 text-tg-accent" />
                                     </div>
                                 </div>
 
                                 <div class="space-y-4">
                                     <h1 class="text-2xl font-bold text-tg-text">
-                                        Все готово!
+                                        {{ t('app.all_ready') }}
                                     </h1>
-                                    <p class="text-tg-hint text-sm leading-relaxed">
-                                        Вітаємо в Horario. Організацію ваших {{ selectedRole === 'business' ? 'розкладів' : 'записів' }}.
+                                    <p class="text-sm leading-relaxed text-tg-hint">
+                                        {{ t('app.welcome_horario_organize') }} {{ selectedRole === 'business' ? t('app.schedules') : t('app.appointments') }}.
                                     </p>
                                 </div>
                             </div>
@@ -317,21 +298,11 @@ function completeOnboarding() {
             <!-- Bottom Actions -->
             <div class="px-6 pb-6">
                 <div v-if="currentStep === 1" class="flex gap-3">
-                    <Button
-                        class="flex-1 bg-tg-accent text-tg-accent-foreground hover:opacity-90"
-                        @click="goNext"
-                    >
-                        Розпочати
-                    </Button>
+                    <Button class="flex-1 bg-tg-accent text-tg-accent-foreground hover:opacity-90" @click="goNext"> Розпочати </Button>
                 </div>
 
                 <div v-if="currentStep === 3" class="flex gap-3">
-                    <Button
-                        class="flex-1 bg-tg-accent text-tg-accent-foreground hover:opacity-90"
-                        @click="completeOnboarding"
-                    >
-                        В кабінет
-                    </Button>
+                    <Button class="flex-1 bg-tg-accent text-tg-accent-foreground hover:opacity-90" @click="completeOnboarding"> В кабінет </Button>
                 </div>
             </div>
         </div>

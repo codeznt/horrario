@@ -7,35 +7,35 @@ uses(RefreshDatabase::class);
 
 test('user can select business role during onboarding', function () {
     $user = User::factory()->create();
-    
+
     $response = $this->actingAs($user)
         ->post('/onboarding/role', [
-            'role' => 'business'
+            'role' => 'business',
         ]);
 
     $response->assertRedirect();
     $response->assertSessionHas('flash.success', true);
-    
+
     expect($user->fresh()->role)->toBe('business');
 });
 
 test('user can select customer role during onboarding', function () {
     $user = User::factory()->create();
-    
+
     $response = $this->actingAs($user)
         ->post('/onboarding/role', [
-            'role' => 'customer'
+            'role' => 'customer',
         ]);
 
     $response->assertRedirect();
     $response->assertSessionHas('flash.success', true);
-    
+
     expect($user->fresh()->role)->toBe('customer');
 });
 
 test('role selection validates required role field', function () {
     $user = User::factory()->create(['role' => 'user']);
-    
+
     $response = $this->actingAs($user)
         ->post('/onboarding/role', []);
 
@@ -45,10 +45,10 @@ test('role selection validates required role field', function () {
 
 test('role selection validates role must be business or customer', function () {
     $user = User::factory()->create(['role' => 'user']);
-    
+
     $response = $this->actingAs($user)
         ->post('/onboarding/role', [
-            'role' => 'invalid_role'
+            'role' => 'invalid_role',
         ]);
 
     $response->assertSessionHasErrors('role');
@@ -57,7 +57,7 @@ test('role selection validates role must be business or customer', function () {
 
 test('unauthenticated user cannot access onboarding role endpoint', function () {
     $response = $this->post('/onboarding/role', [
-        'role' => 'business'
+        'role' => 'business',
     ]);
 
     $response->assertStatus(302); // Redirect due to middleware
@@ -65,7 +65,7 @@ test('unauthenticated user cannot access onboarding role endpoint', function () 
 
 test('user can complete onboarding after selecting role', function () {
     $user = User::factory()->create(['role' => 'business']);
-    
+
     $response = $this->actingAs($user)
         ->post('/onboarding/complete');
 
@@ -75,7 +75,7 @@ test('user can complete onboarding after selecting role', function () {
 
 test('onboarding completion marks user as completed', function () {
     $user = User::factory()->create(['role' => 'customer']);
-    
+
     $this->actingAs($user)
         ->post('/onboarding/complete');
 

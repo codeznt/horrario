@@ -1,8 +1,8 @@
 import '../css/app.css';
 // Telegram Mini Apps: dev mock env and initialization
-import { telegramEnvReady } from './telegram/mockEnv';
-import { initTelegram } from './telegram/init';
 import { useTelegramAuth } from './composables/useTelegramAuth';
+import { initTelegram } from './telegram/init';
+import { telegramEnvReady } from './telegram/mockEnv';
 
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';

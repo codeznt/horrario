@@ -20,7 +20,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('profile_image')->nullable();
             $table->timestamps();
-            
+
             $table->index('user_id');
         });
     }

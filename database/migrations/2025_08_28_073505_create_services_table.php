@@ -19,7 +19,7 @@ return new class extends Migration
             $table->integer('duration_minutes');
             $table->string('display_price')->nullable();
             $table->timestamps();
-            
+
             $table->index('provider_id');
         });
     }

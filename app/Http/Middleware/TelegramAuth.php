@@ -31,7 +31,7 @@ class TelegramAuth
         // Try to get Telegram init data from various sources
         $initData = $this->extractTelegramInitData($request);
 
-        if (!$initData) {
+        if (! $initData) {
             // In local/dev environments, attempt to generate a valid mock init data
             if (app()->environment(['local', 'development']) || config('app.debug')) {
                 $initData = $this->generateDevMockInitData();
@@ -40,8 +40,9 @@ class TelegramAuth
                 }
             }
 
-            if (!$initData) {
+            if (! $initData) {
                 Log::debug('TelegramAuth: No init data found');
+
                 return $this->unauthorizedResponse($request);
             }
         }
@@ -49,24 +50,27 @@ class TelegramAuth
         // Parse and validate Telegram data
         $telegramData = $this->telegramAuthService->parseAndValidateTelegramData($initData);
 
-        if (!$telegramData) {
+        if (! $telegramData) {
             Log::warning('TelegramAuth: Invalid Telegram hash verification failed', [
-                'init_data' => substr($initData, 0, 100) . '...'
+                'init_data' => substr($initData, 0, 100).'...',
             ]);
+
             return $this->unauthorizedResponse($request);
         }
 
         // Check auth date validity
-        if (!$this->telegramAuthService->isAuthDateValid($telegramData, (int) config('telegram.auth_max_age', 86400))) {
+        if (! $this->telegramAuthService->isAuthDateValid($telegramData, (int) config('telegram.auth_max_age', 86400))) {
             Log::warning('TelegramAuth: Auth date is too old');
+
             return $this->unauthorizedResponse($request);
         }
 
         // Extract user data
         $userData = $this->telegramAuthService->extractUserData($telegramData);
 
-        if (!$userData) {
+        if (! $userData) {
             Log::warning('TelegramAuth: No user data found in Telegram data');
+
             return $this->unauthorizedResponse($request);
         }
 
@@ -91,6 +95,7 @@ class TelegramAuth
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return $this->unauthorizedResponse($request);
         }
 
@@ -119,14 +124,14 @@ class TelegramAuth
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Unauthorized. Valid Telegram authentication required.',
-                'error' => 'telegram_auth_required'
+                'error' => 'telegram_auth_required',
             ], 401);
         }
 
         // For Inertia requests, render the unauthorized page with proper Telegram styling
         return \Inertia\Inertia::render('Telegram/Unauthorized', [
             'message' => 'Telegram authentication required',
-            'error' => 'telegram_auth_required'
+            'error' => 'telegram_auth_required',
         ])->toResponse($request)->setStatusCode(401);
     }
 
@@ -170,7 +175,7 @@ class TelegramAuth
             ksort($dataForHash);
             $pairs = [];
             foreach ($dataForHash as $key => $value) {
-                $pairs[] = $key . '=' . $value;
+                $pairs[] = $key.'='.$value;
             }
             $dataCheckString = implode("\n", $pairs);
 
@@ -194,6 +199,7 @@ class TelegramAuth
             Log::debug('TelegramAuth: Failed to generate DEV mock init data', [
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }

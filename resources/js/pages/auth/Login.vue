@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTranslations } from '@/composables/useTranslations';
 import AuthBase from '@/layouts/AuthLayout.vue';
 import { register } from '@/routes';
 import { request } from '@/routes/password';
@@ -16,11 +17,13 @@ defineProps<{
     status?: string;
     canResetPassword: boolean;
 }>();
+
+const { t } = useTranslations();
 </script>
 
 <template>
-    <AuthBase title="Log in to your account" description="Enter your email and password below to log in">
-        <Head title="Log in" />
+    <AuthBase :title="t('app.log_in_account')" :description="t('app.enter_email_password')">
+        <Head :title="t('app.login')" />
 
         <div v-if="status" class="mb-4 text-center text-sm font-medium text-green-600">
             {{ status }}
@@ -34,7 +37,7 @@ defineProps<{
         >
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="email">Email address</Label>
+                    <Label for="email">{{ t('app.email_address') }}</Label>
                     <Input
                         id="email"
                         type="email"
@@ -43,15 +46,15 @@ defineProps<{
                         autofocus
                         :tabindex="1"
                         autocomplete="email"
-                        placeholder="email@example.com"
+                        :placeholder="t('app.email_placeholder')"
                     />
                     <InputError :message="errors.email" />
                 </div>
 
                 <div class="grid gap-2">
                     <div class="flex items-center justify-between">
-                        <Label for="password">Password</Label>
-                        <TextLink v-if="canResetPassword" :href="request()" class="text-sm" :tabindex="5"> Forgot password? </TextLink>
+                        <Label for="password">{{ t('app.password') }}</Label>
+                        <TextLink v-if="canResetPassword" :href="request()" class="text-sm" :tabindex="5"> {{ t('app.forgot_password') }} </TextLink>
                     </div>
                     <Input
                         id="password"
@@ -60,7 +63,7 @@ defineProps<{
                         required
                         :tabindex="2"
                         autocomplete="current-password"
-                        placeholder="Password"
+                        :placeholder="t('app.password')"
                     />
                     <InputError :message="errors.password" />
                 </div>
@@ -68,19 +71,19 @@ defineProps<{
                 <div class="flex items-center justify-between">
                     <Label for="remember" class="flex items-center space-x-3">
                         <Checkbox id="remember" name="remember" :tabindex="3" />
-                        <span>Remember me</span>
+                        <span>{{ t('app.remember_me') }}</span>
                     </Label>
                 </div>
 
                 <Button type="submit" class="mt-4 w-full" :tabindex="4" :disabled="processing">
                     <LoaderCircle v-if="processing" class="h-4 w-4 animate-spin" />
-                    Log in
+                    {{ t('app.login') }}
                 </Button>
             </div>
 
             <div class="text-center text-sm text-muted-foreground">
-                Don't have an account?
-                <TextLink :href="register()" :tabindex="5">Sign up</TextLink>
+                {{ t('app.dont_have_account') }}
+                <TextLink :href="register()" :tabindex="5">{{ t('app.sign_up') }}</TextLink>
             </div>
         </Form>
     </AuthBase>

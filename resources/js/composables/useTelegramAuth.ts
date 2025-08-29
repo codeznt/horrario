@@ -1,5 +1,5 @@
-import { router } from '@inertiajs/vue3'
-import { initData } from '@telegram-apps/sdk'
+import { router } from '@inertiajs/vue3';
+import { initData } from '@telegram-apps/sdk';
 
 /**
  * Composable for handling Telegram authentication with Inertia.js
@@ -14,63 +14,63 @@ export function useTelegramAuth() {
         router.on('before', (event) => {
             try {
                 // Get raw init data from Telegram SDK
-                const rawInitData = initData.raw()
-                
+                const rawInitData = initData.raw();
+
                 if (rawInitData) {
                     // Add init data to all requests via header
                     if (!event.detail.visit.headers) {
-                        event.detail.visit.headers = {}
+                        event.detail.visit.headers = {};
                     }
-                    
-                    event.detail.visit.headers['X-Telegram-Init-Data'] = rawInitData
+
+                    event.detail.visit.headers['X-Telegram-Init-Data'] = rawInitData;
                 }
             } catch (error) {
                 // In development or if SDK not available, this is expected
-                console.debug('Telegram init data not available:', error)
+                console.debug('Telegram init data not available:', error);
             }
-        })
-    }
+        });
+    };
 
     /**
      * Get current Telegram init data
      */
     const getTelegramInitData = () => {
         try {
-            return initData.raw()
+            return initData.raw();
         } catch (error) {
-            console.debug('Telegram init data not available:', error)
-            return null
+            console.debug('Telegram init data not available:', error);
+            return null;
         }
-    }
+    };
 
     /**
      * Check if we're running in Telegram context
      */
     const isTelegramContext = () => {
         try {
-            return !!initData.raw()
-        } catch (error) {
-            return false
+            return !!initData.raw();
+        } catch {
+            return false;
         }
-    }
+    };
 
     /**
      * Get parsed user data from Telegram
      */
     const getTelegramUser = () => {
         try {
-            const data = initData.parsed()
-            return data?.user || null
+            const data = initData.parsed();
+            return data?.user || null;
         } catch (error) {
-            console.debug('Telegram user data not available:', error)
-            return null
+            console.debug('Telegram user data not available:', error);
+            return null;
         }
-    }
+    };
 
     return {
         setupTelegramAuth,
         getTelegramInitData,
         isTelegramContext,
         getTelegramUser,
-    }
+    };
 }
