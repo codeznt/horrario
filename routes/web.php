@@ -71,8 +71,8 @@ Route::middleware(['telegram.auth'])->group(function () {
         return Inertia::render('Dashboard');
     })->middleware(['auth', 'verified'])->name('dashboard');
 
-    // Provider routes
-    Route::prefix('provider')->name('provider.')->group(function () {
+    // Provider routes - business role required
+    Route::prefix('provider')->name('provider.')->middleware('role:business')->group(function () {
         Route::get('/create', [App\Http\Controllers\ProviderController::class, 'create'])->name('create');
         Route::post('/', [App\Http\Controllers\ProviderController::class, 'store'])->name('store');
         Route::get('/profile', [App\Http\Controllers\ProviderController::class, 'show'])->name('profile');
@@ -83,8 +83,8 @@ Route::middleware(['telegram.auth'])->group(function () {
         Route::delete('/', [App\Http\Controllers\ProviderController::class, 'destroy'])->name('destroy');
     });
 
-    // Service routes
-    Route::prefix('services')->name('services.')->group(function () {
+    // Service routes - business role required (providers manage their services)
+    Route::prefix('services')->name('services.')->middleware('role:business')->group(function () {
         Route::get('/', [App\Http\Controllers\ServiceController::class, 'index'])->name('index');
         Route::get('/create', [App\Http\Controllers\ServiceController::class, 'create'])->name('create');
         Route::post('/', [App\Http\Controllers\ServiceController::class, 'store'])->name('store');
@@ -93,34 +93,42 @@ Route::middleware(['telegram.auth'])->group(function () {
         Route::delete('/{service}', [App\Http\Controllers\ServiceController::class, 'destroy'])->name('destroy');
     });
 
-    // Schedule routes
-    Route::prefix('schedules')->name('schedules.')->group(function () {
+    // Schedule routes - business role required (providers manage their schedules)
+    Route::prefix('schedules')->name('schedules.')->middleware('role:business')->group(function () {
         Route::get('/', [App\Http\Controllers\ScheduleController::class, 'index'])->name('index');
         Route::post('/', [App\Http\Controllers\ScheduleController::class, 'store'])->name('store');
         Route::put('/{schedule}', [App\Http\Controllers\ScheduleController::class, 'update'])->name('update');
         Route::delete('/{schedule}', [App\Http\Controllers\ScheduleController::class, 'destroy'])->name('destroy');
     });
 
-    // Booking routes
-    Route::prefix('bookings')->name('bookings.')->group(function () {
+    // Consumer booking routes - customer role required (consumers view/manage their bookings)
+    Route::prefix('bookings')->name('bookings.')->middleware('role:customer')->group(function () {
         Route::get('/', [App\Http\Controllers\BookingController::class, 'index'])->name('index');
         Route::get('/upcoming', [App\Http\Controllers\BookingController::class, 'upcoming'])->name('upcoming');
         Route::get('/past', [App\Http\Controllers\BookingController::class, 'past'])->name('past');
         Route::get('/{booking}', [App\Http\Controllers\BookingController::class, 'show'])->name('show');
         Route::post('/{booking}/cancel', [App\Http\Controllers\BookingController::class, 'cancel'])->name('cancel');
+    });
+
+    // Provider booking management routes - business role required (providers confirm/decline bookings)
+    Route::prefix('bookings')->name('bookings.')->middleware('role:business')->group(function () {
         Route::post('/{booking}/confirm', [App\Http\Controllers\BookingController::class, 'confirm'])->name('confirm');
         Route::post('/{booking}/decline', [App\Http\Controllers\BookingController::class, 'decline'])->name('decline');
         Route::post('/{booking}/status', [App\Http\Controllers\BookingController::class, 'updateStatus'])->name('updateStatus');
     });
 
-    // Service booking routes
-    Route::get('/services/{service}/book', [App\Http\Controllers\BookingController::class, 'create'])->name('bookings.create');
-    Route::post('/bookings', [App\Http\Controllers\BookingController::class, 'store'])->name('bookings.store');
+    // Service booking routes - customer role required (consumers create bookings)
+    Route::middleware('role:customer')->group(function () {
+        Route::get('/services/{service}/book', [App\Http\Controllers\BookingController::class, 'create'])->name('bookings.create');
+        Route::post('/bookings', [App\Http\Controllers\BookingController::class, 'store'])->name('bookings.store');
+    });
 
-    // Search routes
-    Route::get('/search', [App\Http\Controllers\SearchController::class, 'index'])->name('search');
-    Route::get('/search/results', [App\Http\Controllers\SearchController::class, 'search'])->name('search.results');
-    Route::get('/search/provider/{provider}', [App\Http\Controllers\SearchController::class, 'providerServices'])->name('search.provider');
+    // Search routes - customer role required (consumers search for services)
+    Route::middleware('role:customer')->group(function () {
+        Route::get('/search', [App\Http\Controllers\SearchController::class, 'index'])->name('search');
+        Route::get('/search/results', [App\Http\Controllers\SearchController::class, 'search'])->name('search.results');
+        Route::get('/search/provider/{provider}', [App\Http\Controllers\SearchController::class, 'providerServices'])->name('search.provider');
+    });
 
     // Page links for review
     Route::get('/page-links', function () {
