@@ -10,20 +10,36 @@ import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Stepper, StepperIndicator, StepperItem, StepperTrigger } from '@/components/ui/stepper';
+import { Textarea } from '@/components/ui/textarea';
 
 // Icons
-import { Building2, CheckCircle, Sparkles, User, UserCheck } from 'lucide-vue-next';
+import { Building2, CheckCircle, MapPin, Phone, Sparkles, User, UserCheck } from 'lucide-vue-next';
 
 // Onboarding state
 const currentStep = ref(1);
-const totalSteps = 3;
+const totalSteps = ref(3); // Will be dynamic based on role
 const selectedRole = ref<string>('');
 const savingRole = ref(false);
 const showRoleWarning = ref(false);
 
+// Form states for customer/business info
+const customerForm = ref({
+    name: '',
+    phone: ''
+});
+const businessForm = ref({
+    business_name: '',
+    business_phone: '',
+    address: ''
+});
+const savingInfo = ref(false);
+const showFormWarning = ref(false);
+
 // Progress calculation
-const progress = computed(() => (currentStep.value / totalSteps) * 100);
+const progress = computed(() => (currentStep.value / totalSteps.value) * 100);
 
 // Carousel API reference
 const carouselApi = ref<any>();
@@ -96,6 +112,9 @@ function selectRole(role: 'business' | 'customer') {
     savingRole.value = true;
     showRoleWarning.value = false; // Clear warning when role is selected
 
+    // Set total steps based on role
+    totalSteps.value = role === 'business' ? 5 : 4; // business: welcome, role, info, address, complete | customer: welcome, role, info, complete
+
     // Immediately save role to backend for dynamic flow
     router.post(
         '/onboarding/role',
@@ -124,6 +143,106 @@ function selectRole(role: 'business' | 'customer') {
     );
 }
 
+// Handle form validation and show warnings
+function showFormRequiredWarning() {
+    showFormWarning.value = true;
+    setTimeout(() => {
+        showFormWarning.value = false;
+    }, 3000);
+}
+
+// Submit customer information
+function submitCustomerInfo() {
+    if (!customerForm.value.name || !customerForm.value.phone) {
+        showFormRequiredWarning();
+        return;
+    }
+
+    savingInfo.value = true;
+    router.post(
+        '/onboarding/customer-info',
+        customerForm.value,
+        {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                savingInfo.value = false;
+                setTimeout(() => {
+                    goNext();
+                }, 300);
+            },
+            onError: (errors) => {
+                console.error('Failed to save customer info:', errors);
+                savingInfo.value = false;
+                showFormRequiredWarning();
+            },
+        },
+    );
+}
+
+// Submit business information
+function submitBusinessInfo() {
+    if (!businessForm.value.business_name || !businessForm.value.business_phone) {
+        showFormRequiredWarning();
+        return;
+    }
+
+    savingInfo.value = true;
+    router.post(
+        '/onboarding/business-info',
+        {
+            business_name: businessForm.value.business_name,
+            business_phone: businessForm.value.business_phone,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                savingInfo.value = false;
+                setTimeout(() => {
+                    goNext();
+                }, 300);
+            },
+            onError: (errors) => {
+                console.error('Failed to save business info:', errors);
+                savingInfo.value = false;
+                showFormRequiredWarning();
+            },
+        },
+    );
+}
+
+// Submit business address
+function submitBusinessAddress() {
+    if (!businessForm.value.address) {
+        showFormRequiredWarning();
+        return;
+    }
+
+    savingInfo.value = true;
+    router.post(
+        '/onboarding/business-address',
+        {
+            address: businessForm.value.address,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                savingInfo.value = false;
+                setTimeout(() => {
+                    goNext();
+                }, 300);
+            },
+            onError: (errors) => {
+                console.error('Failed to save business address:', errors);
+                savingInfo.value = false;
+                showFormRequiredWarning();
+            },
+        },
+    );
+}
+
 function completeOnboarding() {
     // Complete onboarding (role already saved) and redirect
     router.post('/onboarding/complete', {
@@ -141,6 +260,7 @@ function completeOnboarding() {
             <div class="flex justify-center p-4 pb-2">
                 <!-- Stepper Navigation -->
                 <Stepper :model-value="currentStep" class="max-w-sm" @step-change="onStepperChange">
+                    <!-- Step 1: Welcome -->
                     <StepperItem :step="1">
                         <StepperTrigger :step="1" class="p-1">
                             <StepperIndicator :step="1" :icon="Sparkles" />
@@ -149,19 +269,50 @@ function completeOnboarding() {
 
                     <div class="h-[2px] w-12 bg-tg-section-separator"></div>
 
+                    <!-- Step 2: Role Selection -->
                     <StepperItem :step="2">
                         <StepperTrigger :step="2" class="p-1">
                             <StepperIndicator :step="2" :icon="UserCheck" />
                         </StepperTrigger>
                     </StepperItem>
 
-                    <div class="h-[2px] w-12 bg-tg-section-separator"></div>
+                    <!-- Step 3: Info Collection (Customer/Business) -->
+                    <template v-if="selectedRole">
+                        <div class="h-[2px] w-12 bg-tg-section-separator"></div>
+                        <StepperItem :step="3">
+                            <StepperTrigger :step="3" class="p-1">
+                                <StepperIndicator :step="3" :icon="selectedRole === 'customer' ? User : Building2" />
+                            </StepperTrigger>
+                        </StepperItem>
 
-                    <StepperItem :step="3">
-                        <StepperTrigger :step="3" :disabled="!selectedRole" class="p-1">
-                            <StepperIndicator :step="3" :icon="CheckCircle" />
-                        </StepperTrigger>
-                    </StepperItem>
+                        <!-- Step 4: Business Address (Business only) -->
+                        <template v-if="selectedRole === 'business'">
+                            <div class="h-[2px] w-12 bg-tg-section-separator"></div>
+                            <StepperItem :step="4">
+                                <StepperTrigger :step="4" class="p-1">
+                                    <StepperIndicator :step="4" :icon="MapPin" />
+                                </StepperTrigger>
+                            </StepperItem>
+                        </template>
+
+                        <!-- Final Step: Completion -->
+                        <div class="h-[2px] w-12 bg-tg-section-separator"></div>
+                        <StepperItem :step="totalSteps">
+                            <StepperTrigger :step="totalSteps" class="p-1">
+                                <StepperIndicator :step="totalSteps" :icon="CheckCircle" />
+                            </StepperTrigger>
+                        </StepperItem>
+                    </template>
+                    
+                    <!-- Fallback final step when no role selected -->
+                    <template v-else>
+                        <div class="h-[2px] w-12 bg-tg-section-separator"></div>
+                        <StepperItem :step="3">
+                            <StepperTrigger :step="3" :disabled="!selectedRole" class="p-1">
+                                <StepperIndicator :step="3" :icon="CheckCircle" />
+                            </StepperTrigger>
+                        </StepperItem>
+                    </template>
                 </Stepper>
             </div>
 
@@ -270,7 +421,145 @@ function completeOnboarding() {
                             </div>
                         </CarouselItem>
 
-                        <!-- Step 3: Completion -->
+                        <!-- Step 3: Customer Information -->
+                        <CarouselItem v-if="selectedRole === 'customer'" class="pl-4">
+                            <div class="flex flex-col items-center space-y-8 text-center">
+                                <div
+                                    class="flex h-32 w-32 items-center justify-center rounded-3xl border border-tg-section-separator bg-gradient-to-br from-tg-link/20 to-blue-500/20"
+                                >
+                                    <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-tg-link/10">
+                                        <User class="size-8 text-tg-link" />
+                                    </div>
+                                </div>
+
+                                <div class="space-y-4">
+                                    <h1 class="text-2xl font-bold text-tg-text">{{ t('app.tell_us_about_yourself') }}</h1>
+                                    <p class="text-sm text-tg-hint">{{ t('app.help_us_know_you_better') }}</p>
+
+                                    <!-- Warning Message -->
+                                    <div
+                                        v-if="showFormWarning"
+                                        class="rounded-lg border border-orange-500/20 bg-orange-500/10 p-3 transition-all duration-300"
+                                    >
+                                        <p class="text-sm font-medium text-orange-600">⚠️ Будь ласка, заповніть всі поля</p>
+                                    </div>
+                                </div>
+
+                                <div class="w-full space-y-4">
+                                    <div class="space-y-2">
+                                        <Label for="customer-name" class="text-sm font-medium text-tg-text">{{ t('app.name') }}</Label>
+                                        <Input
+                                            id="customer-name"
+                                            v-model="customerForm.name"
+                                            :placeholder="t('app.full_name')"
+                                            class="w-full"
+                                            :disabled="savingInfo"
+                                        />
+                                    </div>
+                                    <div class="space-y-2">
+                                        <Label for="customer-phone" class="text-sm font-medium text-tg-text">{{ t('app.phone_number') }}</Label>
+                                        <Input
+                                            id="customer-phone"
+                                            v-model="customerForm.phone"
+                                            :placeholder="t('app.phone_placeholder')"
+                                            class="w-full"
+                                            :disabled="savingInfo"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </CarouselItem>
+
+                        <!-- Step 3: Business Information -->
+                        <CarouselItem v-if="selectedRole === 'business'" class="pl-4">
+                            <div class="flex flex-col items-center space-y-8 text-center">
+                                <div
+                                    class="flex h-32 w-32 items-center justify-center rounded-3xl border border-tg-section-separator bg-gradient-to-br from-tg-accent/20 to-purple-500/20"
+                                >
+                                    <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-tg-accent/10">
+                                        <Building2 class="size-8 text-tg-accent" />
+                                    </div>
+                                </div>
+
+                                <div class="space-y-4">
+                                    <h1 class="text-2xl font-bold text-tg-text">{{ t('app.tell_us_about_business') }}</h1>
+                                    <p class="text-sm text-tg-hint">{{ t('app.business_details') }}</p>
+
+                                    <!-- Warning Message -->
+                                    <div
+                                        v-if="showFormWarning"
+                                        class="rounded-lg border border-orange-500/20 bg-orange-500/10 p-3 transition-all duration-300"
+                                    >
+                                        <p class="text-sm font-medium text-orange-600">⚠️ Будь ласка, заповніть всі поля</p>
+                                    </div>
+                                </div>
+
+                                <div class="w-full space-y-4">
+                                    <div class="space-y-2">
+                                        <Label for="business-name" class="text-sm font-medium text-tg-text">{{ t('app.business_name') }}</Label>
+                                        <Input
+                                            id="business-name"
+                                            v-model="businessForm.business_name"
+                                            :placeholder="t('app.business_name_placeholder')"
+                                            class="w-full"
+                                            :disabled="savingInfo"
+                                        />
+                                    </div>
+                                    <div class="space-y-2">
+                                        <Label for="business-phone" class="text-sm font-medium text-tg-text">{{ t('app.business_phone') }}</Label>
+                                        <Input
+                                            id="business-phone"
+                                            v-model="businessForm.business_phone"
+                                            :placeholder="t('app.phone_placeholder')"
+                                            class="w-full"
+                                            :disabled="savingInfo"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </CarouselItem>
+
+                        <!-- Step 4: Business Address (Business only) -->
+                        <CarouselItem v-if="selectedRole === 'business'" class="pl-4">
+                            <div class="flex flex-col items-center space-y-8 text-center">
+                                <div
+                                    class="flex h-32 w-32 items-center justify-center rounded-3xl border border-tg-section-separator bg-gradient-to-br from-green-500/20 to-tg-accent/20"
+                                >
+                                    <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-green-500/10">
+                                        <MapPin class="size-8 text-green-600" />
+                                    </div>
+                                </div>
+
+                                <div class="space-y-4">
+                                    <h1 class="text-2xl font-bold text-tg-text">{{ t('app.location_information') }}</h1>
+                                    <p class="text-sm text-tg-hint">{{ t('app.where_located') }}</p>
+
+                                    <!-- Warning Message -->
+                                    <div
+                                        v-if="showFormWarning"
+                                        class="rounded-lg border border-orange-500/20 bg-orange-500/10 p-3 transition-all duration-300"
+                                    >
+                                        <p class="text-sm font-medium text-orange-600">⚠️ Будь ласка, заповніть адресу</p>
+                                    </div>
+                                </div>
+
+                                <div class="w-full space-y-4">
+                                    <div class="space-y-2">
+                                        <Label for="business-address" class="text-sm font-medium text-tg-text">{{ t('app.address') }}</Label>
+                                        <Textarea
+                                            id="business-address"
+                                            v-model="businessForm.address"
+                                            :placeholder="t('app.address_placeholder')"
+                                            class="w-full"
+                                            :disabled="savingInfo"
+                                            rows="3"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </CarouselItem>
+
+                        <!-- Final Step: Completion -->
                         <CarouselItem class="pl-4">
                             <div class="flex flex-col items-center space-y-8 text-center">
                                 <div
@@ -282,9 +571,7 @@ function completeOnboarding() {
                                 </div>
 
                                 <div class="space-y-4">
-                                    <h1 class="text-2xl font-bold text-tg-text">
-                                        {{ t('app.all_ready') }}
-                                    </h1>
+                                    <h1 class="text-2xl font-bold text-tg-text">{{ t('app.profile_setup_complete') }}</h1>
                                     <p class="text-sm leading-relaxed text-tg-hint">
                                         {{ t('app.welcome_horario_organize') }} {{ selectedRole === 'business' ? t('app.schedules') : t('app.appointments') }}.
                                     </p>
@@ -297,11 +584,49 @@ function completeOnboarding() {
 
             <!-- Bottom Actions -->
             <div class="px-6 pb-6">
+                <!-- Step 1: Welcome -->
                 <div v-if="currentStep === 1" class="flex gap-3">
                     <Button class="flex-1 bg-tg-accent text-tg-accent-foreground hover:opacity-90" @click="goNext"> Розпочати </Button>
                 </div>
 
-                <div v-if="currentStep === 3" class="flex gap-3">
+                <!-- Step 3: Customer Info Collection -->
+                <div v-if="currentStep === 3 && selectedRole === 'customer'" class="flex gap-3">
+                    <Button 
+                        class="flex-1 bg-tg-accent text-tg-accent-foreground hover:opacity-90" 
+                        @click="submitCustomerInfo"
+                        :disabled="savingInfo"
+                    >
+                        <span v-if="savingInfo">Збереження...</span>
+                        <span v-else>{{ t('app.continue') }}</span>
+                    </Button>
+                </div>
+
+                <!-- Step 3: Business Info Collection -->
+                <div v-if="currentStep === 3 && selectedRole === 'business'" class="flex gap-3">
+                    <Button 
+                        class="flex-1 bg-tg-accent text-tg-accent-foreground hover:opacity-90" 
+                        @click="submitBusinessInfo"
+                        :disabled="savingInfo"
+                    >
+                        <span v-if="savingInfo">Збереження...</span>
+                        <span v-else>{{ t('app.continue') }}</span>
+                    </Button>
+                </div>
+
+                <!-- Step 4: Business Address Collection -->
+                <div v-if="currentStep === 4 && selectedRole === 'business'" class="flex gap-3">
+                    <Button 
+                        class="flex-1 bg-tg-accent text-tg-accent-foreground hover:opacity-90" 
+                        @click="submitBusinessAddress"
+                        :disabled="savingInfo"
+                    >
+                        <span v-if="savingInfo">Збереження...</span>
+                        <span v-else>{{ t('app.continue') }}</span>
+                    </Button>
+                </div>
+
+                <!-- Final Step: Completion -->
+                <div v-if="currentStep === totalSteps" class="flex gap-3">
                     <Button class="flex-1 bg-tg-accent text-tg-accent-foreground hover:opacity-90" @click="completeOnboarding"> В кабінет </Button>
                 </div>
             </div>

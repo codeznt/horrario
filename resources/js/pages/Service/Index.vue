@@ -1,7 +1,8 @@
 <template>
     <Head :title="t('app.services')" />
 
-    <div class="min-h-screen bg-background">
+    <AppLayoutWithNavigation>
+        <div class="min-h-full bg-tg-bg">
         <div class="container mx-auto px-4 py-8">
             <div class="mb-8 flex items-center justify-between">
                 <div>
@@ -69,7 +70,8 @@
                 </Card>
             </div>
         </div>
-    </div>
+        </div>
+    </AppLayoutWithNavigation>
 
     <!-- Delete Confirmation Dialog -->
     <AlertDialog :open="showDeleteDialog" @update:open="showDeleteDialog = $event">
@@ -105,6 +107,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useTranslations } from '@/composables/useTranslations';
+import AppLayoutWithNavigation from '@/layouts/AppLayoutWithNavigation.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { Clock, DollarSign, Edit, MoreVertical, Package, Plus, Trash2 } from 'lucide-vue-next';
 import { ref } from 'vue';

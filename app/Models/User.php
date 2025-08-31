@@ -108,6 +108,47 @@ class User extends Authenticatable
     }
 
     /**
+     * Get customer information.
+     */
+    public function getCustomerInfo(): array
+    {
+        return [
+            'name' => $this->getMeta('customer_name'),
+            'phone' => $this->getMeta('customer_phone'),
+        ];
+    }
+
+    /**
+     * Get business information.
+     */
+    public function getBusinessInfo(): array
+    {
+        return [
+            'business_name' => $this->getMeta('business_name'),
+            'business_phone' => $this->getMeta('business_phone'),
+            'business_address' => $this->getMeta('business_address'),
+        ];
+    }
+
+    /**
+     * Check if user has completed their role-specific information.
+     */
+    public function hasCompletedRoleInfo(): bool
+    {
+        if ($this->role === 'customer') {
+            $info = $this->getCustomerInfo();
+
+            return ! empty($info['name']) && ! empty($info['phone']);
+        } elseif ($this->role === 'business') {
+            $info = $this->getBusinessInfo();
+
+            return ! empty($info['business_name']) && ! empty($info['business_phone']) && ! empty($info['business_address']);
+        }
+
+        return true; // For other roles, no additional info required
+    }
+
+    /**
      * Find or create a user from Telegram data.
      *
      * @param  array<string, mixed>  $telegramData

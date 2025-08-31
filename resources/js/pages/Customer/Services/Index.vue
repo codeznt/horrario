@@ -1,23 +1,20 @@
 <script setup lang="ts">
 import { useTranslations } from '@/composables/useTranslations';
-import TelegramAppLayout from '@/layouts/TelegramAppLayout.vue';
+import AppLayoutWithNavigation from '@/layouts/AppLayoutWithNavigation.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 // shadcn-vue components
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
 // Icons
 import { 
     Search, 
     Clock, 
-    DollarSign, 
-    MapPin, 
     Star,
-    ArrowLeft,
-    Filter
+    ArrowLeft
 } from 'lucide-vue-next';
 
 const { t } = useTranslations();
@@ -77,8 +74,8 @@ const hasFilters = computed(() => props.filters?.search || props.filters?.catego
 <template>
     <Head :title="t('app.browse_services')" />
 
-    <TelegramAppLayout class="bg-tg-bg">
-        <div class="flex min-h-[--spacing-viewport-h] flex-col">
+    <AppLayoutWithNavigation class="bg-tg-bg">
+        <div class="flex min-h-full flex-col">
             <!-- Header -->
             <div class="border-b border-tg-section-separator bg-tg-secondary-bg px-4 py-4">
                 <div class="flex items-center gap-3 mb-4">
@@ -239,7 +236,7 @@ const hasFilters = computed(() => props.filters?.search || props.filters?.catego
                 </div>
             </div>
         </div>
-    </TelegramAppLayout>
+    </AppLayoutWithNavigation>
 </template>
 
 <style scoped>

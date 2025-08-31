@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { useTranslations } from '@/composables/useTranslations';
-import TelegramAppLayout from '@/layouts/TelegramAppLayout.vue';
+import AppLayoutWithNavigation from '@/layouts/AppLayoutWithNavigation.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 // shadcn-vue components
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 
 // Icons
 import { 
@@ -44,7 +44,7 @@ interface Props {
     };
 }
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 // Loading state for favorite removal
 const removingFavorite = ref<number | null>(null);
@@ -68,8 +68,8 @@ const viewProvider = (providerId: number) => {
 <template>
     <Head :title="t('app.my_favorites')" />
 
-    <TelegramAppLayout class="bg-tg-bg">
-        <div class="flex min-h-[--spacing-viewport-h] flex-col">
+    <AppLayoutWithNavigation class="bg-tg-bg">
+        <div class="flex min-h-full flex-col">
             <!-- Header -->
             <div class="border-b border-tg-section-separator bg-tg-secondary-bg px-4 py-4">
                 <div class="flex items-center gap-3">
@@ -202,7 +202,7 @@ const viewProvider = (providerId: number) => {
                 </div>
             </div>
         </div>
-    </TelegramAppLayout>
+    </AppLayoutWithNavigation>
 </template>
 
 <style scoped>

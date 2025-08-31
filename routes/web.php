@@ -24,13 +24,80 @@ Route::post('/onboarding/role', function () {
     ]);
 })->middleware(['telegram.auth'])->name('onboarding.role');
 
+// Customer information collection
+Route::post('/onboarding/customer-info', function () {
+    $validated = request()->validate([
+        'name' => 'required|string|max:255',
+        'phone' => 'required|string|max:20',
+    ]);
+
+    if (auth()->check()) {
+        $user = auth()->user();
+        // Save customer info as metadata
+        $user->setMeta('customer_name', $validated['name']);
+        $user->setMeta('customer_phone', $validated['phone']);
+    }
+
+    return back()->with('flash', [
+        'success' => true,
+        'message' => 'Customer information saved successfully',
+    ]);
+})->middleware(['telegram.auth'])->name('onboarding.customer-info');
+
+// Business information collection
+Route::post('/onboarding/business-info', function () {
+    $validated = request()->validate([
+        'business_name' => 'required|string|max:255',
+        'business_phone' => 'required|string|max:20',
+    ]);
+
+    if (auth()->check()) {
+        $user = auth()->user();
+        // Save business info as metadata
+        $user->setMeta('business_name', $validated['business_name']);
+        $user->setMeta('business_phone', $validated['business_phone']);
+    }
+
+    return back()->with('flash', [
+        'success' => true,
+        'message' => 'Business information saved successfully',
+    ]);
+})->middleware(['telegram.auth'])->name('onboarding.business-info');
+
+// Business address collection
+Route::post('/onboarding/business-address', function () {
+    $validated = request()->validate([
+        'address' => 'required|string|max:500',
+    ]);
+
+    if (auth()->check()) {
+        $user = auth()->user();
+        // Save business address as metadata
+        $user->setMeta('business_address', $validated['address']);
+    }
+
+    return back()->with('flash', [
+        'success' => true,
+        'message' => 'Business address saved successfully',
+    ]);
+})->middleware(['telegram.auth'])->name('onboarding.business-address');
+
 // Onboarding completion
 Route::post('/onboarding/complete', function () {
     // Role already saved, just complete the onboarding flow
 
-    // Mark onboarding as completed using meta
     if (auth()->check()) {
-        auth()->user()->markOnboardingCompleted();
+        $user = auth()->user();
+
+        // Check if user has completed their role-specific information
+        if (! $user->hasCompletedRoleInfo()) {
+            return back()->withErrors([
+                'error' => 'Please complete all required information before finishing onboarding.',
+            ]);
+        }
+
+        // Mark onboarding as completed using meta
+        $user->markOnboardingCompleted();
     }
 
     // Redirect to dashboard after onboarding
@@ -75,7 +142,7 @@ Route::middleware(['telegram.auth'])->group(function () {
     Route::get('/business/dashboard', [App\Http\Controllers\BusinessDashboardController::class, 'index'])
         ->middleware(['auth', 'verified', 'role:business'])
         ->name('business.dashboard');
-    
+
     Route::get('/customer/dashboard', [App\Http\Controllers\CustomerDashboardController::class, 'index'])
         ->middleware(['auth', 'verified', 'role:customer'])
         ->name('customer.dashboard');
@@ -140,7 +207,7 @@ Route::middleware(['telegram.auth'])->group(function () {
         Route::post('/bookings', [App\Http\Controllers\BookingController::class, 'store'])->name('bookings.store');
     });
 
-    // Customer service browsing routes - customer role required  
+    // Customer service browsing routes - customer role required
     // Note: Using /browse/services to avoid conflict with business /services management
     Route::middleware('role:customer')->group(function () {
         Route::get('/browse/services', [App\Http\Controllers\CustomerServiceController::class, 'index'])->name('customer.services.index');

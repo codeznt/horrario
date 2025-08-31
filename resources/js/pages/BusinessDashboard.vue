@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { useTranslations } from '@/composables/useTranslations';
-import TelegramAppLayout from '@/layouts/TelegramAppLayout.vue';
+import AppLayoutWithNavigation from '@/layouts/AppLayoutWithNavigation.vue';
 import { Head, Link } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 
 // shadcn-vue components
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 
 // Icons
 import { 
@@ -16,8 +15,7 @@ import {
     DollarSign, 
     Package, 
     Settings, 
-    TrendingUp, 
-    Users 
+    TrendingUp
 } from 'lucide-vue-next';
 
 const { t } = useTranslations();
@@ -123,8 +121,8 @@ const quickActions = computed(() => {
 <template>
     <Head :title="t('app.business_dashboard')" />
 
-    <TelegramAppLayout class="bg-tg-bg">
-        <div class="flex min-h-[--spacing-viewport-h] flex-col">
+    <AppLayoutWithNavigation class="bg-tg-bg">
+        <div class="flex min-h-full flex-col">
             <!-- Header -->
             <div class="border-b border-tg-section-separator bg-tg-secondary-bg px-4 py-6">
                 <div class="flex items-center justify-between">
@@ -277,30 +275,6 @@ const quickActions = computed(() => {
                 </div>
             </div>
 
-            <!-- Bottom Navigation -->
-            <div class="border-t border-tg-section-separator bg-tg-secondary-bg p-4">
-                <div class="grid grid-cols-4 gap-2">
-                    <Link :href="'/dashboard'" class="flex flex-col items-center gap-1 rounded-lg p-3 bg-tg-accent/10">
-                        <Building2 class="h-5 w-5 text-tg-accent" />
-                        <span class="text-xs font-medium text-tg-accent">{{ t('app.dashboard') }}</span>
-                    </Link>
-                    
-                    <Link :href="'/services'" class="flex flex-col items-center gap-1 rounded-lg p-3 transition-colors hover:bg-tg-section-bg">
-                        <Package class="h-5 w-5 text-tg-hint" />
-                        <span class="text-xs text-tg-hint">{{ t('app.services') }}</span>
-                    </Link>
-                    
-                    <Link :href="'/provider/bookings'" class="flex flex-col items-center gap-1 rounded-lg p-3 transition-colors hover:bg-tg-section-bg">
-                        <Calendar class="h-5 w-5 text-tg-hint" />
-                        <span class="text-xs text-tg-hint">{{ t('app.bookings') }}</span>
-                    </Link>
-                    
-                    <Link :href="'/schedules'" class="flex flex-col items-center gap-1 rounded-lg p-3 transition-colors hover:bg-tg-section-bg">
-                        <Clock class="h-5 w-5 text-tg-hint" />
-                        <span class="text-xs text-tg-hint">{{ t('app.schedule') }}</span>
-                    </Link>
-                </div>
-            </div>
         </div>
-    </TelegramAppLayout>
+    </AppLayoutWithNavigation>
 </template>
