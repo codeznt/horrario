@@ -2,8 +2,8 @@
 import { useTranslations } from '@/composables/useTranslations';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { onMounted } from 'vue';
-import type { AppPageProps, User, BreadcrumbItemType } from '@/types';
-import AppLayout from '@/layouts/AppLayout.vue';
+import type { AppPageProps, BreadcrumbItemType } from '@/types';
+import AppLayoutWithNavigation from '@/layouts/AppLayoutWithNavigation.vue';
 import PlaceholderPattern from '@/components/PlaceholderPattern.vue';
 
 const { t } = useTranslations();
@@ -30,7 +30,7 @@ onMounted(() => {
 <template>
     <Head :title="t('app.dashboard')" />
 
-    <AppLayout :breadcrumbs="breadcrumbs">
+    <AppLayoutWithNavigation :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
             <!-- Telegram theme demo block -->
             <section class="rounded-lg border border-tg-section-separator bg-tg-secondary-bg p-4 text-tg-text">
@@ -59,5 +59,5 @@ onMounted(() => {
                 <PlaceholderPattern />
             </div>
         </div>
-    </AppLayout>
+    </AppLayoutWithNavigation>
 </template>

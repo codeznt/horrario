@@ -110,32 +110,11 @@ Route::post('/language/{locale}', [LanguageController::class, 'switch'])->name('
 // Telegram protected routes
 Route::middleware(['telegram.auth'])->group(function () {
     Route::get('/', function () {
-        return Inertia::render('Welcome');
-    })->name('home');
-
-    Route::get('/start', function () {
         return Inertia::render('Start');
     })->name('start');
 
-    Route::get('/tg', function () {
-        return Inertia::render('Telegram/Home', [
-            'message' => 'Welcome to Telegram Mini App!',
-            'user' => auth()->user(),
-            'telegramData' => request('telegram_data'),
-        ]);
-    })->name('telegram.home');
-
-    // Simple test route for tests
-    Route::get('/tg-test', function () {
-        return response()->json([
-            'success' => true,
-            'user' => auth()->user(),
-            'telegram_data' => request('telegram_data'),
-        ]);
-    })->name('telegram.test');
-
     Route::get('dashboard', function () {
-        return Inertia::render('Dashboard');
+        return auth()->user()->role === 'business' ? redirect()->route('business.dashboard') : redirect()->route('customer.dashboard');
     })->middleware(['auth', 'verified'])->name('dashboard');
 
     // Role-specific dashboard routes
@@ -227,5 +206,4 @@ Route::middleware(['telegram.auth'])->group(function () {
     })->name('page-links');
 });
 
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+

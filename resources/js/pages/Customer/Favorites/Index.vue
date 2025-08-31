@@ -9,15 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
 // Icons
-import { 
-    ArrowLeft,
-    Heart, 
-    MapPin, 
-    Phone,
-    Trash2,
-    Search,
-    Calendar
-} from 'lucide-vue-next';
+import Icon from '@/components/Icon.vue';
 
 const { t } = useTranslations();
 
@@ -74,14 +66,14 @@ const viewProvider = (providerId: number) => {
             <div class="border-b border-tg-section-separator bg-tg-secondary-bg px-4 py-4">
                 <div class="flex items-center gap-3">
                     <Link :href="'/customer/dashboard'" class="rounded-full bg-tg-accent/10 p-2">
-                        <ArrowLeft class="h-5 w-5 text-tg-accent" />
+                        <Icon name="ArrowLeft" class="h-5 w-5 text-tg-accent" />
                     </Link>
                     <div class="flex-1">
                         <h1 class="text-xl font-bold text-tg-text">{{ t('app.my_favorites') }}</h1>
                         <p class="text-sm text-tg-hint">{{ t('app.saved_providers') }}</p>
                     </div>
                     <div class="flex items-center gap-1 bg-tg-accent/10 px-2 py-1 rounded-full">
-                        <Heart class="h-4 w-4 text-tg-accent" />
+                        <Icon name="Heart" class="h-4 w-4 text-tg-accent" />
                         <span class="text-sm font-medium text-tg-accent">{{ favorites?.meta?.total || 0 }}</span>
                     </div>
                 </div>
@@ -91,12 +83,12 @@ const viewProvider = (providerId: number) => {
             <div class="flex-1 p-4">
                 <div v-if="(favorites?.data?.length || 0) === 0" class="py-12 text-center">
                     <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-tg-section-bg">
-                        <Heart class="h-8 w-8 text-tg-hint" />
+                        <Icon name="Heart" class="h-8 w-8 text-tg-hint" />
                     </div>
                     <h3 class="mb-2 text-lg font-semibold text-tg-text">{{ t('app.no_favorites_yet') }}</h3>
                     <p class="mb-4 text-sm text-tg-hint px-4">{{ t('app.favorite_providers_desc') }}</p>
                     <Button @click="router.visit('/browse/services')" class="bg-tg-accent text-white hover:bg-tg-accent/90">
-                        <Search class="mr-2 h-4 w-4" />
+                        <Icon name="Search" class="mr-2 h-4 w-4" />
                         {{ t('app.browse_services') }}
                     </Button>
                 </div>
@@ -111,7 +103,7 @@ const viewProvider = (providerId: number) => {
                             <div class="flex items-start justify-between">
                                 <div class="flex-1">
                                     <div class="flex items-center gap-2 mb-2">
-                                        <Heart class="h-4 w-4 text-tg-accent" />
+                                        <Icon name="Heart" class="h-4 w-4 text-tg-accent" />
                                         <h3 class="font-semibold text-tg-text">{{ favorite.provider.business_name }}</h3>
                                     </div>
                                     
@@ -121,15 +113,15 @@ const viewProvider = (providerId: number) => {
                                     
                                     <div class="space-y-1">
                                         <div v-if="favorite.provider.address" class="flex items-center gap-2 text-xs text-tg-hint">
-                                            <MapPin class="h-3 w-3" />
+                                            <Icon name="MapPin" class="h-3 w-3" />
                                             <span>{{ favorite.provider.address }}</span>
                                         </div>
                                         <div v-if="favorite.provider.contact_phone" class="flex items-center gap-2 text-xs text-tg-hint">
-                                            <Phone class="h-3 w-3" />
+                                            <Icon name="Phone" class="h-3 w-3" />
                                             <span>{{ favorite.provider.contact_phone }}</span>
                                         </div>
                                         <div class="flex items-center gap-2 text-xs text-tg-hint">
-                                            <Calendar class="h-3 w-3" />
+                                            <Icon name="Calendar" class="h-3 w-3" />
                                             <span>{{ t('app.favorited_on') }} {{ favorite.favorited_at }}</span>
                                         </div>
                                     </div>
@@ -146,7 +138,7 @@ const viewProvider = (providerId: number) => {
                                         :disabled="removingFavorite === favorite.id"
                                         class="text-destructive hover:text-destructive hover:bg-destructive/10"
                                     >
-                                        <Trash2 class="h-3 w-3" />
+                                        <Icon name="Trash2" class="h-3 w-3" />
                                     </Button>
                                 </div>
                             </div>
@@ -162,43 +154,20 @@ const viewProvider = (providerId: number) => {
                                 :variant="link.active ? 'default' : 'outline'"
                                 size="sm"
                                 class="min-w-[40px]"
-                                v-html="link.label"
-                            />
+                            >
+                                {{ link.label }}
+                            </Button>
                             <Button
                                 v-else
                                 variant="ghost"
                                 size="sm"
                                 disabled
                                 class="min-w-[40px]"
-                                v-html="link.label"
-                            />
+                            >
+                                {{ link.label }}
+                            </Button>
                         </template>
                     </div>
-                </div>
-            </div>
-
-            <!-- Bottom Navigation -->
-            <div class="border-t border-tg-section-separator bg-tg-secondary-bg p-4">
-                <div class="grid grid-cols-4 gap-2">
-                    <Link :href="'/customer/dashboard'" class="flex flex-col items-center gap-1 rounded-lg p-3 transition-colors hover:bg-tg-section-bg">
-                        <ArrowLeft class="h-5 w-5 text-tg-hint" />
-                        <span class="text-xs text-tg-hint">{{ t('app.back') }}</span>
-                    </Link>
-                    
-                    <Link :href="'/browse/services'" class="flex flex-col items-center gap-1 rounded-lg p-3 transition-colors hover:bg-tg-section-bg">
-                        <Search class="h-5 w-5 text-tg-hint" />
-                        <span class="text-xs text-tg-hint">{{ t('app.services') }}</span>
-                    </Link>
-                    
-                    <Link :href="'/bookings'" class="flex flex-col items-center gap-1 rounded-lg p-3 transition-colors hover:bg-tg-section-bg">
-                        <Calendar class="h-5 w-5 text-tg-hint" />
-                        <span class="text-xs text-tg-hint">{{ t('app.bookings') }}</span>
-                    </Link>
-                    
-                    <Link :href="'/favorites'" class="flex flex-col items-center gap-1 rounded-lg p-3 bg-tg-accent/10">
-                        <Heart class="h-5 w-5 text-tg-accent" />
-                        <span class="text-xs font-medium text-tg-accent">{{ t('app.favorites') }}</span>
-                    </Link>
                 </div>
             </div>
         </div>
@@ -209,6 +178,7 @@ const viewProvider = (providerId: number) => {
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }

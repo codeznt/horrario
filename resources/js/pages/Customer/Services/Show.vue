@@ -1,23 +1,15 @@
 <script setup lang="ts">
 import { useTranslations } from '@/composables/useTranslations';
-import TelegramAppLayout from '@/layouts/TelegramAppLayout.vue';
+import AppLayoutWithNavigation from '@/layouts/AppLayoutWithNavigation.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 
 // shadcn-vue components
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-// Icons
-import { 
-    ArrowLeft,
-    Clock, 
-    DollarSign, 
-    MapPin, 
-    Phone,
-    Calendar,
-    Heart,
-    Share
-} from 'lucide-vue-next';
+// Icon component
+import Icon from '@/components/Icon.vue';
+
 
 const { t } = useTranslations();
 
@@ -53,20 +45,20 @@ const bookService = () => {
 <template>
     <Head :title="`${service.title} - ${service.provider.business_name}`" />
 
-    <TelegramAppLayout class="bg-tg-bg">
+    <AppLayoutWithNavigation class="bg-tg-bg">
         <div class="flex min-h-[--spacing-viewport-h] flex-col">
             <!-- Header -->
             <div class="border-b border-tg-section-separator bg-tg-secondary-bg px-4 py-4">
                 <div class="flex items-center gap-3">
                     <Link :href="'/browse/services'" class="rounded-full bg-tg-accent/10 p-2">
-                        <ArrowLeft class="h-5 w-5 text-tg-accent" />
+                        <Icon name="ArrowLeft" class="h-5 w-5 text-tg-accent" />
                     </Link>
                     <div class="flex-1">
                         <h1 class="text-xl font-bold text-tg-text">{{ service.title }}</h1>
                         <p class="text-sm text-tg-accent font-medium">{{ service.provider.business_name }}</p>
                     </div>
                     <Button variant="ghost" size="sm" class="rounded-full bg-tg-accent/10 p-2">
-                        <Heart class="h-5 w-5 text-tg-accent" />
+                        <Icon name="Heart" class="h-5 w-5 text-tg-accent" />
                     </Button>
                 </div>
             </div>
@@ -85,18 +77,18 @@ const bookService = () => {
                         <!-- Price and Duration -->
                         <div class="flex items-center justify-between py-2">
                             <div class="flex items-center gap-2 text-tg-hint">
-                                <Clock class="h-5 w-5" />
+                                <Icon name="Clock" class="h-5 w-5" />
                                 <span>{{ service.duration_minutes }} {{ t('app.minutes') }}</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <DollarSign class="h-5 w-5 text-tg-accent" />
+                                <Icon name="DollarSign" class="h-5 w-5 text-tg-accent" />
                                 <span class="text-xl font-bold text-tg-text">{{ service.display_price }}</span>
                             </div>
                         </div>
 
                         <!-- Book Button -->
                         <Button @click="bookService" class="w-full bg-tg-accent text-white hover:bg-tg-accent/90">
-                            <Calendar class="mr-2 h-4 w-4" />
+                            <Icon name="Calendar" class="mr-2 h-4 w-4" />
                             {{ t('app.book_now') }}
                         </Button>
                     </CardContent>
@@ -118,11 +110,11 @@ const bookService = () => {
                         <!-- Contact Info -->
                         <div class="space-y-2">
                             <div v-if="service.provider.contact_phone" class="flex items-center gap-2 text-sm text-tg-hint">
-                                <Phone class="h-4 w-4" />
+                                <Icon name="Phone" class="h-4 w-4" />
                                 <span>{{ service.provider.contact_phone }}</span>
                             </div>
                             <div v-if="service.provider.address" class="flex items-center gap-2 text-sm text-tg-hint">
-                                <MapPin class="h-4 w-4" />
+                                <Icon name="MapPin" class="h-4 w-4" />
                                 <span>{{ service.provider.address }}</span>
                             </div>
                         </div>
@@ -133,7 +125,7 @@ const bookService = () => {
                                 {{ t('app.view_all_services') }}
                             </Button>
                             <Button v-if="service.provider.contact_phone" variant="outline" size="sm" class="flex-1">
-                                <Phone class="mr-1 h-3 w-3" />
+                                <Icon name="Phone" class="mr-1 h-3 w-3" />
                                 {{ t('app.call') }}
                             </Button>
                         </div>
@@ -147,14 +139,14 @@ const bookService = () => {
                     </CardHeader>
                     <CardContent class="space-y-3 text-sm text-tg-hint">
                         <div class="flex items-start gap-2">
-                            <Clock class="h-4 w-4 mt-0.5 text-tg-accent" />
+                            <Icon name="Clock" class="h-4 w-4 mt-0.5 text-tg-accent" />
                             <div>
                                 <p class="font-medium text-tg-text">{{ t('app.duration') }}</p>
                                 <p>{{ service.duration_minutes }} {{ t('app.minutes_session') }}</p>
                             </div>
                         </div>
                         <div class="flex items-start gap-2">
-                            <Calendar class="h-4 w-4 mt-0.5 text-tg-accent" />
+                            <Icon name="Calendar" class="h-4 w-4 mt-0.5 text-tg-accent" />
                             <div>
                                 <p class="font-medium text-tg-text">{{ t('app.booking_policy') }}</p>
                                 <p>{{ t('app.booking_confirmation_required') }}</p>
@@ -168,16 +160,16 @@ const bookService = () => {
             <div class="border-t border-tg-section-separator bg-tg-secondary-bg p-4">
                 <div class="flex gap-3">
                     <Link :href="'/browse/services'" class="flex flex-col items-center gap-1 rounded-lg p-3 transition-colors hover:bg-tg-section-bg">
-                        <ArrowLeft class="h-5 w-5 text-tg-hint" />
+                        <Icon name="ArrowLeft" class="h-5 w-5 text-tg-hint" />
                         <span class="text-xs text-tg-hint">{{ t('app.back') }}</span>
                     </Link>
                     
                     <Button @click="bookService" class="flex-1 bg-tg-accent text-white hover:bg-tg-accent/90">
-                        <Calendar class="mr-2 h-4 w-4" />
+                        <Icon name="Calendar" class="mr-2 h-4 w-4" />
                         {{ t('app.book_this_service') }}
                     </Button>
                 </div>
             </div>
         </div>
-    </TelegramAppLayout>
+    </AppLayoutWithNavigation>
 </template>

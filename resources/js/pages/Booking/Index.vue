@@ -1,7 +1,7 @@
 <template>
     <Head :title="t('app.my_bookings')" />
 
-    <MobileAppLayout :title="t('app.my_bookings')">
+    <AppLayoutWithNavigation :title="t('app.my_bookings')">
         <template #header-actions>
             <div class="flex gap-2">
                 <Button @click="router.visit('/bookings/upcoming')" size="sm" variant="outline">
@@ -57,7 +57,7 @@
             @confirm="confirmCancel"
             @cancel="showCancelDialog = false"
         />
-    </MobileAppLayout>
+    </AppLayoutWithNavigation>
 </template>
 
 <script setup lang="ts">
@@ -65,7 +65,7 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui';
 import { useTranslations } from '@/composables/useTranslations';
-import MobileAppLayout from '@/layouts/MobileAppLayout.vue';
+import AppLayoutWithNavigation from '@/layouts/AppLayoutWithNavigation.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import BookingCard from '../../components/BookingCard.vue';

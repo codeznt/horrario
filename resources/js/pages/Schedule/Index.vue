@@ -1,15 +1,12 @@
 <template>
     <Head :title="t('app.schedule')" />
 
-    <div class="min-h-screen bg-background">
-        <div class="container mx-auto px-4 py-8">
-            <div class="mb-8 flex items-center justify-between">
-                <div>
-                    <h1 class="text-3xl font-bold text-foreground">{{ t('app.my_schedule') }}</h1>
-                    <p class="mt-2 text-muted-foreground">{{ t('app.working_hours') }}</p>
-                </div>
+    <AppLayoutWithNavigation :title="t('app.my_schedule')" :subtitle="t('app.working_hours')">
+
+        <div class="container mx-auto px-4 py-4">
+            <div class="mb-6 flex items-center justify-end">
                 <Button @click="showAddDialog = true" class="flex items-center gap-2">
-                    <Plus class="h-4 w-4" />
+                    <Icon name="Plus" class="h-4 w-4" />
                     {{ t('app.add_time_slot') }}
                 </Button>
             </div>
@@ -20,14 +17,14 @@
                         <div class="flex items-center justify-between">
                             <CardTitle class="text-lg">{{ dayName }}</CardTitle>
                             <Button variant="outline" size="sm" @click="openAddDialog(dayNumber)" class="flex items-center gap-1">
-                                <Plus class="h-3 w-3" />
+                                <Icon name="Plus" class="h-3 w-3" />
                                 {{ t('app.add') }}
                             </Button>
                         </div>
                     </CardHeader>
                     <CardContent>
                         <div v-if="!schedules[dayNumber] || schedules[dayNumber].length === 0" class="py-8 text-center text-muted-foreground">
-                            <Clock class="mx-auto mb-2 h-8 w-8 opacity-50" />
+                            <Icon name="Clock" class="mx-auto mb-2 h-8 w-8 opacity-50" />
                             <p>{{ t('app.no_working_hours_set') }}</p>
                         </div>
                         <div v-else class="space-y-2">
@@ -37,12 +34,12 @@
                                 class="flex items-center justify-between rounded-lg bg-muted p-3"
                             >
                                 <div class="flex items-center gap-2">
-                                    <Clock class="h-4 w-4 text-muted-foreground" />
+                                    <Icon name="Clock" class="h-4 w-4 text-muted-foreground" />
                                     <span class="font-medium"> {{ formatTime(schedule.start_time) }} - {{ formatTime(schedule.end_time) }} </span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <Button variant="ghost" size="sm" @click="editSchedule(schedule)" class="h-8 w-8 p-0">
-                                        <Edit class="h-3 w-3" />
+                                        <Icon name="Edit" class="h-3 w-3" />
                                     </Button>
                                     <Button
                                         variant="ghost"
@@ -50,7 +47,7 @@
                                         @click="deleteSchedule(schedule)"
                                         class="h-8 w-8 p-0 text-destructive hover:text-destructive"
                                     >
-                                        <Trash2 class="h-3 w-3" />
+                                        <Icon name="Trash2" class="h-3 w-3" />
                                     </Button>
                                 </div>
                             </div>
@@ -59,9 +56,9 @@
                 </Card>
             </div>
         </div>
-    </div>
-
     <!-- Add/Edit Schedule Dialog -->
+    </AppLayoutWithNavigation>
+
     <Dialog :open="showAddDialog" @update:open="showAddDialog = $event">
         <DialogContent class="sm:max-w-md">
             <DialogHeader>
@@ -110,7 +107,7 @@
                         {{ t('app.cancel') }}
                     </Button>
                     <Button type="submit" :disabled="processing">
-                        <Loader2 v-if="processing" class="mr-2 h-4 w-4 animate-spin" />
+                        <Icon v-if="processing" name="Loader2" class="mr-2 h-4 w-4 animate-spin" />
                         {{ editingSchedule ? t('app.update_time_slot') : t('app.add_time_slot') }}
                     </Button>
                 </DialogFooter>
@@ -155,7 +152,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTranslations } from '@/composables/useTranslations';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { Clock, Edit, Loader2, Plus, Trash2 } from 'lucide-vue-next';
+import AppLayoutWithNavigation from '@/layouts/AppLayoutWithNavigation.vue';
+import Icon from '@/components/Icon.vue';
 import { ref } from 'vue';
 
 interface Schedule {

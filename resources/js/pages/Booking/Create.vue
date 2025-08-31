@@ -1,7 +1,7 @@
 <template>
     <Head :title="t('app.book_service')" />
 
-    <MobileAppLayout :title="service.title" :subtitle="t('app.book_your_appointment')" :show-back-button="true">
+    <AppLayoutWithNavigation :title="service.title" :subtitle="t('app.book_your_appointment')" :show-back-button="true">
         <!-- Service Info Header -->
         <Card class="mb-6 bg-tg-section-bg">
             <CardContent class="p-4">
@@ -92,7 +92,7 @@
 
         <!-- Loading Overlay -->
         <LoadingOverlay :show="processing" :message="t('app.creating_your_booking')" />
-    </MobileAppLayout>
+    </AppLayoutWithNavigation>
 </template>
 
 <script setup lang="ts">
@@ -100,7 +100,7 @@ import Icon from '@/components/Icon.vue';
 import LoadingOverlay from '@/components/LoadingOverlay.vue';
 import { Button, Card, CardContent, CardHeader, CardTitle, Label, Textarea } from '@/components/ui';
 import { useTranslations } from '@/composables/useTranslations';
-import MobileAppLayout from '@/layouts/MobileAppLayout.vue';
+import AppLayoutWithNavigation from '@/layouts/AppLayoutWithNavigation.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 

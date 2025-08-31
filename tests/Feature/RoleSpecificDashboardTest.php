@@ -10,7 +10,7 @@ it('redirects business users to business dashboard', function () {
     
     $response = $this->actingAs($user)->get('/dashboard');
     
-    $response->assertSuccessful();
+    $response->assertRedirect('/business/dashboard');
 });
 
 it('redirects customer users to customer dashboard', function () {
@@ -18,17 +18,9 @@ it('redirects customer users to customer dashboard', function () {
     
     $response = $this->actingAs($user)->get('/dashboard');
     
-    $response->assertSuccessful();
+    $response->assertRedirect('/customer/dashboard');
 });
 
-it('allows users without specific roles to stay on general dashboard', function () {
-    $user = User::factory()->create(['role' => 'user']);
-    
-    $response = $this->actingAs($user)->get('/dashboard');
-    
-    $response->assertSuccessful()
-        ->assertInertia(fn ($page) => $page->component('Dashboard'));
-});
 
 it('business dashboard displays correctly for business users', function () {
     $user = User::factory()->create(['role' => 'business']);

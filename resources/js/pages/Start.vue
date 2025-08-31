@@ -16,7 +16,8 @@ import { Stepper, StepperIndicator, StepperItem, StepperTrigger } from '@/compon
 import { Textarea } from '@/components/ui/textarea';
 
 // Icons
-import { Building2, CheckCircle, MapPin, Phone, Sparkles, User, UserCheck } from 'lucide-vue-next';
+import Icon from '@/components/Icon.vue';
+
 
 // Onboarding state
 const currentStep = ref(1);
@@ -263,7 +264,9 @@ function completeOnboarding() {
                     <!-- Step 1: Welcome -->
                     <StepperItem :step="1">
                         <StepperTrigger :step="1" class="p-1">
-                            <StepperIndicator :step="1" :icon="Sparkles" />
+                            <StepperIndicator :step="1">
+                                <Icon name="Sparkles" />
+                            </StepperIndicator>
                         </StepperTrigger>
                     </StepperItem>
 
@@ -272,7 +275,9 @@ function completeOnboarding() {
                     <!-- Step 2: Role Selection -->
                     <StepperItem :step="2">
                         <StepperTrigger :step="2" class="p-1">
-                            <StepperIndicator :step="2" :icon="UserCheck" />
+                            <StepperIndicator :step="2">
+                                <Icon name="UserCheck" />
+                            </StepperIndicator>
                         </StepperTrigger>
                     </StepperItem>
 
@@ -281,7 +286,9 @@ function completeOnboarding() {
                         <div class="h-[2px] w-12 bg-tg-section-separator"></div>
                         <StepperItem :step="3">
                             <StepperTrigger :step="3" class="p-1">
-                                <StepperIndicator :step="3" :icon="selectedRole === 'customer' ? User : Building2" />
+                                <StepperIndicator :step="3">
+                                    <Icon :name="selectedRole === 'customer' ? 'User' : 'Building2'" />
+                                </StepperIndicator>
                             </StepperTrigger>
                         </StepperItem>
 
@@ -290,7 +297,9 @@ function completeOnboarding() {
                             <div class="h-[2px] w-12 bg-tg-section-separator"></div>
                             <StepperItem :step="4">
                                 <StepperTrigger :step="4" class="p-1">
-                                    <StepperIndicator :step="4" :icon="MapPin" />
+                                    <StepperIndicator :step="4">
+                                        <Icon name="MapPin" />
+                                    </StepperIndicator>
                                 </StepperTrigger>
                             </StepperItem>
                         </template>
@@ -299,7 +308,9 @@ function completeOnboarding() {
                         <div class="h-[2px] w-12 bg-tg-section-separator"></div>
                         <StepperItem :step="totalSteps">
                             <StepperTrigger :step="totalSteps" class="p-1">
-                                <StepperIndicator :step="totalSteps" :icon="CheckCircle" />
+                                <StepperIndicator :step="totalSteps">
+                                    <Icon name="CheckCircle" />
+                                </StepperIndicator>
                             </StepperTrigger>
                         </StepperItem>
                     </template>
@@ -309,7 +320,9 @@ function completeOnboarding() {
                         <div class="h-[2px] w-12 bg-tg-section-separator"></div>
                         <StepperItem :step="3">
                             <StepperTrigger :step="3" :disabled="!selectedRole" class="p-1">
-                                <StepperIndicator :step="3" :icon="CheckCircle" />
+                                <StepperIndicator :step="3">
+                                    <Icon name="CheckCircle" />
+                                </StepperIndicator>
                             </StepperTrigger>
                         </StepperItem>
                     </template>
@@ -335,7 +348,7 @@ function completeOnboarding() {
                                     class="flex h-32 w-32 items-center justify-center rounded-3xl border border-tg-section-separator bg-gradient-to-br from-tg-accent/20 to-tg-link/20"
                                 >
                                     <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-tg-accent/10">
-                                        <Sparkles class="size-8 text-tg-accent" />
+                                        <Icon name="Sparkles" class="size-8 text-tg-accent" />
                                     </div>
                                 </div>
 
@@ -386,7 +399,7 @@ function completeOnboarding() {
                                     >
                                         <CardContent class="flex items-center gap-4 p-4">
                                             <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-tg-accent/10">
-                                                <Building2 class="size-6 text-tg-accent" />
+                                                <Icon name="Building2" class="size-6 text-tg-accent" />
                                             </div>
                                             <div class="flex-1 text-left">
                                                 <h3 class="font-semibold text-tg-text">{{ t('app.business') }}</h3>
@@ -409,7 +422,7 @@ function completeOnboarding() {
                                     >
                                         <CardContent class="flex items-center gap-4 p-4">
                                             <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-tg-link/10">
-                                                <User class="size-6 text-tg-link" />
+                                                <Icon name="User" class="size-6 text-tg-link" />
                                             </div>
                                             <div class="flex-1 text-left">
                                                 <h3 class="font-semibold text-tg-text">{{ t('app.customer') }}</h3>
@@ -428,7 +441,7 @@ function completeOnboarding() {
                                     class="flex h-32 w-32 items-center justify-center rounded-3xl border border-tg-section-separator bg-gradient-to-br from-tg-link/20 to-blue-500/20"
                                 >
                                     <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-tg-link/10">
-                                        <User class="size-8 text-tg-link" />
+                                        <Icon name="User" class="size-8 text-tg-link" />
                                     </div>
                                 </div>
 
@@ -477,7 +490,7 @@ function completeOnboarding() {
                                     class="flex h-32 w-32 items-center justify-center rounded-3xl border border-tg-section-separator bg-gradient-to-br from-tg-accent/20 to-purple-500/20"
                                 >
                                     <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-tg-accent/10">
-                                        <Building2 class="size-8 text-tg-accent" />
+                                        <Icon name="Building2" class="size-8 text-tg-accent" />
                                     </div>
                                 </div>
 
@@ -526,7 +539,7 @@ function completeOnboarding() {
                                     class="flex h-32 w-32 items-center justify-center rounded-3xl border border-tg-section-separator bg-gradient-to-br from-green-500/20 to-tg-accent/20"
                                 >
                                     <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-green-500/10">
-                                        <MapPin class="size-8 text-green-600" />
+                                        <Icon name="MapPin" class="size-8 text-green-600" />
                                     </div>
                                 </div>
 
@@ -552,7 +565,7 @@ function completeOnboarding() {
                                             :placeholder="t('app.address_placeholder')"
                                             class="w-full"
                                             :disabled="savingInfo"
-                                            rows="3"
+                                            :rows="3"
                                         />
                                     </div>
                                 </div>

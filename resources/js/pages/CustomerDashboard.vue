@@ -9,13 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
 // Icons
-import { 
-    Calendar, 
-    Search, 
-    Settings,
-    Heart,
-    History
-} from 'lucide-vue-next';
+import Icon from '@/components/Icon.vue';
 
 const { t } = useTranslations();
 
@@ -62,7 +56,7 @@ const quickActions = computed(() => {
             title: t('app.find_services'),
             description: t('app.discover_local_services'),
             href: '/browse/services',
-            icon: Search,
+            icon: 'Search',
             variant: 'default' as const,
             urgent: true
         },
@@ -70,7 +64,7 @@ const quickActions = computed(() => {
             title: t('app.my_bookings'),
             description: t('app.manage_appointments'),
             href: '/bookings',
-            icon: Calendar,
+            icon: 'Calendar',
             variant: 'outline' as const,
             urgent: false
         },
@@ -78,7 +72,7 @@ const quickActions = computed(() => {
             title: t('app.favorites'),
             description: t('app.saved_providers'),
             href: '/favorites',
-            icon: Heart,
+            icon: 'Heart',
             variant: 'outline' as const,
             urgent: false
         },
@@ -86,7 +80,7 @@ const quickActions = computed(() => {
             title: t('app.booking_history'),
             description: t('app.past_appointments'),
             href: '/bookings/history',
-            icon: History,
+            icon: 'History',
             variant: 'outline' as const,
             urgent: false
         }
@@ -111,7 +105,7 @@ const quickActions = computed(() => {
                         </p>
                     </div>
                     <Link :href="'/settings/profile'" class="rounded-full bg-tg-accent/10 p-2">
-                        <Settings class="h-5 w-5 text-tg-accent" />
+                        <Icon name="Settings" class="h-5 w-5 text-tg-accent" />
                     </Link>
                 </div>
             </div>
@@ -120,7 +114,7 @@ const quickActions = computed(() => {
             <div class="grid grid-cols-2 gap-3 p-4">
                 <Card class="border-tg-section-separator bg-tg-section-bg">
                     <CardContent class="p-4 text-center">
-                        <Calendar class="mx-auto mb-2 h-8 w-8 text-tg-accent" />
+                        <Icon name="Calendar" class="mx-auto mb-2 h-8 w-8 text-tg-accent" />
                         <div class="text-xl font-bold text-tg-text">{{ bookingsCount }}</div>
                         <div class="text-xs text-tg-hint">{{ t('app.total_bookings') }}</div>
                     </CardContent>
@@ -128,7 +122,7 @@ const quickActions = computed(() => {
                 
                 <Card class="border-tg-section-separator bg-tg-section-bg">
                     <CardContent class="p-4 text-center">
-                        <Heart class="mx-auto mb-2 h-8 w-8 text-tg-accent" />
+                        <Icon name="Heart" class="mx-auto mb-2 h-8 w-8 text-tg-accent" />
                         <div class="text-xl font-bold text-tg-text">{{ favoriteProvidersCount }}</div>
                         <div class="text-xs text-tg-hint">{{ t('app.favorites') }}</div>
                     </CardContent>
@@ -161,7 +155,7 @@ const quickActions = computed(() => {
                                         class="flex h-12 w-12 items-center justify-center rounded-xl"
                                         :class="action.urgent ? 'bg-tg-accent/10' : 'bg-tg-accent/10'"
                                     >
-                                        <component :is="action.icon" class="h-6 w-6 text-tg-accent" />
+                                        <Icon :name="action.icon" class="h-6 w-6 text-tg-accent" />
                                     </div>
                                     <div class="flex-1 text-left">
                                         <h3 class="font-semibold text-tg-text">{{ action.title }}</h3>
@@ -241,11 +235,11 @@ const quickActions = computed(() => {
                 <!-- Empty State for New Users -->
                 <div v-if="!hasUpcomingBookings && !hasRecentServices" class="py-8 text-center">
                     <div class="rounded-lg border border-dashed border-tg-section-separator p-6">
-                        <Search class="mx-auto mb-4 h-12 w-12 text-tg-hint" />
+                        <Icon name="Search" class="mx-auto mb-4 h-12 w-12 text-tg-hint" />
                         <h3 class="mb-2 text-lg font-semibold text-tg-text">{{ t('app.start_exploring') }}</h3>
                         <p class="mb-4 text-sm text-tg-hint">{{ t('app.discover_services_nearby') }}</p>
                         <Button as="a" :href="'/browse/services'" class="bg-tg-accent text-white hover:bg-tg-accent/90">
-                            <Search class="mr-2 h-4 w-4" />
+                            <Icon name="Search" class="mr-2 h-4 w-4" />
                             {{ t('app.browse_services') }}
                         </Button>
                     </div>

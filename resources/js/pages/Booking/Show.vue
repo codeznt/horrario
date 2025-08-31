@@ -1,13 +1,14 @@
 <template>
     <Head :title="t('app.booking_details')" />
 
-    <div class="min-h-screen bg-background">
+    <AppLayoutWithNavigation :title="t('app.booking_details')">
+
         <div class="container mx-auto px-4 py-8">
             <div class="mx-auto max-w-2xl">
                 <!-- Header -->
                 <div class="mb-8">
                     <Button variant="ghost" @click="router.visit('/bookings')" class="mb-4">
-                        <ArrowLeft class="mr-2 h-4 w-4" />
+                        <Icon name="ArrowLeft" class="mr-2 h-4 w-4" />
                         {{ t('app.my_bookings') }}
                     </Button>
                     <div class="flex items-center justify-between">
@@ -22,7 +23,7 @@
                 <Card class="mb-6">
                     <CardHeader>
                         <CardTitle class="flex items-center gap-2">
-                            <Calendar class="h-5 w-5" />
+                            <Icon name="Calendar" class="h-5 w-5" />
                             {{ booking.service.title }}
                         </CardTitle>
                         <CardDescription> {{ t('app.booking') }} #{{ booking.id }} </CardDescription>
@@ -62,7 +63,7 @@
                             <Label class="text-sm font-medium text-muted-foreground">{{ t('app.provider') }}</Label>
                             <div class="flex items-center gap-3">
                                 <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                                    <User class="h-5 w-5 text-primary" />
+                                    <Icon name="User" class="h-5 w-5 text-primary" />
                                 </div>
                                 <div>
                                     <p class="font-semibold">{{ booking.provider.business_name }}</p>
@@ -92,15 +93,15 @@
                 <!-- Actions -->
                 <div v-if="canCancelBooking" class="flex justify-end">
                     <Button variant="destructive" @click="showCancelDialog = true" class="flex items-center gap-2">
-                        <X class="h-4 w-4" />
+                        <Icon name="X" class="h-4 w-4" />
             {{ t('app.cancel_booking') }}
                     </Button>
                 </div>
             </div>
         </div>
-    </div>
-
     <!-- Cancel Confirmation Dialog -->
+    </AppLayoutWithNavigation>
+
     <AlertDialog :open="showCancelDialog" @update:open="showCancelDialog = $event">
         <AlertDialogContent>
             <AlertDialogHeader>
@@ -136,7 +137,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { useTranslations } from '@/composables/useTranslations';
 import { Head, router } from '@inertiajs/vue3';
-import { ArrowLeft, Calendar, User, X } from 'lucide-vue-next';
+import AppLayoutWithNavigation from '@/layouts/AppLayoutWithNavigation.vue';
+import Icon from '@/components/Icon.vue';
 import { computed, ref } from 'vue';
 
 interface Booking {

@@ -8,15 +8,7 @@ import { computed } from 'vue';
 import { Card, CardContent } from '@/components/ui/card';
 
 // Icons
-import { 
-    Building2, 
-    Calendar, 
-    Clock, 
-    DollarSign, 
-    Package, 
-    Settings, 
-    TrendingUp
-} from 'lucide-vue-next';
+import Icon from '@/components/Icon.vue';
 
 const { t } = useTranslations();
 
@@ -70,7 +62,7 @@ const quickActions = computed(() => {
             title: t('app.create_business_profile'),
             description: t('app.setup_your_business_details'),
             href: '/provider/create',
-            icon: Building2,
+            icon: 'Building2',
             variant: 'default' as const,
             urgent: true
         });
@@ -80,7 +72,7 @@ const quickActions = computed(() => {
                 title: t('app.add_first_service'),
                 description: t('app.create_services_to_offer'),
                 href: '/services/create',
-                icon: Package,
+                icon: 'Package',
                 variant: 'default' as const,
                 urgent: true
             });
@@ -89,7 +81,7 @@ const quickActions = computed(() => {
                 title: t('app.add_new_service'),
                 description: t('app.expand_your_offerings'),
                 href: '/services/create',
-                icon: Package,
+                icon: 'Package',
                 variant: 'outline' as const,
                 urgent: false
             });
@@ -99,7 +91,7 @@ const quickActions = computed(() => {
             title: t('app.view_schedule'),
             description: t('app.manage_working_hours'),
             href: '/schedules',
-            icon: Clock,
+            icon: 'Clock',
             variant: 'outline' as const,
             urgent: false
         });
@@ -108,7 +100,7 @@ const quickActions = computed(() => {
             title: t('app.today_bookings'),
             description: t('app.check_todays_appointments'),
             href: '/provider/dashboard',
-            icon: Calendar,
+            icon: 'Calendar',
             variant: 'outline' as const,
             urgent: false
         });
@@ -135,7 +127,7 @@ const quickActions = computed(() => {
                         </p>
                     </div>
                     <Link :href="'/settings/profile'" class="rounded-full bg-tg-accent/10 p-2">
-                        <Settings class="h-5 w-5 text-tg-accent" />
+                        <Icon name="Settings" class="h-5 w-5 text-tg-accent" />
                     </Link>
                 </div>
             </div>
@@ -144,7 +136,7 @@ const quickActions = computed(() => {
             <div v-if="hasProvider" class="grid grid-cols-3 gap-3 p-4">
                 <Card class="border-tg-section-separator bg-tg-section-bg">
                     <CardContent class="p-4 text-center">
-                        <Calendar class="mx-auto mb-2 h-8 w-8 text-tg-accent" />
+                        <Icon name="Calendar" class="mx-auto mb-2 h-8 w-8 text-tg-accent" />
                         <div class="text-xl font-bold text-tg-text">{{ todaysBookings }}</div>
                         <div class="text-xs text-tg-hint">{{ t('app.today') }}</div>
                     </CardContent>
@@ -152,7 +144,7 @@ const quickActions = computed(() => {
                 
                 <Card class="border-tg-section-separator bg-tg-section-bg">
                     <CardContent class="p-4 text-center">
-                        <TrendingUp class="mx-auto mb-2 h-8 w-8 text-tg-accent" />
+                        <Icon name="TrendingUp" class="mx-auto mb-2 h-8 w-8 text-tg-accent" />
                         <div class="text-xl font-bold text-tg-text">{{ weeklyBookings }}</div>
                         <div class="text-xs text-tg-hint">{{ t('app.this_week') }}</div>
                     </CardContent>
@@ -160,7 +152,7 @@ const quickActions = computed(() => {
                 
                 <Card class="border-tg-section-separator bg-tg-section-bg">
                     <CardContent class="p-4 text-center">
-                        <DollarSign class="mx-auto mb-2 h-8 w-8 text-tg-accent" />
+                        <Icon name="DollarSign" class="mx-auto mb-2 h-8 w-8 text-tg-accent" />
                         <div class="text-xl font-bold text-tg-text">{{ monthlyRevenue }}</div>
                         <div class="text-xs text-tg-hint">{{ t('app.this_month') }}</div>
                     </CardContent>
@@ -193,7 +185,7 @@ const quickActions = computed(() => {
                                         class="flex h-12 w-12 items-center justify-center rounded-xl"
                                         :class="action.urgent ? 'bg-tg-accent/10' : 'bg-tg-accent/10'"
                                     >
-                                        <component :is="action.icon" class="h-6 w-6 text-tg-accent" />
+                                        <Icon :name="action.icon" class="h-6 w-6 text-tg-accent" />
                                     </div>
                                     <div class="flex-1 text-left">
                                         <h3 class="font-semibold text-tg-text">{{ action.title }}</h3>
@@ -269,7 +261,7 @@ const quickActions = computed(() => {
                     </div>
                     
                     <div v-else class="rounded-lg border border-dashed border-tg-section-separator p-6 text-center">
-                        <Package class="mx-auto mb-2 h-8 w-8 text-tg-hint" />
+                        <Icon name="Package" class="mx-auto mb-2 h-8 w-8 text-tg-hint" />
                         <p class="text-sm text-tg-hint">{{ t('app.no_services_yet') }}</p>
                     </div>
                 </div>

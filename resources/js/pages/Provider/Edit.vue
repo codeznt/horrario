@@ -3,9 +3,9 @@ import { Input, Label, Textarea } from '@/components/ui';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslations } from '@/composables/useTranslations';
-import TelegramAppLayout from '@/layouts/TelegramAppLayout.vue';
+import AppLayoutWithNavigation from '@/layouts/AppLayoutWithNavigation.vue';
 import { Head, useForm } from '@inertiajs/vue3';
-import { Building2, FileText, MapPin, Phone, Save, Upload, User } from 'lucide-vue-next';
+import Icon from '@/components/Icon.vue';
 import { computed, ref } from 'vue';
 
 const { t } = useTranslations();
@@ -79,12 +79,12 @@ const submit = () => {
 <template>
     <Head :title="t('edit_provider')" />
 
-    <TelegramAppLayout>
+    <AppLayoutWithNavigation>
         <div class="container mx-auto max-w-2xl px-4 py-6">
             <Card>
                 <CardHeader>
                     <CardTitle class="flex items-center gap-2">
-                        <Building2 class="h-5 w-5" />
+                        <Icon name="Building2" class="h-5 w-5" />
                         {{ t('edit_provider') }}
                     </CardTitle>
                     <CardDescription>
@@ -97,7 +97,7 @@ const submit = () => {
                         <!-- Business Name -->
                         <div class="space-y-2">
                             <Label for="business_name" class="flex items-center gap-2">
-                                <Building2 class="h-4 w-4" />
+                                <Icon name="Building2" class="h-4 w-4" />
                                 {{ t('business_name') }} *
                             </Label>
                             <Input
@@ -116,15 +116,15 @@ const submit = () => {
                         <!-- Address -->
                         <div class="space-y-2">
                             <Label for="address" class="flex items-center gap-2">
-                                <MapPin class="h-4 w-4" />
+                                <Icon name="MapPin" class="h-4 w-4" />
                                 {{ t('address') }}
                             </Label>
                             <Textarea
                                 id="address"
                                 v-model="form.address"
-                                :placeholder="t('enter_business_address')"
-                                :rows="2"
-                                :class="{ 'border-red-500': form.errors.address }"
+                                :class="form.errors.address ? 'border-red-500' : ''"
+                                :placeholder="t('business_address_placeholder')"
+                                :rows="3"
                             />
                             <p v-if="form.errors.address" class="text-sm text-red-600">
                                 {{ form.errors.address }}
@@ -134,7 +134,7 @@ const submit = () => {
                         <!-- Contact Phone -->
                         <div class="space-y-2">
                             <Label for="contact_phone" class="flex items-center gap-2">
-                                <Phone class="h-4 w-4" />
+                                <Icon name="Phone" class="h-4 w-4" />
                                 {{ t('contact_phone') }}
                             </Label>
                             <Input
@@ -152,15 +152,15 @@ const submit = () => {
                         <!-- Description -->
                         <div class="space-y-2">
                             <Label for="description" class="flex items-center gap-2">
-                                <FileText class="h-4 w-4" />
+                                <Icon name="FileText" class="h-4 w-4" />
                                 {{ t('description') }}
                             </Label>
                             <Textarea
                                 id="description"
                                 v-model="form.description"
-                                :placeholder="t('describe_business')"
+                                :class="form.errors.description ? 'border-red-500' : ''"
+                                :placeholder="t('business_description_placeholder')"
                                 :rows="4"
-                                :class="{ 'border-red-500': form.errors.description }"
                             />
                             <p v-if="form.errors.description" class="text-sm text-red-600">
                                 {{ form.errors.description }}
@@ -170,7 +170,7 @@ const submit = () => {
                         <!-- Profile Image -->
                         <div class="space-y-2">
                             <Label class="flex items-center gap-2">
-                                <User class="h-4 w-4" />
+                                <Icon name="User" class="h-4 w-4" />
                                 {{ t('profile_image') }}
                             </Label>
 
@@ -195,7 +195,7 @@ const submit = () => {
                             </div>
 
                             <div v-else class="rounded-lg border-2 border-dashed border-gray-300 p-6 text-center">
-                                <Upload class="mx-auto mb-2 h-8 w-8 text-gray-400" />
+                                <Icon name="Upload" class="mx-auto mb-2 h-8 w-8 text-gray-400" />
                                 <p class="mb-2 text-sm text-gray-600">{{ t('upload_profile_image') }}</p>
                                 <Button type="button" variant="outline" size="sm" @click="fileInput?.click()">
                                     {{ t('choose_file') }}
@@ -212,7 +212,7 @@ const submit = () => {
                         <!-- Submit Button -->
                         <div class="flex gap-3 pt-4">
                             <Button type="submit" class="flex-1" :disabled="form.processing">
-                                <Save class="mr-2 h-4 w-4" />
+                                <Icon name="Save" class="mr-2 h-4 w-4" />
                                 {{ form.processing ? t('saving') : t('save_changes') }}
                             </Button>
                         </div>
@@ -220,5 +220,5 @@ const submit = () => {
                 </CardContent>
             </Card>
         </div>
-    </TelegramAppLayout>
+    </AppLayoutWithNavigation>
 </template>

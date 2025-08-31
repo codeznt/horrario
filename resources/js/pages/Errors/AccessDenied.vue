@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3'
-import TelegramAppLayout from '@/layouts/TelegramAppLayout.vue'
+import AppLayoutWithNavigation from '@/layouts/AppLayoutWithNavigation.vue'
 
 defineProps<{
   message: string
@@ -11,10 +11,10 @@ defineProps<{
 </script>
 
 <template>
-  <TelegramAppLayout>
+  <AppLayoutWithNavigation>
     <Head title="Access Denied" />
     
-    <div class="min-h-screen flex items-center justify-center bg-tg-bg">
+    <div class="flex items-center justify-center py-8">
       <div class="max-w-md w-full space-y-8 px-6">
         <div class="text-center">
           <!-- Error Icon -->
@@ -50,5 +50,5 @@ defineProps<{
         </div>
       </div>
     </div>
-  </TelegramAppLayout>
+  </AppLayoutWithNavigation>
 </template>

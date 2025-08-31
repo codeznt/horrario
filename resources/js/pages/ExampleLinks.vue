@@ -1,7 +1,7 @@
 <template>
     <Head :title="t('app.page_links')" />
 
-    <MobileAppLayout :title="t('app.page_links')" :subtitle="t('app.review_all_pages')">
+    <AppLayoutWithNavigation :title="t('app.page_links')" :subtitle="t('app.review_all_pages')">
         <div class="space-y-6">
             <!-- Main Routes -->
             <div class="space-y-3">
@@ -137,14 +137,14 @@
                 </p>
             </div>
         </div>
-    </MobileAppLayout>
+    </AppLayoutWithNavigation>
 </template>
 
 <script setup lang="ts">
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui';
 import { useTranslations } from '@/composables/useTranslations';
-import MobileAppLayout from '@/layouts/MobileAppLayout.vue';
+import AppLayoutWithNavigation from '@/layouts/AppLayoutWithNavigation.vue';
 import { Head, router } from '@inertiajs/vue3';
 
 const { t } = useTranslations();

@@ -10,14 +10,14 @@
                     <p class="mt-2 text-muted-foreground">{{ t('app.manage_services') }}</p>
                 </div>
                 <Button @click="router.visit('/services/create')" class="flex items-center gap-2">
-                    <Plus class="h-4 w-4" />
+                    <Icon name="Plus" class="h-4 w-4" />
                     {{ t('app.add_service') }}
                 </Button>
             </div>
 
             <div v-if="services.length === 0" class="py-12 text-center">
                 <div class="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-muted">
-                    <Package class="h-12 w-12 text-muted-foreground" />
+                    <Icon name="Package" class="h-12 w-12 text-muted-foreground" />
                 </div>
                 <h3 class="mb-2 text-lg font-semibold text-foreground">{{ t('app.no_services') }}</h3>
                 <p class="mb-4 text-muted-foreground">{{ t('app.create_first_service') }}</p>
@@ -39,16 +39,16 @@
                             <DropdownMenu>
                                 <DropdownMenuTrigger as-child>
                                     <Button variant="ghost" size="sm">
-                                        <MoreVertical class="h-4 w-4" />
+                                        <Icon name="MoreVertical" class="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                     <DropdownMenuItem @click="editService(service.id)">
-                                        <Edit class="mr-2 h-4 w-4" />
+                                        <Icon name="Edit" class="mr-2 h-4 w-4" />
                                         {{ t('edit') }}
                                     </DropdownMenuItem>
                                     <DropdownMenuItem @click="deleteService(service)" class="text-destructive">
-                                        <Trash2 class="mr-2 h-4 w-4" />
+                                        <Icon name="Trash2" class="mr-2 h-4 w-4" />
                                         {{ t('delete') }}
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -58,11 +58,11 @@
                     <CardContent>
                         <div class="space-y-2">
                             <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Clock class="h-4 w-4" />
+                                <Icon name="Clock" class="h-4 w-4" />
                                 {{ service.duration_minutes }} {{ t('minutes') }}
                             </div>
                             <div class="flex items-center gap-2 text-sm font-semibold text-foreground">
-                                <DollarSign class="h-4 w-4" />
+                                <Icon name="DollarSign" class="h-4 w-4" />
                                 {{ service.display_price }}
                             </div>
                         </div>
@@ -79,7 +79,7 @@
             <AlertDialogHeader>
                 <AlertDialogTitle>{{ t('app.delete_service') }}</AlertDialogTitle>
                 <AlertDialogDescription>
-                    {{ t('app.delete_service_confirmation', { name: serviceToDelete?.title }) }}
+                    {{ t('app.delete_service_confirmation', { name: serviceToDelete?.title || '' }) }}
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -109,7 +109,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useTranslations } from '@/composables/useTranslations';
 import AppLayoutWithNavigation from '@/layouts/AppLayoutWithNavigation.vue';
 import { Head, router } from '@inertiajs/vue3';
-import { Clock, DollarSign, Edit, MoreVertical, Package, Plus, Trash2 } from 'lucide-vue-next';
+import Icon from '@/components/Icon.vue';
 import { ref } from 'vue';
 
 const { t } = useTranslations();

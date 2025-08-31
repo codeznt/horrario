@@ -10,12 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
 // Icons
-import { 
-    Search, 
-    Clock, 
-    Star,
-    ArrowLeft
-} from 'lucide-vue-next';
+import Icon from '@/components/Icon.vue';
 
 const { t } = useTranslations();
 
@@ -80,7 +75,7 @@ const hasFilters = computed(() => props.filters?.search || props.filters?.catego
             <div class="border-b border-tg-section-separator bg-tg-secondary-bg px-4 py-4">
                 <div class="flex items-center gap-3 mb-4">
                     <Link :href="'/customer/dashboard'" class="rounded-full bg-tg-accent/10 p-2">
-                        <ArrowLeft class="h-5 w-5 text-tg-accent" />
+                        <Icon name="ArrowLeft" class="h-5 w-5 text-tg-accent" />
                     </Link>
                     <div class="flex-1">
                         <h1 class="text-xl font-bold text-tg-text">
@@ -101,10 +96,10 @@ const hasFilters = computed(() => props.filters?.search || props.filters?.catego
                             class="pl-10 bg-tg-section-bg border-tg-section-separator text-tg-text"
                             @keydown.enter="performSearch"
                         />
-                        <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-tg-hint" />
+                        <Icon name="Search" class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-tg-hint" />
                     </div>
                     <Button @click="performSearch" class="bg-tg-accent text-white hover:bg-tg-accent/90">
-                        <Search class="h-4 w-4" />
+                        <Icon name="Search" class="h-4 w-4" />
                     </Button>
                 </div>
 
@@ -124,7 +119,7 @@ const hasFilters = computed(() => props.filters?.search || props.filters?.catego
             <div class="flex-1 p-4">
                 <div v-if="!hasServices && hasFilters" class="py-12 text-center">
                     <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-tg-section-bg">
-                        <Search class="h-8 w-8 text-tg-hint" />
+                        <Icon name="Search" class="h-8 w-8 text-tg-hint" />
                     </div>
                     <h3 class="mb-2 text-lg font-semibold text-tg-text">{{ t('app.no_results_found') }}</h3>
                     <p class="mb-4 text-sm text-tg-hint">{{ t('app.try_different_search') }}</p>
@@ -135,7 +130,7 @@ const hasFilters = computed(() => props.filters?.search || props.filters?.catego
 
                 <div v-else-if="!hasServices" class="py-12 text-center">
                     <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-tg-section-bg">
-                        <Star class="h-8 w-8 text-tg-hint" />
+                        <Icon name="Star" class="h-8 w-8 text-tg-hint" />
                     </div>
                     <h3 class="mb-2 text-lg font-semibold text-tg-text">{{ t('app.no_services_available') }}</h3>
                     <p class="text-sm text-tg-hint">{{ t('app.check_back_later') }}</p>
@@ -178,7 +173,7 @@ const hasFilters = computed(() => props.filters?.search || props.filters?.catego
                                     
                                     <div class="flex items-center gap-4 text-xs text-tg-hint">
                                         <div class="flex items-center gap-1">
-                                            <Clock class="h-3 w-3" />
+                                            <Icon name="Clock" class="h-3 w-3" />
                                             <span>{{ service.duration_minutes }} {{ t('app.minutes') }}</span>
                                         </div>
                                     </div>
@@ -196,43 +191,20 @@ const hasFilters = computed(() => props.filters?.search || props.filters?.catego
                                 :variant="link.active ? 'default' : 'outline'"
                                 size="sm"
                                 class="min-w-[40px]"
-                                v-html="link.label"
-                            />
+                            >
+                                {{ link.label }}
+                            </Button>
                             <Button
                                 v-else
                                 variant="ghost"
                                 size="sm"
                                 disabled
                                 class="min-w-[40px]"
-                                v-html="link.label"
-                            />
+                            >
+                                {{ link.label }}
+                            </Button>
                         </template>
                     </div>
-                </div>
-            </div>
-
-            <!-- Bottom Navigation -->
-            <div class="border-t border-tg-section-separator bg-tg-secondary-bg p-4">
-                <div class="grid grid-cols-4 gap-2">
-                    <Link :href="'/customer/dashboard'" class="flex flex-col items-center gap-1 rounded-lg p-3 transition-colors hover:bg-tg-section-bg">
-                        <ArrowLeft class="h-5 w-5 text-tg-hint" />
-                        <span class="text-xs text-tg-hint">{{ t('app.back') }}</span>
-                    </Link>
-                    
-                    <Link :href="'/browse/services'" class="flex flex-col items-center gap-1 rounded-lg p-3 bg-tg-accent/10">
-                        <Search class="h-5 w-5 text-tg-accent" />
-                        <span class="text-xs font-medium text-tg-accent">{{ t('app.services') }}</span>
-                    </Link>
-                    
-                    <Link :href="'/bookings'" class="flex flex-col items-center gap-1 rounded-lg p-3 transition-colors hover:bg-tg-section-bg">
-                        <Clock class="h-5 w-5 text-tg-hint" />
-                        <span class="text-xs text-tg-hint">{{ t('app.bookings') }}</span>
-                    </Link>
-                    
-                    <Link :href="'/favorites'" class="flex flex-col items-center gap-1 rounded-lg p-3 transition-colors hover:bg-tg-section-bg">
-                        <Star class="h-5 w-5 text-tg-hint" />
-                        <span class="text-xs text-tg-hint">{{ t('app.favorites') }}</span>
-                    </Link>
                 </div>
             </div>
         </div>
@@ -243,6 +215,7 @@ const hasFilters = computed(() => props.filters?.search || props.filters?.catego
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }

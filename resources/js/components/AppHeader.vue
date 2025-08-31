@@ -9,12 +9,12 @@ import { NavigationMenu, NavigationMenuItem, NavigationMenuList, navigationMenuT
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import UserMenuContent from '@/components/UserMenuContent.vue';
+import Icon from '@/components/Icon.vue';
 import { getInitials } from '@/composables/useInitials';
 import { useTranslations } from '@/composables/useTranslations';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem, NavItem } from '@/types';
 import { InertiaLinkProps, Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 interface Props {
@@ -40,7 +40,7 @@ const mainNavItems: NavItem[] = [
     {
         title: t('app.dashboard'),
         href: dashboard(),
-        icon: LayoutGrid,
+        icon: 'LayoutGrid',
     },
 ];
 
@@ -48,12 +48,12 @@ const rightNavItems: NavItem[] = [
     {
         title: t('app.repository'),
         href: 'https://github.com/laravel/vue-starter-kit',
-        icon: Folder,
+        icon: 'Folder',
     },
     {
         title: t('app.documentation'),
         href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
+        icon: 'BookOpen',
     },
 ];
 </script>
@@ -67,7 +67,7 @@ const rightNavItems: NavItem[] = [
                     <Sheet>
                         <SheetTrigger :as-child="true">
                             <Button variant="ghost" size="icon" class="mr-2 h-9 w-9">
-                                <Menu class="h-5 w-5" />
+                                <Icon name="Menu" class="h-5 w-5" />
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="left" class="w-[300px] p-6">
@@ -84,7 +84,7 @@ const rightNavItems: NavItem[] = [
                                         class="flex items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent"
                                         :class="activeItemStyles(item.href)"
                                     >
-                                        <component v-if="item.icon" :is="item.icon" class="h-5 w-5" />
+                                        <Icon v-if="item.icon" :name="item.icon" class="h-5 w-5" />
                                         {{ item.title }}
                                     </Link>
                                 </nav>
@@ -97,7 +97,7 @@ const rightNavItems: NavItem[] = [
                                         rel="noopener noreferrer"
                                         class="flex items-center space-x-2 text-sm font-medium"
                                     >
-                                        <component v-if="item.icon" :is="item.icon" class="h-5 w-5" />
+                                        <Icon v-if="item.icon" :name="item.icon" class="h-5 w-5" />
                                         <span>{{ item.title }}</span>
                                     </a>
                                 </div>
@@ -119,7 +119,7 @@ const rightNavItems: NavItem[] = [
                                     :class="[navigationMenuTriggerStyle(), activeItemStyles(item.href), 'h-9 cursor-pointer px-3']"
                                     :href="item.href"
                                 >
-                                    <component v-if="item.icon" :is="item.icon" class="mr-2 h-4 w-4" />
+                                    <Icon v-if="item.icon" :name="item.icon" class="mr-2 h-4 w-4" />
                                     {{ item.title }}
                                 </Link>
                                 <div
@@ -134,7 +134,7 @@ const rightNavItems: NavItem[] = [
                 <div class="ml-auto flex items-center space-x-2">
                     <div class="relative flex items-center space-x-1">
                         <Button variant="ghost" size="icon" class="group h-9 w-9 cursor-pointer">
-                            <Search class="size-5 opacity-80 group-hover:opacity-100" />
+                            <Icon name="Search" class="size-5 opacity-80 group-hover:opacity-100" />
                         </Button>
 
                         <div class="hidden space-x-1 lg:flex">
@@ -149,7 +149,7 @@ const rightNavItems: NavItem[] = [
                                                     rel="noopener noreferrer"
                                                 >
                                                     <span class="sr-only">{{ item.title }}</span>
-                                                    <component :is="item.icon" class="size-5 opacity-80 group-hover:opacity-100" />
+                                                    <Icon :name="item.icon" class="size-5 opacity-80 group-hover:opacity-100" />
                                                 </a>
                                             </Button>
                                         </TooltipTrigger>

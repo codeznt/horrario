@@ -1,12 +1,13 @@
 <template>
     <Head :title="t('create_service')" />
 
-    <div class="min-h-screen bg-background">
+    <AppLayoutWithNavigation :title="t('create_new_service')" :subtitle="t('add_service')">
+
         <div class="container mx-auto px-4 py-8">
             <div class="mx-auto max-w-2xl">
                 <div class="mb-8">
                     <Button variant="ghost" @click="router.visit('/services')" class="mb-4">
-                        <ArrowLeft class="mr-2 h-4 w-4" />
+                        <Icon name="ArrowLeft" class="mr-2 h-4 w-4" />
                         {{ t('back_to_services') }}
                     </Button>
                     <h1 class="text-3xl font-bold text-foreground">{{ t('create_new_service') }}</h1>
@@ -78,7 +79,7 @@
 
                             <div class="flex gap-4 pt-4">
                                 <Button type="submit" :disabled="processing" class="flex-1">
-                                    <Loader2 v-if="processing" class="mr-2 h-4 w-4 animate-spin" />
+                                    <Icon v-if="processing" name="Loader2" class="mr-2 h-4 w-4 animate-spin" />
                                     {{ t('create_service') }}
                                 </Button>
                                 <Button type="button" variant="outline" @click="router.visit('/services')">
@@ -90,7 +91,7 @@
                 </Card>
             </div>
         </div>
-    </div>
+    </AppLayoutWithNavigation>
 </template>
 
 <script setup lang="ts">
@@ -101,7 +102,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslations } from '@/composables/useTranslations';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ArrowLeft, Loader2 } from 'lucide-vue-next';
+import AppLayoutWithNavigation from '@/layouts/AppLayoutWithNavigation.vue';
+import Icon from '@/components/Icon.vue';
 import { ref } from 'vue';
 
 const { t } = useTranslations();

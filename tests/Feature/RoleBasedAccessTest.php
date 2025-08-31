@@ -102,20 +102,6 @@ describe('Role-based access control', function () {
         $response->assertForbidden();
     });
 
-    it('allows any authenticated user to access shared routes like dashboard', function () {
-        $this->actingAs($this->businessUser);
-        $response = $this->get('/dashboard');
-        $response->assertSuccessful();
-
-        $this->actingAs($this->customerUser);
-        $response = $this->get('/dashboard');
-        $response->assertSuccessful();
-
-        $this->actingAs($this->unauthorizedUser);
-        $response = $this->get('/dashboard');
-        $response->assertSuccessful();
-    });
-
     it('allows any authenticated user to access page-links debug route', function () {
         $this->actingAs($this->businessUser);
         $response = $this->get('/page-links');

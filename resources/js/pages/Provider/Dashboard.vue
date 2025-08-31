@@ -1,7 +1,7 @@
 <template>
     <Head :title="t('app.provider_dashboard')" />
 
-    <MobileAppLayout :title="t('app.todays_bookings')" :subtitle="formatDate(date)">
+    <AppLayoutWithNavigation :title="t('app.todays_bookings')" :subtitle="formatDate(date)">
         <template #header-actions>
             <Button @click="router.visit('/provider/bookings')" size="sm" variant="outline">
                 <Icon name="Calendar" class="mr-1 h-4 w-4" />
@@ -60,7 +60,7 @@
             @confirm="handleDecline"
             @cancel="showDeclineDialog = false"
         />
-    </MobileAppLayout>
+    </AppLayoutWithNavigation>
 </template>
 
 <script setup lang="ts">
@@ -69,7 +69,7 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import Icon from '@/components/Icon.vue';
 import { Button, Card, CardContent } from '@/components/ui';
 import { useTranslations } from '@/composables/useTranslations';
-import MobileAppLayout from '@/layouts/MobileAppLayout.vue';
+import AppLayoutWithNavigation from '@/layouts/AppLayoutWithNavigation.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 

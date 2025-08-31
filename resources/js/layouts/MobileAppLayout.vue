@@ -70,7 +70,7 @@ import NavLink from '@/components/NavLink.vue';
 import { Alert, AlertDescription, AlertTitle, Button } from '@/components/ui';
 import TelegramAppLayout from '@/layouts/TelegramAppLayout.vue';
 import { index as bookingsIndex } from '@/routes/bookings';
-import { edit as profileShow } from '@/routes/profile';
+import { dashboard as profileShow } from '@/routes';
 import { create as providerDashboard } from '@/routes/provider';
 import { index as servicesIndex } from '@/routes/services';
 import { router, usePage } from '@inertiajs/vue3';
