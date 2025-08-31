@@ -12,7 +12,7 @@
                     <Icon name="Clock" class="mr-1 h-4 w-4" />
                     {{ t('app.upcoming_bookings') }}
                 </Button>
-                <Button @click="router.visit('/services')" size="sm">
+                <Button @click="router.visit('/browse/services')" size="sm">
                     <Icon name="Plus" class="mr-1 h-4 w-4" />
                     {{ t('app.book_service') }}
                 </Button>
@@ -27,7 +27,7 @@
             <p class="mb-6 px-4 text-tg-subtitle-text">
                 {{ t('app.no_past_bookings_description') }}
             </p>
-            <Button @click="router.visit('/services')" class="mx-auto">
+            <Button @click="router.visit('/browse/services')" class="mx-auto">
                 <Icon name="Search" class="mr-2 h-4 w-4" />
                 {{ t('app.browse_services') }}
             </Button>

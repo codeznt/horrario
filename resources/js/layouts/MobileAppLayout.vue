@@ -39,7 +39,7 @@
         <!-- Bottom Navigation -->
         <nav v-if="showNavigation" class="app-navigation border-t border-tg-section-separator bg-tg-secondary-bg">
             <div class="flex items-center justify-around py-2">
-                <NavLink :href="servicesIndex.url()" :active="isCurrentRoute('/services')" icon="Search" label="Services" />
+                <NavLink :href="servicesRoute" :active="isServicesRoute" icon="Search" label="Services" />
 
                 <NavLink :href="bookingsIndex.url()" :active="isCurrentRoute('/bookings')" icon="Calendar" label="Bookings" />
 
@@ -73,7 +73,8 @@ import { index as bookingsIndex } from '@/routes/bookings';
 import { edit as profileShow } from '@/routes/profile';
 import { create as providerDashboard } from '@/routes/provider';
 import { index as servicesIndex } from '@/routes/services';
-import { router } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 interface Props {
     title: string;
@@ -95,6 +96,7 @@ interface AppPageProps {
             id: number;
             name: string;
             email: string;
+            role?: string;
         };
     };
 }
@@ -108,6 +110,25 @@ declare module '@inertiajs/core' {
 withDefaults(defineProps<Props>(), {
     showBackButton: false,
     showNavigation: true,
+});
+
+const page = usePage();
+
+// Determine services route based on user role
+const servicesRoute = computed(() => {
+    const user = page.props.auth?.user;
+    if (user?.role === 'customer') {
+        return '/browse/services';
+    } else {
+        // For business users or fallback, use business services route
+        return servicesIndex.url();
+    }
+});
+
+// Determine if current route matches services (checking both possibilities)
+const isServicesRoute = computed(() => {
+    const currentPath = page.url;
+    return currentPath.startsWith('/services') || currentPath.startsWith('/browse/services');
 });
 
 function goBack() {

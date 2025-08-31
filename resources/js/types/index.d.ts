@@ -22,12 +22,13 @@ export type AppPageProps<T extends Record<string, unknown> = Record<string, unkn
     quote: { message: string; author: string };
     auth: Auth;
     sidebarOpen: boolean;
-};
+}
 
 export interface User {
     id: number;
     name: string;
     email: string;
+    role?: 'business' | 'customer' | 'user' | null;
     avatar?: string;
     email_verified_at: string | null;
     created_at: string;

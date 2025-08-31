@@ -1,19 +1,30 @@
 <script setup lang="ts">
 import { useTranslations } from '@/composables/useTranslations';
+import { Head, router, usePage } from '@inertiajs/vue3';
+import { onMounted } from 'vue';
+import type { AppPageProps, User, BreadcrumbItemType } from '@/types';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
-import PlaceholderPattern from '../components/PlaceholderPattern.vue';
+import PlaceholderPattern from '@/components/PlaceholderPattern.vue';
 
 const { t } = useTranslations();
+const page = usePage<AppPageProps>();
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: t('app.dashboard'),
-        href: dashboard().url,
-    },
+const user = page.props.auth?.user;
+
+// Define breadcrumbs for the dashboard
+const breadcrumbs: BreadcrumbItemType[] = [
+    { title: t('app.dashboard'), href: '/dashboard' }
 ];
+
+onMounted(() => {
+    // Route users to their role-specific dashboards
+    if (user?.role === 'business') {
+        router.visit('/business/dashboard', { replace: true });
+    } else if (user?.role === 'customer') {
+        router.visit('/customer/dashboard', { replace: true });
+    }
+    // Users without specific roles or with 'user' role stay on general dashboard
+});
 </script>
 
 <template>

@@ -71,6 +71,15 @@ Route::middleware(['telegram.auth'])->group(function () {
         return Inertia::render('Dashboard');
     })->middleware(['auth', 'verified'])->name('dashboard');
 
+    // Role-specific dashboard routes
+    Route::get('/business/dashboard', [App\Http\Controllers\BusinessDashboardController::class, 'index'])
+        ->middleware(['auth', 'verified', 'role:business'])
+        ->name('business.dashboard');
+    
+    Route::get('/customer/dashboard', [App\Http\Controllers\CustomerDashboardController::class, 'index'])
+        ->middleware(['auth', 'verified', 'role:customer'])
+        ->name('customer.dashboard');
+
     // Provider routes - business role required
     Route::prefix('provider')->name('provider.')->middleware('role:business')->group(function () {
         Route::get('/create', [App\Http\Controllers\ProviderController::class, 'create'])->name('create');
@@ -106,8 +115,16 @@ Route::middleware(['telegram.auth'])->group(function () {
         Route::get('/', [App\Http\Controllers\BookingController::class, 'index'])->name('index');
         Route::get('/upcoming', [App\Http\Controllers\BookingController::class, 'upcoming'])->name('upcoming');
         Route::get('/past', [App\Http\Controllers\BookingController::class, 'past'])->name('past');
+        Route::get('/history', [App\Http\Controllers\BookingController::class, 'history'])->name('history');
         Route::get('/{booking}', [App\Http\Controllers\BookingController::class, 'show'])->name('show');
         Route::post('/{booking}/cancel', [App\Http\Controllers\BookingController::class, 'cancel'])->name('cancel');
+    });
+
+    // Customer favorites routes - customer role required
+    Route::middleware('role:customer')->group(function () {
+        Route::get('/favorites', [App\Http\Controllers\FavoriteController::class, 'index'])->name('favorites.index');
+        Route::post('/favorites', [App\Http\Controllers\FavoriteController::class, 'store'])->name('favorites.store');
+        Route::delete('/favorites/{provider}', [App\Http\Controllers\FavoriteController::class, 'destroy'])->name('favorites.destroy');
     });
 
     // Provider booking management routes - business role required (providers confirm/decline bookings)
@@ -121,6 +138,13 @@ Route::middleware(['telegram.auth'])->group(function () {
     Route::middleware('role:customer')->group(function () {
         Route::get('/services/{service}/book', [App\Http\Controllers\BookingController::class, 'create'])->name('bookings.create');
         Route::post('/bookings', [App\Http\Controllers\BookingController::class, 'store'])->name('bookings.store');
+    });
+
+    // Customer service browsing routes - customer role required  
+    // Note: Using /browse/services to avoid conflict with business /services management
+    Route::middleware('role:customer')->group(function () {
+        Route::get('/browse/services', [App\Http\Controllers\CustomerServiceController::class, 'index'])->name('customer.services.index');
+        Route::get('/browse/services/{service}', [App\Http\Controllers\CustomerServiceController::class, 'show'])->name('customer.services.show');
     });
 
     // Search routes - customer role required (consumers search for services)

@@ -330,4 +330,40 @@ class BookingController extends Controller
 
         return redirect()->back()->with('success', 'Booking declined successfully!');
     }
+
+    /**
+     * Display booking history (past bookings) for customer.
+     */
+    public function history()
+    {
+        $bookings = auth()->user()->bookings()
+            ->with(['service.provider'])
+            ->where('start_datetime', '<', now())
+            ->orderBy('start_datetime', 'desc')
+            ->paginate(10)
+            ->through(function ($booking) {
+                return [
+                    'id' => $booking->id,
+                    'status' => $booking->status,
+                    'start_datetime' => $booking->start_datetime->format('M j, Y g:i A'),
+                    'end_datetime' => $booking->end_datetime->format('g:i A'),
+                    'notes' => $booking->notes,
+                    'service' => [
+                        'id' => $booking->service->id,
+                        'title' => $booking->service->title,
+                        'display_price' => $booking->service->display_price,
+                        'duration_minutes' => $booking->service->duration_minutes,
+                    ],
+                    'provider' => [
+                        'id' => $booking->service->provider->id,
+                        'business_name' => $booking->service->provider->business_name,
+                        'address' => $booking->service->provider->address,
+                    ],
+                ];
+            });
+
+        return Inertia::render('Customer/Bookings/History', [
+            'bookings' => $bookings,
+        ]);
+    }
 }
