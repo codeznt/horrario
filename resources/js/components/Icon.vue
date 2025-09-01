@@ -129,14 +129,18 @@ const icon = computed(() => {
   
   return IconComponent;
 });
+
+// Convert size and strokeWidth to numbers for the Lucide components
+const sizeAsNumber = computed(() => typeof props.size === 'string' ? parseInt(props.size, 10) : props.size);
+const strokeWidthAsNumber = computed(() => typeof props.strokeWidth === 'string' ? parseInt(props.strokeWidth, 10) : props.strokeWidth);
 </script>
 
 <template>
     <component 
       :is="icon" 
       :class="className" 
-      :size="size" 
-      :stroke-width="strokeWidth" 
+      :size="sizeAsNumber" 
+      :stroke-width="strokeWidthAsNumber" 
       :color="color" 
       aria-hidden="true"
     />

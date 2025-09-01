@@ -1,98 +1,139 @@
 <template>
     <Head :title="t('app.book_service')" />
 
-    <AppLayoutWithNavigation :title="service.title" :subtitle="t('app.book_your_appointment')" :show-back-button="true">
-        <!-- Service Info Header -->
-        <Card class="mb-6 bg-tg-section-bg">
-            <CardContent class="p-4">
-                <div class="flex items-start justify-between">
-                    <div class="flex-1">
-                        <h2 class="mb-2 text-lg font-semibold">{{ service.title }}</h2>
-                        <p v-if="service.description" class="mb-3 text-sm text-tg-subtitle-text">
-                            {{ service.description }}
-                        </p>
-                        <div class="flex items-center gap-4 text-sm">
-                            <div class="flex items-center gap-1 text-tg-hint">
-                                <Icon name="Clock" class="h-4 w-4" />
-                                {{ service.duration_minutes }} {{ t('app.minutes') }}
+    <AppLayoutWithNavigation>
+        <div class="min-h-full bg-tg-bg">
+            <!-- Enhanced Header with Gradient Background -->
+            <div class="relative overflow-hidden bg-gradient-to-r from-tg-link to-blue-500 px-4 py-6">
+                <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSg0NSkiPjxjaXJjbGUgY3g9IjIwIiBjeT0iMjAiIHI9IjAuNSIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4xIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI3BhdHRlcm4pIi8+PC9zdmc+')] opacity-10"></div>
+                <div class="relative">
+                    <Button 
+                        variant="ghost" 
+                        @click="router.visit('/browse/services')" 
+                        class="mb-4 -ml-2 flex items-center gap-2 text-white/90 hover:bg-white/20"
+                    >
+                        <Icon name="ArrowLeft" class="h-4 w-4" />
+                        {{ t('app.back') }}
+                    </Button>
+                    <h1 class="text-2xl font-bold text-white truncate">{{ service.title }}</h1>
+                    <p class="mt-1 text-sm text-white/90">{{ t('app.book_your_appointment') }}</p>
+                </div>
+            </div>
+
+            <div class="container mx-auto px-4 py-6">
+                <!-- Enhanced Service Info Header -->
+                <Card class="mb-6 border-tg-section-separator bg-gradient-to-br from-white to-tg-section-bg shadow-sm">
+                    <CardContent class="p-5">
+                        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                            <div class="flex-1">
+                                <h2 class="mb-2 text-xl font-bold text-tg-text">{{ service.title }}</h2>
+                                <p v-if="service.description" class="mb-4 text-tg-hint">
+                                    {{ service.description }}
+                                </p>
+                                <div class="flex flex-wrap items-center gap-4 text-sm">
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-tg-link/10">
+                                            <Icon name="Clock" class="h-4 w-4 text-tg-link" />
+                                        </div>
+                                        <span class="font-medium text-tg-text">{{ service.duration_minutes }} {{ t('app.minutes') }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-tg-link/10">
+                                            <Icon name="MapPin" class="h-4 w-4 text-tg-link" />
+                                        </div>
+                                        <span class="font-medium text-tg-text">{{ provider.business_name }}</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-1 text-tg-hint">
-                                <Icon name="MapPin" class="h-4 w-4" />
-                                {{ provider.business_name }}
+                            <div class="flex-shrink-0">
+                                <div class="rounded-lg bg-tg-link/10 px-4 py-2">
+                                    <div class="text-2xl font-bold text-tg-link">{{ service.display_price }}</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-2xl font-bold text-tg-accent">{{ service.display_price }}</div>
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
+                    </CardContent>
+                </Card>
 
-        <!-- Date Selection -->
-        <Card class="mb-6">
-            <CardHeader>
-                <CardTitle>{{ t('app.select_date_time') }}</CardTitle>
-            </CardHeader>
-            <CardContent class="space-y-4">
-                <!-- Date Grid -->
-                <div>
-                    <Label class="mb-2 block text-sm font-medium">{{ t('app.available_dates') }}</Label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <Button
-                            v-for="dateOption in dates"
-                            :key="dateOption.date"
-                            type="button"
-                            :variant="selectedDate === dateOption.date ? 'default' : 'outline'"
-                            @click="selectDate(dateOption)"
-                            :disabled="dateOption.slots.length === 0"
-                            class="flex h-auto flex-col items-start p-3"
-                        >
-                            <span class="font-medium">{{ dateOption.day_name }}</span>
-                            <span class="text-sm opacity-75">{{ dateOption.day_number }} {{ dateOption.month }}</span>
-                            <span v-if="dateOption.slots.length === 0" class="text-xs text-red-500">{{ t('app.no_slots') }}</span>
-                        </Button>
-                    </div>
-                </div>
+                <!-- Enhanced Date Selection -->
+                <Card class="mb-6 border-tg-section-separator bg-gradient-to-br from-white to-tg-section-bg shadow-sm">
+                    <CardHeader class="border-b border-tg-section-separator pb-4">
+                        <CardTitle class="text-lg font-bold text-tg-text">{{ t('app.select_date_time') }}</CardTitle>
+                    </CardHeader>
+                    <CardContent class="space-y-6 pt-5">
+                        <!-- Date Grid -->
+                        <div>
+                            <Label class="mb-3 block text-sm font-medium text-tg-text">{{ t('app.available_dates') }}</Label>
+                            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                                <Button
+                                    v-for="dateOption in dates"
+                                    :key="dateOption.date"
+                                    type="button"
+                                    :variant="selectedDate === dateOption.date ? 'default' : 'outline'"
+                                    @click="selectDate(dateOption)"
+                                    :disabled="dateOption.slots.length === 0"
+                                    class="flex h-auto flex-col items-center justify-center gap-1 p-3"
+                                    :class="selectedDate === dateOption.date ? 'bg-tg-link text-white hover:bg-tg-link/90' : 'border-tg-section-separator bg-white text-tg-text hover:bg-tg-section-separator/20'"
+                                >
+                                    <span class="font-medium text-sm">{{ dateOption.day_short }}</span>
+                                    <span class="text-lg font-bold">{{ dateOption.day_number }}</span>
+                                    <span class="text-xs opacity-75">{{ dateOption.month }}</span>
+                                    <span v-if="dateOption.slots.length === 0" class="text-xs text-red-600">{{ t('app.no_slots') }}</span>
+                                </Button>
+                            </div>
+                        </div>
 
-                <!-- Time Slots -->
-                <div v-if="selectedDate && selectedDateData">
-                    <Label class="mb-2 block text-sm font-medium">{{ t('app.available_times') }}</Label>
-                    <div class="grid grid-cols-3 gap-2">
-                        <Button
-                            v-for="slot in selectedDateData.slots"
-                            :key="slot.start"
-                            type="button"
-                            :variant="selectedTime === slot.start ? 'default' : 'outline'"
-                            @click="selectedTime = slot.start"
-                            :disabled="!slot.available"
-                            class="text-sm"
-                        >
-                            {{ formatTime(slot.start) }}
-                        </Button>
-                    </div>
-                </div>
+                        <!-- Time Slots -->
+                        <div v-if="selectedDate && selectedDateData">
+                            <Label class="mb-3 block text-sm font-medium text-tg-text">{{ t('app.available_times') }}</Label>
+                            <div class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
+                                <Button
+                                    v-for="slot in selectedDateData.slots"
+                                    :key="slot.start"
+                                    type="button"
+                                    :variant="selectedTime === slot.start ? 'default' : 'outline'"
+                                    @click="selectedTime = slot.start"
+                                    :disabled="!slot.available"
+                                    class="text-sm py-2"
+                                    :class="selectedTime === slot.start ? 'bg-tg-link text-white hover:bg-tg-link/90' : 'border-tg-section-separator bg-white text-tg-text hover:bg-tg-section-separator/20'"
+                                >
+                                    {{ formatTime(slot.start) }}
+                                </Button>
+                            </div>
+                        </div>
 
-                <!-- Notes -->
-                <div>
-                    <Label for="notes" class="mb-2 block text-sm font-medium">{{ t('app.notes_optional') }}</Label>
-                    <Textarea id="notes" v-model="form.notes" :placeholder="t('app.special_requests')" :rows="3" />
-                </div>
+                        <!-- Notes -->
+                        <div>
+                            <Label for="notes" class="mb-2 block text-sm font-medium text-tg-text">{{ t('app.notes_optional') }}</Label>
+                            <Textarea 
+                                id="notes" 
+                                v-model="form.notes" 
+                                :placeholder="t('app.special_requests')" 
+                                :rows="3" 
+                                class="border-tg-section-separator bg-white focus:border-tg-link focus:ring-tg-link"
+                            />
+                        </div>
 
-                <!-- Submit Button -->
-                <div class="pt-4">
-                    <Button @click="submitBooking" :disabled="!selectedDate || !selectedTime || processing" class="w-full" size="lg">
-                        <Icon v-if="processing" name="Loader2" class="mr-2 h-4 w-4 animate-spin" />
-                        <Icon v-else name="Calendar" class="mr-2 h-4 w-4" />
-                        {{ processing ? t('app.creating_booking') : t('app.book_appointment') }}
-                    </Button>
-                </div>
-            </CardContent>
-        </Card>
-
-        <!-- Loading Overlay -->
-        <LoadingOverlay :show="processing" :message="t('app.creating_your_booking')" />
+                        <!-- Submit Button -->
+                        <div class="pt-2">
+                            <Button 
+                                @click="submitBooking" 
+                                :disabled="!selectedDate || !selectedTime || processing" 
+                                size="lg"
+                                class="w-full bg-tg-link text-white hover:bg-tg-link/90"
+                            >
+                                <Icon v-if="processing" name="Loader2" class="mr-2 h-4 w-4 animate-spin" />
+                                <Icon v-else name="Calendar" class="mr-2 h-4 w-4" />
+                                {{ processing ? t('app.creating_booking') : t('app.book_appointment') }}
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
     </AppLayoutWithNavigation>
+
+    <!-- Enhanced Loading Overlay -->
+    <LoadingOverlay :show="processing" :message="t('app.creating_your_booking')" />
 </template>
 
 <script setup lang="ts">

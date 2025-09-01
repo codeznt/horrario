@@ -8,7 +8,7 @@ const { t } = useTranslations();
 // shadcn-vue components
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -85,15 +85,6 @@ function goToStep(step: number) {
         return;
     }
     carouselApi.value?.scrollTo(step - 1);
-}
-
-// Show role selection warning
-function showRoleRequiredWarning() {
-    showRoleWarning.value = true;
-    // Auto-hide warning after 3 seconds
-    setTimeout(() => {
-        showRoleWarning.value = false;
-    }, 3000);
 }
 
 // Handle stepper step change
@@ -257,59 +248,59 @@ function completeOnboarding() {
 
     <TelegramAppLayout class="bg-tg-bg">
         <div class="flex min-h-[--spacing-viewport-h] flex-col">
-            <!-- Header with Stepper -->
-            <div class="flex justify-center p-4 pb-2">
-                <!-- Stepper Navigation -->
+            <!-- Enhanced Header with Stepper -->
+            <div class="flex justify-center p-5 pb-3">
+                <!-- Enhanced Stepper Navigation -->
                 <Stepper :model-value="currentStep" class="max-w-sm" @step-change="onStepperChange">
                     <!-- Step 1: Welcome -->
                     <StepperItem :step="1">
-                        <StepperTrigger :step="1" class="p-1">
-                            <StepperIndicator :step="1">
-                                <Icon name="Sparkles" />
+                        <StepperTrigger :step="1" class="p-1.5">
+                            <StepperIndicator :step="1" class="bg-tg-section-separator/20">
+                                <Icon name="Sparkles" class="text-tg-accent" />
                             </StepperIndicator>
                         </StepperTrigger>
                     </StepperItem>
 
-                    <div class="h-[2px] w-12 bg-tg-section-separator"></div>
+                    <div class="h-[2px] w-10 bg-tg-section-separator"></div>
 
                     <!-- Step 2: Role Selection -->
                     <StepperItem :step="2">
-                        <StepperTrigger :step="2" class="p-1">
-                            <StepperIndicator :step="2">
-                                <Icon name="UserCheck" />
+                        <StepperTrigger :step="2" class="p-1.5">
+                            <StepperIndicator :step="2" class="bg-tg-section-separator/20">
+                                <Icon :name="selectedRole === 'customer' ? 'User' : 'Building2'" class="text-tg-accent" />
                             </StepperIndicator>
                         </StepperTrigger>
                     </StepperItem>
 
                     <!-- Step 3: Info Collection (Customer/Business) -->
                     <template v-if="selectedRole">
-                        <div class="h-[2px] w-12 bg-tg-section-separator"></div>
+                        <div class="h-[2px] w-10 bg-tg-section-separator"></div>
                         <StepperItem :step="3">
-                            <StepperTrigger :step="3" class="p-1">
-                                <StepperIndicator :step="3">
-                                    <Icon :name="selectedRole === 'customer' ? 'User' : 'Building2'" />
+                            <StepperTrigger :step="3" class="p-1.5">
+                                <StepperIndicator :step="3" class="bg-tg-section-separator/20">
+                                    <Icon :name="selectedRole === 'customer' ? 'User' : 'Building2'" class="text-tg-accent" />
                                 </StepperIndicator>
                             </StepperTrigger>
                         </StepperItem>
 
                         <!-- Step 4: Business Address (Business only) -->
                         <template v-if="selectedRole === 'business'">
-                            <div class="h-[2px] w-12 bg-tg-section-separator"></div>
+                            <div class="h-[2px] w-10 bg-tg-section-separator"></div>
                             <StepperItem :step="4">
-                                <StepperTrigger :step="4" class="p-1">
-                                    <StepperIndicator :step="4">
-                                        <Icon name="MapPin" />
+                                <StepperTrigger :step="4" class="p-1.5">
+                                    <StepperIndicator :step="4" class="bg-tg-section-separator/20">
+                                        <Icon name="MapPin" class="text-tg-accent" />
                                     </StepperIndicator>
                                 </StepperTrigger>
                             </StepperItem>
                         </template>
 
                         <!-- Final Step: Completion -->
-                        <div class="h-[2px] w-12 bg-tg-section-separator"></div>
+                        <div class="h-[2px] w-10 bg-tg-section-separator"></div>
                         <StepperItem :step="totalSteps">
-                            <StepperTrigger :step="totalSteps" class="p-1">
-                                <StepperIndicator :step="totalSteps">
-                                    <Icon name="CheckCircle" />
+                            <StepperTrigger :step="totalSteps" class="p-1.5">
+                                <StepperIndicator :step="totalSteps" class="bg-tg-section-separator/20">
+                                    <Icon name="CheckCircle" class="text-tg-accent" />
                                 </StepperIndicator>
                             </StepperTrigger>
                         </StepperItem>
@@ -317,11 +308,11 @@ function completeOnboarding() {
                     
                     <!-- Fallback final step when no role selected -->
                     <template v-else>
-                        <div class="h-[2px] w-12 bg-tg-section-separator"></div>
+                        <div class="h-[2px] w-10 bg-tg-section-separator"></div>
                         <StepperItem :step="3">
-                            <StepperTrigger :step="3" :disabled="!selectedRole" class="p-1">
-                                <StepperIndicator :step="3">
-                                    <Icon name="CheckCircle" />
+                            <StepperTrigger :step="3" :disabled="!selectedRole" class="p-1.5">
+                                <StepperIndicator :step="3" class="bg-tg-section-separator/20">
+                                    <Icon name="CheckCircle" class="text-tg-accent" />
                                 </StepperIndicator>
                             </StepperTrigger>
                         </StepperItem>
@@ -329,30 +320,30 @@ function completeOnboarding() {
                 </Stepper>
             </div>
 
-            <!-- Progress Bar -->
-            <div class="px-4 pb-6">
-                <div class="h-1 w-full overflow-hidden rounded-full bg-tg-secondary-bg">
-                    <div class="h-full rounded-full bg-tg-accent transition-all duration-300 ease-out" :style="`width: ${progress}%`"></div>
+            <!-- Enhanced Progress Bar -->
+            <div class="px-5 pb-6">
+                <div class="h-2 w-full overflow-hidden rounded-full bg-tg-section-separator/20">
+                    <div class="h-full rounded-full bg-tg-accent transition-all duration-500 ease-out" :style="`width: ${progress}%`"></div>
                 </div>
             </div>
 
-            <!-- Content Area with Carousel -->
-            <div class="flex flex-1 flex-col items-center justify-center px-6 pb-8">
+            <!-- Enhanced Content Area with Carousel -->
+            <div class="flex flex-1 flex-col items-center justify-center px-5 pb-6">
                 <Carousel class="w-full max-w-sm" @slide-changed="onSlideChanged" @init-api="onInitApi">
                     <CarouselContent class="-ml-4">
                         <!-- Step 1: Welcome -->
                         <CarouselItem class="pl-4">
                             <div class="flex flex-col items-center space-y-8 text-center">
-                                <!-- Illustration placeholder -->
+                                <!-- Enhanced Illustration -->
                                 <div
-                                    class="flex h-32 w-32 items-center justify-center rounded-3xl border border-tg-section-separator bg-gradient-to-br from-tg-accent/20 to-tg-link/20"
+                                    class="flex h-36 w-36 items-center justify-center rounded-3xl border border-tg-section-separator bg-gradient-to-br from-tg-accent/20 to-tg-link/20 shadow-lg"
                                 >
-                                    <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-tg-accent/10">
-                                        <Icon name="Sparkles" class="size-8 text-tg-accent" />
+                                    <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-tg-accent/10 shadow-inner">
+                                        <Icon name="Sparkles" class="size-10 text-tg-accent" />
                                     </div>
                                 </div>
 
-                                <div class="space-y-4">
+                                <div class="space-y-5">
                                     <h1 class="text-2xl font-bold text-tg-text">
                                         Прощавайте,<br />
                                         записник та ручка
@@ -362,7 +353,7 @@ function completeOnboarding() {
                                             Привіт,<br />
                                             Horario
                                         </h2>
-                                        <p class="text-sm leading-relaxed text-tg-hint">Ваш розклад та записи в одному місці.</p>
+                                        <p class="text-base leading-relaxed text-tg-hint">Ваш розклад та записи в одному місці.</p>
                                     </div>
                                 </div>
                             </div>
@@ -373,60 +364,63 @@ function completeOnboarding() {
                             <div class="flex flex-col items-center space-y-8 text-center">
                                 <div class="space-y-4">
                                     <h1 class="text-2xl font-bold text-tg-text">Оберіть ваш профіль</h1>
-                                    <p class="text-sm text-tg-hint">Допоможіть нам організувати ваш досвід</p>
+                                    <p class="text-base text-tg-hint">Допоможіть нам організувати ваш досвід</p>
 
-                                    <!-- Warning Message -->
+                                    <!-- Enhanced Warning Message -->
                                     <div
                                         v-if="showRoleWarning"
-                                        class="rounded-lg border border-orange-500/20 bg-orange-500/10 p-3 transition-all duration-300"
+                                        class="rounded-xl border border-orange-500/30 bg-orange-500/15 p-4 transition-all duration-300 shadow-sm"
                                     >
-                                        <p class="text-sm font-medium text-orange-600">⚠️ Будь ласка, оберіть свій профіль щоб продовжити</p>
+                                        <div class="flex items-center gap-2">
+                                            <Icon name="AlertTriangle" class="h-5 w-5 text-orange-600" />
+                                            <p class="text-sm font-medium text-orange-700">Будь ласка, оберіть свій профіль щоб продовжити</p>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="w-full space-y-3">
-                                    <!-- Business Option -->
+                                <div class="w-full space-y-4">
+                                    <!-- Enhanced Business Option -->
                                     <Card
-                                        class="cursor-pointer border-2 transition-all duration-200"
+                                        class="cursor-pointer border-2 transition-all duration-300 shadow-sm hover:shadow-md"
                                         :class="[
                                             selectedRole === 'business'
-                                                ? 'border-tg-accent bg-tg-accent/5'
-                                                : 'border-tg-section-separator bg-tg-section-bg hover:bg-tg-secondary-bg',
-                                            !savingRole && 'hover:scale-[0.98] active:scale-95',
+                                                ? 'border-tg-accent bg-gradient-to-br from-tg-accent/10 to-tg-accent/5'
+                                                : 'border-tg-section-separator bg-gradient-to-br from-tg-section-bg to-white hover:border-tg-accent/30',
+                                            !savingRole && 'hover:-translate-y-0.5',
                                             savingRole && selectedRole === 'business' && 'opacity-75',
                                         ]"
                                         @click="!savingRole && selectRole('business')"
                                     >
-                                        <CardContent class="flex items-center gap-4 p-4">
-                                            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-tg-accent/10">
-                                                <Icon name="Building2" class="size-6 text-tg-accent" />
+                                        <CardContent class="flex items-center gap-4 p-5">
+                                            <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-tg-accent/10">
+                                                <Icon name="Building2" class="size-7 text-tg-accent" />
                                             </div>
                                             <div class="flex-1 text-left">
-                                                <h3 class="font-semibold text-tg-text">{{ t('app.business') }}</h3>
-                                                <p class="text-sm text-tg-hint">{{ t('app.provide_services') }}</p>
+                                                <h3 class="text-lg font-bold text-tg-text">{{ t('app.business') }}</h3>
+                                                <p class="text-sm text-tg-hint mt-1">{{ t('app.provide_services') }}</p>
                                             </div>
                                         </CardContent>
                                     </Card>
 
-                                    <!-- Customer Option -->
+                                    <!-- Enhanced Customer Option -->
                                     <Card
-                                        class="cursor-pointer border-2 transition-all duration-200"
+                                        class="cursor-pointer border-2 transition-all duration-300 shadow-sm hover:shadow-md"
                                         :class="[
                                             selectedRole === 'customer'
-                                                ? 'border-tg-accent bg-tg-accent/5'
-                                                : 'border-tg-section-separator bg-tg-section-bg hover:bg-tg-secondary-bg',
-                                            !savingRole && 'hover:scale-[0.98] active:scale-95',
+                                                ? 'border-tg-link bg-gradient-to-br from-tg-link/10 to-tg-link/5'
+                                                : 'border-tg-section-separator bg-gradient-to-br from-tg-section-bg to-white hover:border-tg-link/30',
+                                            !savingRole && 'hover:-translate-y-0.5',
                                             savingRole && selectedRole === 'customer' && 'opacity-75',
                                         ]"
                                         @click="!savingRole && selectRole('customer')"
                                     >
-                                        <CardContent class="flex items-center gap-4 p-4">
-                                            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-tg-link/10">
-                                                <Icon name="User" class="size-6 text-tg-link" />
+                                        <CardContent class="flex items-center gap-4 p-5">
+                                            <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-tg-link/10">
+                                                <Icon name="User" class="size-7 text-tg-link" />
                                             </div>
                                             <div class="flex-1 text-left">
-                                                <h3 class="font-semibold text-tg-text">{{ t('app.customer') }}</h3>
-                                                <p class="text-sm text-tg-hint">{{ t('app.use_services') }}</p>
+                                                <h3 class="text-lg font-bold text-tg-text">{{ t('app.customer') }}</h3>
+                                                <p class="text-sm text-tg-hint mt-1">{{ t('app.use_services') }}</p>
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -438,44 +432,53 @@ function completeOnboarding() {
                         <CarouselItem v-if="selectedRole === 'customer'" class="pl-4">
                             <div class="flex flex-col items-center space-y-8 text-center">
                                 <div
-                                    class="flex h-32 w-32 items-center justify-center rounded-3xl border border-tg-section-separator bg-gradient-to-br from-tg-link/20 to-blue-500/20"
+                                    class="flex h-36 w-36 items-center justify-center rounded-3xl border border-tg-section-separator bg-gradient-to-br from-tg-link/20 to-blue-500/20 shadow-lg"
                                 >
-                                    <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-tg-link/10">
-                                        <Icon name="User" class="size-8 text-tg-link" />
+                                    <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-tg-link/10 shadow-inner">
+                                        <Icon name="User" class="size-10 text-tg-link" />
                                     </div>
                                 </div>
 
-                                <div class="space-y-4">
+                                <div class="space-y-5">
                                     <h1 class="text-2xl font-bold text-tg-text">{{ t('app.tell_us_about_yourself') }}</h1>
-                                    <p class="text-sm text-tg-hint">{{ t('app.help_us_know_you_better') }}</p>
+                                    <p class="text-base text-tg-hint">{{ t('app.help_us_know_you_better') }}</p>
 
-                                    <!-- Warning Message -->
+                                    <!-- Enhanced Warning Message -->
                                     <div
                                         v-if="showFormWarning"
-                                        class="rounded-lg border border-orange-500/20 bg-orange-500/10 p-3 transition-all duration-300"
+                                        class="rounded-xl border border-orange-500/30 bg-orange-500/15 p-4 transition-all duration-300 shadow-sm"
                                     >
-                                        <p class="text-sm font-medium text-orange-600">⚠️ Будь ласка, заповніть всі поля</p>
+                                        <div class="flex items-center gap-2">
+                                            <Icon name="AlertTriangle" class="h-5 w-5 text-orange-600" />
+                                            <p class="text-sm font-medium text-orange-700">Будь ласка, заповніть всі поля</p>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="w-full space-y-4">
+                                <div class="w-full space-y-5">
                                     <div class="space-y-2">
-                                        <Label for="customer-name" class="text-sm font-medium text-tg-text">{{ t('app.name') }}</Label>
+                                        <Label for="customer-name" class="text-sm font-medium text-tg-text flex items-center gap-2">
+                                            <Icon name="User" class="h-4 w-4 text-tg-accent" />
+                                            {{ t('app.name') }}
+                                        </Label>
                                         <Input
                                             id="customer-name"
                                             v-model="customerForm.name"
                                             :placeholder="t('app.full_name')"
-                                            class="w-full"
+                                            class="w-full border-tg-section-separator bg-white focus:border-tg-accent focus:ring-tg-accent"
                                             :disabled="savingInfo"
                                         />
                                     </div>
                                     <div class="space-y-2">
-                                        <Label for="customer-phone" class="text-sm font-medium text-tg-text">{{ t('app.phone_number') }}</Label>
+                                        <Label for="customer-phone" class="text-sm font-medium text-tg-text flex items-center gap-2">
+                                            <Icon name="Phone" class="h-4 w-4 text-tg-accent" />
+                                            {{ t('app.phone_number') }}
+                                        </Label>
                                         <Input
                                             id="customer-phone"
                                             v-model="customerForm.phone"
                                             :placeholder="t('app.phone_placeholder')"
-                                            class="w-full"
+                                            class="w-full border-tg-section-separator bg-white focus:border-tg-accent focus:ring-tg-accent"
                                             :disabled="savingInfo"
                                         />
                                     </div>
@@ -487,44 +490,53 @@ function completeOnboarding() {
                         <CarouselItem v-if="selectedRole === 'business'" class="pl-4">
                             <div class="flex flex-col items-center space-y-8 text-center">
                                 <div
-                                    class="flex h-32 w-32 items-center justify-center rounded-3xl border border-tg-section-separator bg-gradient-to-br from-tg-accent/20 to-purple-500/20"
+                                    class="flex h-36 w-36 items-center justify-center rounded-3xl border border-tg-section-separator bg-gradient-to-br from-tg-accent/20 to-purple-500/20 shadow-lg"
                                 >
-                                    <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-tg-accent/10">
-                                        <Icon name="Building2" class="size-8 text-tg-accent" />
+                                    <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-tg-accent/10 shadow-inner">
+                                        <Icon name="Building2" class="size-10 text-tg-accent" />
                                     </div>
                                 </div>
 
-                                <div class="space-y-4">
+                                <div class="space-y-5">
                                     <h1 class="text-2xl font-bold text-tg-text">{{ t('app.tell_us_about_business') }}</h1>
-                                    <p class="text-sm text-tg-hint">{{ t('app.business_details') }}</p>
+                                    <p class="text-base text-tg-hint">{{ t('app.business_details') }}</p>
 
-                                    <!-- Warning Message -->
+                                    <!-- Enhanced Warning Message -->
                                     <div
                                         v-if="showFormWarning"
-                                        class="rounded-lg border border-orange-500/20 bg-orange-500/10 p-3 transition-all duration-300"
+                                        class="rounded-xl border border-orange-500/30 bg-orange-500/15 p-4 transition-all duration-300 shadow-sm"
                                     >
-                                        <p class="text-sm font-medium text-orange-600">⚠️ Будь ласка, заповніть всі поля</p>
+                                        <div class="flex items-center gap-2">
+                                            <Icon name="AlertTriangle" class="h-5 w-5 text-orange-600" />
+                                            <p class="text-sm font-medium text-orange-700">Будь ласка, заповніть всі поля</p>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="w-full space-y-4">
+                                <div class="w-full space-y-5">
                                     <div class="space-y-2">
-                                        <Label for="business-name" class="text-sm font-medium text-tg-text">{{ t('app.business_name') }}</Label>
+                                        <Label for="business-name" class="text-sm font-medium text-tg-text flex items-center gap-2">
+                                            <Icon name="Building2" class="h-4 w-4 text-tg-accent" />
+                                            {{ t('app.business_name') }}
+                                        </Label>
                                         <Input
                                             id="business-name"
                                             v-model="businessForm.business_name"
                                             :placeholder="t('app.business_name_placeholder')"
-                                            class="w-full"
+                                            class="w-full border-tg-section-separator bg-white focus:border-tg-accent focus:ring-tg-accent"
                                             :disabled="savingInfo"
                                         />
                                     </div>
                                     <div class="space-y-2">
-                                        <Label for="business-phone" class="text-sm font-medium text-tg-text">{{ t('app.business_phone') }}</Label>
+                                        <Label for="business-phone" class="text-sm font-medium text-tg-text flex items-center gap-2">
+                                            <Icon name="Phone" class="h-4 w-4 text-tg-accent" />
+                                            {{ t('app.business_phone') }}
+                                        </Label>
                                         <Input
                                             id="business-phone"
                                             v-model="businessForm.business_phone"
                                             :placeholder="t('app.phone_placeholder')"
-                                            class="w-full"
+                                            class="w-full border-tg-section-separator bg-white focus:border-tg-accent focus:ring-tg-accent"
                                             :disabled="savingInfo"
                                         />
                                     </div>
@@ -536,36 +548,42 @@ function completeOnboarding() {
                         <CarouselItem v-if="selectedRole === 'business'" class="pl-4">
                             <div class="flex flex-col items-center space-y-8 text-center">
                                 <div
-                                    class="flex h-32 w-32 items-center justify-center rounded-3xl border border-tg-section-separator bg-gradient-to-br from-green-500/20 to-tg-accent/20"
+                                    class="flex h-36 w-36 items-center justify-center rounded-3xl border border-tg-section-separator bg-gradient-to-br from-green-500/20 to-tg-accent/20 shadow-lg"
                                 >
-                                    <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-green-500/10">
-                                        <Icon name="MapPin" class="size-8 text-green-600" />
+                                    <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-green-500/10 shadow-inner">
+                                        <Icon name="MapPin" class="size-10 text-green-600" />
                                     </div>
                                 </div>
 
-                                <div class="space-y-4">
+                                <div class="space-y-5">
                                     <h1 class="text-2xl font-bold text-tg-text">{{ t('app.location_information') }}</h1>
-                                    <p class="text-sm text-tg-hint">{{ t('app.where_located') }}</p>
+                                    <p class="text-base text-tg-hint">{{ t('app.where_located') }}</p>
 
-                                    <!-- Warning Message -->
+                                    <!-- Enhanced Warning Message -->
                                     <div
                                         v-if="showFormWarning"
-                                        class="rounded-lg border border-orange-500/20 bg-orange-500/10 p-3 transition-all duration-300"
+                                        class="rounded-xl border border-orange-500/30 bg-orange-500/15 p-4 transition-all duration-300 shadow-sm"
                                     >
-                                        <p class="text-sm font-medium text-orange-600">⚠️ Будь ласка, заповніть адресу</p>
+                                        <div class="flex items-center gap-2">
+                                            <Icon name="AlertTriangle" class="h-5 w-5 text-orange-600" />
+                                            <p class="text-sm font-medium text-orange-700">Будь ласка, заповніть адресу</p>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div class="w-full space-y-4">
+                                <div class="w-full space-y-5">
                                     <div class="space-y-2">
-                                        <Label for="business-address" class="text-sm font-medium text-tg-text">{{ t('app.address') }}</Label>
+                                        <Label for="business-address" class="text-sm font-medium text-tg-text flex items-center gap-2">
+                                            <Icon name="MapPin" class="h-4 w-4 text-tg-accent" />
+                                            {{ t('app.address') }}
+                                        </Label>
                                         <Textarea
                                             id="business-address"
                                             v-model="businessForm.address"
                                             :placeholder="t('app.address_placeholder')"
-                                            class="w-full"
+                                            class="w-full border-tg-section-separator bg-white focus:border-tg-accent focus:ring-tg-accent"
                                             :disabled="savingInfo"
-                                            :rows="3"
+                                            :rows="4"
                                         />
                                     </div>
                                 </div>
@@ -576,16 +594,16 @@ function completeOnboarding() {
                         <CarouselItem class="pl-4">
                             <div class="flex flex-col items-center space-y-8 text-center">
                                 <div
-                                    class="flex h-32 w-32 items-center justify-center rounded-3xl border border-tg-section-separator bg-gradient-to-br from-green-500/20 to-tg-accent/20"
+                                    class="flex h-36 w-36 items-center justify-center rounded-3xl border border-tg-section-separator bg-gradient-to-br from-green-500/20 to-tg-accent/20 shadow-lg"
                                 >
-                                    <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-green-500/10">
-                                        <AppLogoIcon class="size-8 text-tg-accent" />
+                                    <div class="flex h-20 w-20 items-center justify-center rounded-2xl bg-green-500/10 shadow-inner">
+                                        <AppLogoIcon class="size-10 text-tg-accent" />
                                     </div>
                                 </div>
 
-                                <div class="space-y-4">
+                                <div class="space-y-5">
                                     <h1 class="text-2xl font-bold text-tg-text">{{ t('app.profile_setup_complete') }}</h1>
-                                    <p class="text-sm leading-relaxed text-tg-hint">
+                                    <p class="text-base leading-relaxed text-tg-hint max-w-xs">
                                         {{ t('app.welcome_horario_organize') }} {{ selectedRole === 'business' ? t('app.schedules') : t('app.appointments') }}.
                                     </p>
                                 </div>
@@ -595,20 +613,24 @@ function completeOnboarding() {
                 </Carousel>
             </div>
 
-            <!-- Bottom Actions -->
-            <div class="px-6 pb-6">
+            <!-- Enhanced Bottom Actions -->
+            <div class="px-5 pb-6">
                 <!-- Step 1: Welcome -->
                 <div v-if="currentStep === 1" class="flex gap-3">
-                    <Button class="flex-1 bg-tg-accent text-tg-accent-foreground hover:opacity-90" @click="goNext"> Розпочати </Button>
+                    <Button size="lg" class="flex-1 bg-tg-accent text-white hover:bg-tg-accent/90 shadow-lg rounded-xl py-6" @click="goNext"> 
+                        Розпочати 
+                    </Button>
                 </div>
 
                 <!-- Step 3: Customer Info Collection -->
                 <div v-if="currentStep === 3 && selectedRole === 'customer'" class="flex gap-3">
                     <Button 
-                        class="flex-1 bg-tg-accent text-tg-accent-foreground hover:opacity-90" 
+                        size="lg"
+                        class="flex-1 bg-tg-accent text-white hover:bg-tg-accent/90 shadow-lg rounded-xl py-6" 
                         @click="submitCustomerInfo"
                         :disabled="savingInfo"
                     >
+                        <Icon v-if="savingInfo" name="Loader2" class="mr-2 h-5 w-5 animate-spin" />
                         <span v-if="savingInfo">Збереження...</span>
                         <span v-else>{{ t('app.continue') }}</span>
                     </Button>
@@ -617,10 +639,12 @@ function completeOnboarding() {
                 <!-- Step 3: Business Info Collection -->
                 <div v-if="currentStep === 3 && selectedRole === 'business'" class="flex gap-3">
                     <Button 
-                        class="flex-1 bg-tg-accent text-tg-accent-foreground hover:opacity-90" 
+                        size="lg"
+                        class="flex-1 bg-tg-accent text-white hover:bg-tg-accent/90 shadow-lg rounded-xl py-6" 
                         @click="submitBusinessInfo"
                         :disabled="savingInfo"
                     >
+                        <Icon v-if="savingInfo" name="Loader2" class="mr-2 h-5 w-5 animate-spin" />
                         <span v-if="savingInfo">Збереження...</span>
                         <span v-else>{{ t('app.continue') }}</span>
                     </Button>
@@ -629,10 +653,12 @@ function completeOnboarding() {
                 <!-- Step 4: Business Address Collection -->
                 <div v-if="currentStep === 4 && selectedRole === 'business'" class="flex gap-3">
                     <Button 
-                        class="flex-1 bg-tg-accent text-tg-accent-foreground hover:opacity-90" 
+                        size="lg"
+                        class="flex-1 bg-tg-accent text-white hover:bg-tg-accent/90 shadow-lg rounded-xl py-6" 
                         @click="submitBusinessAddress"
                         :disabled="savingInfo"
                     >
+                        <Icon v-if="savingInfo" name="Loader2" class="mr-2 h-5 w-5 animate-spin" />
                         <span v-if="savingInfo">Збереження...</span>
                         <span v-else>{{ t('app.continue') }}</span>
                     </Button>
@@ -640,7 +666,9 @@ function completeOnboarding() {
 
                 <!-- Final Step: Completion -->
                 <div v-if="currentStep === totalSteps" class="flex gap-3">
-                    <Button class="flex-1 bg-tg-accent text-tg-accent-foreground hover:opacity-90" @click="completeOnboarding"> В кабінет </Button>
+                    <Button size="lg" class="flex-1 bg-tg-accent text-white hover:bg-tg-accent/90 shadow-lg rounded-xl py-6" @click="completeOnboarding"> 
+                        В кабінет 
+                    </Button>
                 </div>
             </div>
         </div>

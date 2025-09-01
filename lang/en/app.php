@@ -330,6 +330,32 @@ return [
     'secure_area_description' => 'This is a secure area of the application. Please confirm your password before continuing.',
 
     // Settings
+    'settings' => [
+        'profile' => [
+            'title' => 'Profile Settings',
+            'subtitle' => 'Manage your account profile and personal information',
+            'information' => [
+                'title' => 'Profile Information',
+                'description' => 'Update your account\'s profile information and email address.',
+            ],
+            'name' => 'Name',
+            'email' => 'Email',
+            'password' => 'Password',
+            'password_placeholder' => 'Password',
+            'email_verification_required' => 'Email verification required',
+            'email_verification_notice' => 'Your email address is unverified. Click here to re-send the verification email.',
+            'saved' => 'Your profile has been updated successfully.',
+            'danger_zone' => [
+                'title' => 'Danger Zone',
+                'description' => 'Permanently delete your account and all associated data.',
+            ],
+            'delete_account' => 'Delete Account',
+            'delete_confirmation' => [
+                'title' => 'Delete Account',
+                'description' => 'Are you sure you want to delete your account? All of your data will be permanently removed. This action cannot be undone.',
+            ],
+        ],
+    ],
     'profile' => 'Profile',
     'account_settings' => 'Account Settings',
     'security' => 'Security',
@@ -352,6 +378,14 @@ return [
     'deletion_cannot_be_undone' => 'Please proceed with caution, this cannot be undone.',
     'delete_account_confirm_title' => 'Are you sure you want to delete your account?',
     'delete_account_confirm_description' => 'Once your account is deleted, all of its resources and data will also be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.',
+
+    // Common actions
+    'common' => [
+        'save_changes' => 'Save Changes',
+        'saving' => 'Saving...',
+        'cancel' => 'Cancel',
+        'deleting' => 'Deleting...',
+    ],
 
     // Search & Results
     'search_results' => 'Search Results',
