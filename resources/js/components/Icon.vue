@@ -6,6 +6,7 @@ import { computed } from 'vue';
 import { 
   AlertCircle,
   AlertTriangle, 
+  AlignLeft, 
   ArrowLeft,
   BarChart3,
   Building2,
@@ -72,6 +73,7 @@ const className = computed(() => cn('h-4 w-4', props.class));
 const iconMap = {
   AlertCircle,
   AlertTriangle,
+  AlignLeft,
   ArrowLeft,
   BarChart3,
   Building2,

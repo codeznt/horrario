@@ -10,6 +10,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use App\Enums\BookingStatuses;
 
 class BookingController extends Controller
 {
@@ -48,7 +49,7 @@ class BookingController extends Controller
         $bookings = auth()->user()->bookings()
             ->with(['service', 'provider.user'])
             ->where('start_datetime', '>=', Carbon::now())
-            ->where('status', '!=', 'cancelled')
+            ->where('status', '!=', BookingStatuses::CANCELLED)
             ->orderBy('start_datetime')
             ->get();
 
@@ -99,7 +100,7 @@ class BookingController extends Controller
             // Filter out slots that are already booked
             $bookedSlots = Booking::where('provider_id', $provider->id)
                 ->whereDate('start_datetime', $date)
-                ->where('status', '!=', 'cancelled')
+                ->where('status', '!=', BookingStatuses::CANCELLED)
                 ->get()
                 ->map(function ($booking) {
                     return [
@@ -176,7 +177,7 @@ class BookingController extends Controller
                             ->where('end_datetime', '>=', $endDatetime);
                     });
                 })
-                ->where('status', '!=', 'cancelled')
+                ->where('status', '!=', BookingStatuses::CANCELLED)
                 ->lockForUpdate()
                 ->exists();
 
@@ -312,7 +313,7 @@ class BookingController extends Controller
     {
         $this->authorize('manage', $booking);
 
-        $booking->status = 'confirmed';
+        $booking->status = BookingStatuses::CONFIRMED;
         $booking->save();
 
         return redirect()->back()->with('success', 'Booking confirmed successfully!');
@@ -325,7 +326,7 @@ class BookingController extends Controller
     {
         $this->authorize('manage', $booking);
 
-        $booking->status = 'declined';
+        $booking->status = BookingStatuses::DECLINED;
         $booking->save();
 
         return redirect()->back()->with('success', 'Booking declined successfully!');

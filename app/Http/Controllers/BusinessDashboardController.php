@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\Provider;
 use App\Models\Service;
 use App\Models\Booking;
+use App\Enums\BookingStatuses;
 
 class BusinessDashboardController extends Controller
 {
@@ -62,7 +63,7 @@ class BusinessDashboardController extends Controller
             $monthlyBookings = Booking::whereHas('service', function ($query) use ($provider) {
                 $query->where('provider_id', $provider->id);
             })
-            ->where('status', 'completed')
+            ->where('status', BookingStatuses::COMPLETED)
             ->whereMonth('start_datetime', now()->month)
             ->count();
             

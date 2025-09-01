@@ -1,17 +1,15 @@
-<template>
-  <DialogRoot :open="open" @update:open="$emit('update:open', $event)">
-    <slot />
-  </DialogRoot>
-</template>
-
 <script setup lang="ts">
-import { DialogRoot } from 'reka-ui'
+import type { AlertDialogEmits, AlertDialogProps } from "reka-ui"
+import { AlertDialogRoot, useForwardPropsEmits } from "reka-ui"
 
-defineEmits<{
-  'update:open': [value: boolean]
-}>()
+const props = defineProps<AlertDialogProps>()
+const emits = defineEmits<AlertDialogEmits>()
 
-defineProps<{
-  open?: boolean
-}>()
+const forwarded = useForwardPropsEmits(props, emits)
 </script>
+
+<template>
+  <AlertDialogRoot data-slot="alert-dialog" v-bind="forwarded">
+    <slot />
+  </AlertDialogRoot>
+</template>
